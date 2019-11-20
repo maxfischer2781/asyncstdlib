@@ -159,3 +159,10 @@ async def test_enumerate():
         assert count == value
     async for count, value in a.enumerate(asyncify(range(5, 10)), start=5):
         assert count == value
+
+
+@sync
+async def test_sum():
+    assert await a.sum(asyncify((1, 2, 3, 4))) == 10
+    assert await a.sum(asyncify((4, 3, 2, 1)), start=5) == 15
+    assert await a.sum((), start=5) == 5

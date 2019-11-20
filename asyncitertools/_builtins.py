@@ -211,3 +211,10 @@ async def enumerate(
     async for item in iter(iterable):
         yield count, item
         count += 1
+
+
+async def sum(iterable: Union[Iterable[T], AsyncIterable[T]], start: T = 0) -> T:
+    total = start
+    async for item in iter(iterable):
+        total += item
+    return total
