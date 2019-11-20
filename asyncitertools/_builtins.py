@@ -88,7 +88,7 @@ class AsyncMapFunc(Protocol[T, R]):
 
 async def map(
     func: Union[SyncMapFunc, AsyncMapFunc],
-    *iterable: Union[Iterable[T], AsyncIterable[T]]
+    *iterable: Union[Iterable[T], AsyncIterable[T]],
 ) -> AsyncIterator[R]:
     args_iter = zip(*iterable)
     args = await anext(args_iter)
