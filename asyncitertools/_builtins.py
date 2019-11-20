@@ -49,18 +49,16 @@ async def map(
     args_iter = zip(*iterable)
     args = await anext(args_iter)
     result = func(*args)
-    try:
-        result = await result  # type: ignore
-    except TypeError:
-        yield result  # type: ignore
+    if isinstance(result, Awaitable):
+        yield await result
         async for args in args_iter:
             result = func(*args)
-            yield result  # type: ignore
+            yield await result
     else:
-        yield result  # type: ignore
+        yield result
         async for args in args_iter:
             result = func(*args)
-            yield await result  # type: ignore
+            yield result
 
 
 async def filter(
