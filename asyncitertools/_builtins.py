@@ -1,16 +1,27 @@
-from typing import Iterable, AsyncIterable, Union, AsyncIterator, TypeVar, Awaitable, Callable, Tuple
+from typing import (
+    Iterable,
+    AsyncIterable,
+    Union,
+    AsyncIterator,
+    TypeVar,
+    Awaitable,
+    Callable,
+    Tuple,
+)
 from typing_extensions import Protocol
 
 
-T = TypeVar('T')
-R = TypeVar('R')
+T = TypeVar("T")
+R = TypeVar("R")
 
 
 async def anext(iterator: AsyncIterator[T]) -> T:
     return await iterator.__anext__()
 
 
-async def zip(*iters: Union[Iterable[T], AsyncIterable[T]]) -> AsyncIterator[Tuple[T, ...]]:
+async def zip(
+    *iters: Union[Iterable[T], AsyncIterable[T]]
+) -> AsyncIterator[Tuple[T, ...]]:
     if not iters:
         return
     aiters = tuple(iter(it) for it in iters)
@@ -35,11 +46,13 @@ async def _aiter_sync(iterable: Iterable):
 
 
 class SyncMapFunc(Protocol[T, R]):
-    def __call__(self, *args: T) -> R: ...
+    def __call__(self, *args: T) -> R:
+        ...
 
 
 class AsyncMapFunc(Protocol[T, R]):
-    def __call__(self, *args: T) -> Awaitable[R]: ...
+    def __call__(self, *args: T) -> Awaitable[R]:
+        ...
 
 
 async def map(
@@ -63,7 +76,7 @@ async def map(
 
 async def filter(
     func: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]]],
-    iterable: Union[Iterable[T], AsyncIterable[T]]
+    iterable: Union[Iterable[T], AsyncIterable[T]],
 ) -> AsyncIterator[T]:
     if func is None:
         async for item in iter(iterable):
@@ -90,8 +103,7 @@ async def filter(
 
 
 async def enumerate(
-    iterable: Union[Iterable[T], AsyncIterable[T]],
-    start=0
+    iterable: Union[Iterable[T], AsyncIterable[T]], start=0
 ) -> AsyncIterator[Tuple[int, T]]:
     count = start
     async for item in iter(iterable):
