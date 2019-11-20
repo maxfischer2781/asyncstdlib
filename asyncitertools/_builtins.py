@@ -64,7 +64,7 @@ async def map(
 async def filter(
     func: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]]],
     iterable: Union[Iterable[T], AsyncIterable[T]]
-) -> AsyncIterator[R]:
+) -> AsyncIterator[T]:
     if func is None:
         async for item in iter(iterable):
             if item:
@@ -73,21 +73,19 @@ async def filter(
         item_iter = iter(iterable)
         item = await anext(item_iter)
         result = func(item)
-        try:
-            result = await result  # type: ignore
-        except TypeError:
-            if result:
-                yield item  # type: ignore
-            del result
-            async for item in item_iter:
-                if func(item):
-                    yield item
-        else:
-            if result:
-                yield item  # type: ignore
+        if isinstance(result, Awaitable):
+            if await result:
+                yield item
             del result
             async for item in item_iter:
                 if await func(item):  # type: ignore
+                    yield item
+        else:
+            if result:
+                yield item
+            del result
+            async for item in item_iter:
+                if func(item):
                     yield item
 
 
