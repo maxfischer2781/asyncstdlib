@@ -1,3 +1,5 @@
+import pytest
+
 import asyncitertools as a
 
 from .utility import sync, asyncify
@@ -50,6 +52,29 @@ async def test_map_aa():
     assert [value async for value in a.map(map_op, asyncify(range(5, 10, 2)))] == list(
         range(10, 20, 4)
     )
+
+
+@sync
+async def test_max_default():
+    assert await a.max((), default=3) == 3
+    assert await a.max((), key=lambda x: x, default=3) == 3
+    with pytest.raises(ValueError):
+        assert await a.max(()) == 3
+    with pytest.raises(ValueError):
+        assert await a.max((), key=lambda x: x) == 3
+
+
+@sync
+async def test_max_sa():
+    async def minus(x):
+        return -x
+
+    assert await a.max(asyncify((1, 2, 3, 4))) == 4
+    assert await a.max(asyncify((1, 4, 3, 2))) == 4
+    assert await a.max(asyncify((1, 2, 3, 4)), key=lambda x: -x) == 1
+    assert await a.max(asyncify((4, 2, 3, 1)), key=lambda x: -x) == 1
+    assert await a.max(asyncify((1, 2, 3, 4)), key=minus) == 1
+    assert await a.max(asyncify((4, 2, 3, 1)), key=minus) == 1
 
 
 @sync

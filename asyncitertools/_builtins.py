@@ -16,8 +16,24 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 
-async def anext(iterator: AsyncIterator[T]) -> T:
-    return await iterator.__anext__()
+class Sentinel:
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return self.name
+
+
+__ANEXT_DEFAULT = Sentinel("<no default>")
+
+
+async def anext(iterator: AsyncIterator[T], default=__ANEXT_DEFAULT) -> T:
+    try:
+        return await iterator.__anext__()
+    except StopAsyncIteration:
+        if default is __ANEXT_DEFAULT:
+            raise
+        return default
 
 
 async def all(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
@@ -87,6 +103,43 @@ async def map(
         async for args in args_iter:
             result = func(*args)
             yield result
+
+
+__MAX_DEFAULT = Sentinel("<no default>")
+
+
+async def max(
+    iterable: Union[Iterable[T], AsyncIterable[T]],
+    *,
+    key: Optional[Callable] = None,
+    default: T = __MAX_DEFAULT,
+) -> T:
+    item_iter = iter(iterable)
+    best = await anext(item_iter, default=__MAX_DEFAULT)
+    if best is __MAX_DEFAULT:
+        if default is __MAX_DEFAULT:
+            raise ValueError("max() arg is an empty sequence")
+        return default
+    if key is None:
+        async for item in item_iter:
+            if item > best:
+                best = item
+    else:
+        best_key = key(best)
+        if isinstance(best_key, Awaitable):
+            best_key = await best_key
+            async for item in item_iter:
+                item_key = await key(item)
+                if item_key > best_key:
+                    best = item
+                    best_key = item_key
+        else:
+            async for item in item_iter:
+                item_key = key(item)
+                if item_key > best_key:
+                    best = item
+                    best_key = item_key
+    return best
 
 
 async def filter(
