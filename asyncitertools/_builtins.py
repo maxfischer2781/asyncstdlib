@@ -74,17 +74,17 @@ async def filter(
         item = await anext(item_iter)
         result = func(item)
         try:
-            await result  # type: ignore
+            result = await result  # type: ignore
         except TypeError:
             if result:
-                yield result  # type: ignore
+                yield item  # type: ignore
             del result
             async for item in item_iter:
                 if func(item):
                     yield item
         else:
             if result:
-                yield result  # type: ignore
+                yield item  # type: ignore
             del result
             async for item in item_iter:
                 if await func(item):  # type: ignore
