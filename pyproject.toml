@@ -1,0 +1,24 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "asyncitertools"
+author = "Max Fischer"
+author-email = "maxfischer2781@gmail.com"
+home-page = "https://github.com/maxfischer2781/asyncitertools"
+description-file = "README.rst"
+keywords = "async itertools"
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires = ["typing_extensions"]
+
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest >=4.3.0",
+    "flake8",
+    "flake8-bugbear",
+]
+doc = ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-contentui"]
+
+[tool.flit.metadata.urls]
+Documentation = "https://asyncitertools.readthedocs.io/en/latest/"
