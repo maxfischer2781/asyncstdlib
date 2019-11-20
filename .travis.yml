@@ -1,0 +1,24 @@
+dist: xenial
+language: python
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
+  - "pypy3"
+os:
+  - linux
+before_script:
+  - python -m pip install pip --upgrade
+  - python -m pip list
+  - export PYTHONHASHSEED=${PYTHONHASHSEED:-${RANDOM}}
+  - echo "export PYTHONHASHSEED=${PYTHONHASHSEED}"
+  - pip install .[test]
+  - pip install codecov
+  - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
+  - export PYTEST_ADDOPTS=-v
+script:
+  - python -m flake8
+  - black --check asyncitertools unittests
+  - python $DEBUG -m coverage run setup.py test
+after_success:
+  - coverage report && codecov
