@@ -4,11 +4,15 @@ from .utility import sync, asyncify
 
 
 @sync
-async def test_enumerate():
-    async for count, value in a.enumerate(asyncify(range(5))):
-        assert count == value
-    async for count, value in a.enumerate(asyncify(range(5, 10)), start=5):
-        assert count == value
+async def test_all():
+    assert await a.all(asyncify((True, True, True)))
+    assert not await a.all(asyncify((True, False, True)))
+
+
+@sync
+async def test_any():
+    assert await a.any(asyncify((False, True, False)))
+    assert not await a.any(asyncify((False, False, False)))
 
 
 @sync
@@ -86,3 +90,11 @@ async def test_filter_aa():
     assert [
         value async for value in a.filter(map_op, asyncify(range(4, 10, 2)))
     ] == list(range(4, 10, 2))
+
+
+@sync
+async def test_enumerate():
+    async for count, value in a.enumerate(asyncify(range(5))):
+        assert count == value
+    async for count, value in a.enumerate(asyncify(range(5, 10)), start=5):
+        assert count == value

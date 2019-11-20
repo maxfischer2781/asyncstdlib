@@ -19,6 +19,20 @@ async def anext(iterator: AsyncIterator[T]) -> T:
     return await iterator.__anext__()
 
 
+async def all(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
+    async for element in iterable:
+        if not element:
+            return False
+    return True
+
+
+async def any(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
+    async for element in iterable:
+        if element:
+            return True
+    return False
+
+
 async def zip(
     *iters: Union[Iterable[T], AsyncIterable[T]]
 ) -> AsyncIterator[Tuple[T, ...]]:
