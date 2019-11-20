@@ -78,6 +78,29 @@ async def test_max_sa():
 
 
 @sync
+async def test_min_default():
+    assert await a.min((), default=3) == 3
+    assert await a.min((), key=lambda x: x, default=3) == 3
+    with pytest.raises(ValueError):
+        assert await a.min(()) == 3
+    with pytest.raises(ValueError):
+        assert await a.min((), key=lambda x: x) == 3
+
+
+@sync
+async def test_min_sa():
+    async def minus(x):
+        return -x
+
+    assert await a.min(asyncify((1, 2, 3, 4))) == 1
+    assert await a.min(asyncify((4, 1, 3, 2))) == 1
+    assert await a.min(asyncify((1, 2, 3, 4)), key=lambda x: -x) == 4
+    assert await a.min(asyncify((4, 2, 3, 1)), key=lambda x: -x) == 4
+    assert await a.min(asyncify((1, 2, 3, 4)), key=minus) == 4
+    assert await a.min(asyncify((4, 2, 3, 1)), key=minus) == 4
+
+
+@sync
 async def test_filter_as():
     async def map_op(value):
         return value % 2 == 0

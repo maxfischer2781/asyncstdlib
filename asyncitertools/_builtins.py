@@ -142,6 +142,40 @@ async def max(
     return best
 
 
+async def min(
+    iterable: Union[Iterable[T], AsyncIterable[T]],
+    *,
+    key: Optional[Callable] = None,
+    default: T = __MAX_DEFAULT,
+) -> T:
+    item_iter = iter(iterable)
+    best = await anext(item_iter, default=__MAX_DEFAULT)
+    if best is __MAX_DEFAULT:
+        if default is __MAX_DEFAULT:
+            raise ValueError("max() arg is an empty sequence")
+        return default
+    if key is None:
+        async for item in item_iter:
+            if item < best:
+                best = item
+    else:
+        best_key = key(best)
+        if isinstance(best_key, Awaitable):
+            best_key = await best_key
+            async for item in item_iter:
+                item_key = await key(item)
+                if item_key < best_key:
+                    best = item
+                    best_key = item_key
+        else:
+            async for item in item_iter:
+                item_key = key(item)
+                if item_key < best_key:
+                    best = item
+                    best_key = item_key
+    return best
+
+
 async def filter(
     func: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]], None],
     iterable: Union[Iterable[T], AsyncIterable[T]],
