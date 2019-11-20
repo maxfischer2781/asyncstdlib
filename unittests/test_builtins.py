@@ -93,6 +93,19 @@ async def test_filter_aa():
 
 
 @sync
+async def test_filter_na():
+    assert [value async for value in a.filter(None, asyncify(range(5)))] == list(
+        range(1, 5)
+    )
+    assert [value async for value in a.filter(None, asyncify(range(5, 10, 2)))] == list(
+        range(5, 10, 2)
+    )
+    assert [value async for value in a.filter(None, asyncify(range(-10, 10)))] == list(
+        range(-10, 0)
+    ) + list(range(1, 10))
+
+
+@sync
 async def test_enumerate():
     async for count, value in a.enumerate(asyncify(range(5))):
         assert count == value

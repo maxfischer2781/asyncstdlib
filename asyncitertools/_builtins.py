@@ -7,6 +7,7 @@ from typing import (
     Awaitable,
     Callable,
     Tuple,
+    Optional,
 )
 from typing_extensions import Protocol
 
@@ -89,7 +90,7 @@ async def map(
 
 
 async def filter(
-    func: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]]],
+    func: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]], None],
     iterable: Union[Iterable[T], AsyncIterable[T]],
 ) -> AsyncIterator[T]:
     if func is None:
