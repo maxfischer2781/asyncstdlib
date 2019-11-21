@@ -60,7 +60,6 @@ async def zip(
     if not iters:
         return
     aiters = (*(iter(it) for it in iters),)
-    print(aiters)
     try:
         while True:
             yield (*[await anext(it) for it in aiters],)
