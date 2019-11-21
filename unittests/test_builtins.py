@@ -166,3 +166,16 @@ async def test_sum():
     assert await a.sum(asyncify((1, 2, 3, 4))) == 10
     assert await a.sum(asyncify((4, 3, 2, 1)), start=5) == 15
     assert await a.sum((), start=5) == 5
+
+
+@sync
+async def test_types():
+    assert await a.list(asyncify(range(5))) == list(range(5))
+    assert await a.list(asyncify(range(0))) == list(range(0))
+    assert await a.list() == list()
+    assert await a.tuple(asyncify(range(5))) == tuple(range(5))
+    assert await a.tuple(asyncify(range(0))) == tuple(range(0))
+    assert await a.tuple() == tuple()
+    assert await a.set(asyncify(range(5))) == set(range(5))
+    assert await a.set(asyncify(range(0))) == set(range(0))
+    assert await a.set() == set()
