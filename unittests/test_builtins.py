@@ -196,4 +196,7 @@ async def test_types():
         zip((str(i) for i in range(0)), range(0))
     )
     assert await a.dict(b=3) == dict(b=3)
+    assert await a.dict(a.zip((str(i) for i in range(5)), range(5)), b=3) == dict(
+        zip((str(i) for i in range(5)), range(5)), b=3
+    )
     assert await a.dict() == dict()
