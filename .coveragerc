@@ -1,0 +1,21 @@
+[run]
+source = asyncitertools
+branch = TRUE
+cover_pylib = FALSE
+parallel = False
+
+[report]
+exclude_lines =
+    # default
+    pragma: no cover
+    # python debug/internals
+    def __repr__
+    if __debug__:
+    assert
+    raise AssertionError
+    raise NotImplementedError
+    return NotImplemented
+    if __name__ == "__main__"
+    if __name__ == '__main__'
+    @overload
+    if TYPE_CHECKING
