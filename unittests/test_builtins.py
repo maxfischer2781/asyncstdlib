@@ -18,6 +18,16 @@ async def test_any():
 
 
 @sync
+async def test_zip():
+    async for va, vb in a.zip(asyncify(range(5)), range(5)):
+        assert va == vb
+    async for idx, vs in a.enumerate(a.zip(asyncify(range(5)), range(5))):
+        assert vs[0] == vs[1] == idx
+    async for _ in a.zip():
+        assert False
+
+
+@sync
 async def test_map_as():
     async def map_op(value):
         return value * 2
