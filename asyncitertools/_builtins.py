@@ -239,7 +239,8 @@ async def tuple(
 
 
 async def dict(
-    iterable: Union[Iterable[Tuple[str, T]], AsyncIterable[Tuple[str, T]]], **kwargs: T
+    iterable: Union[Iterable[Tuple[str, T]], AsyncIterable[Tuple[str, T]], None] = None,
+    **kwargs: T,
 ) -> Dict[str, T]:
     if iterable is None:
         return {**kwargs}

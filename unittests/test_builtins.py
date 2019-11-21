@@ -179,3 +179,10 @@ async def test_types():
     assert await a.set(asyncify(range(5))) == set(range(5))
     assert await a.set(asyncify(range(0))) == set(range(0))
     assert await a.set() == set()
+    assert await a.dict(a.zip((str(i) for i in range(5)), range(5))) == dict(
+        zip((str(i) for i in range(5)), range(5))
+    )
+    assert await a.dict(a.zip((str(i) for i in range(0)), range(0))) == dict(
+        zip((str(i) for i in range(0)), range(0))
+    )
+    assert await a.dict() == dict()
