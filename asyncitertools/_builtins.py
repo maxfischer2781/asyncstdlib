@@ -230,13 +230,17 @@ async def list(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> L
     return [element async for element in iter(iterable)]
 
 
-async def tuple(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> Tuple[T, ...]:
+async def tuple(
+    iterable: Union[Iterable[T], AsyncIterable[T], None] = None
+) -> Tuple[T, ...]:
     if iterable is None:
         return ()
     return (*[element async for element in iter(iterable)],)
 
 
-async def dict(iterable: Union[Iterable[Tuple[str, T]], AsyncIterable[Tuple[str, T]]], **kwargs: T) -> Dict[str, T]:
+async def dict(
+    iterable: Union[Iterable[Tuple[str, T]], AsyncIterable[Tuple[str, T]]], **kwargs: T
+) -> Dict[str, T]:
     if iterable is None:
         return {**kwargs}
     base_dict = {key: value async for key, value in iter(iterable)}
