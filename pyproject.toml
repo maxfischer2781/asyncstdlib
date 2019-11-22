@@ -3,7 +3,7 @@ requires = ["flit"]
 build-backend = "flit.buildapi"
 
 [tool.flit.metadata]
-module = "asyncitertools"
+module = "asyncstdlib"
 author = "Max Fischer"
 author-email = "maxfischer2781@gmail.com"
 home-page = "https://github.com/maxfischer2781/asyncstdlib"
