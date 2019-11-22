@@ -1,5 +1,5 @@
 """itertools in an async world"""
-from ._builtins import (
+from .builtins import (
     zip,
     map,
     filter,
