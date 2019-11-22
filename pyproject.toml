@@ -6,7 +6,7 @@ build-backend = "flit.buildapi"
 module = "asyncitertools"
 author = "Max Fischer"
 author-email = "maxfischer2781@gmail.com"
-home-page = "https://github.com/maxfischer2781/asyncitertools"
+home-page = "https://github.com/maxfischer2781/asyncstdlib"
 description-file = "README.rst"
 keywords = "async itertools"
 classifiers = ["License :: OSI Approved :: MIT License"]
@@ -22,4 +22,4 @@ test = [
 doc = ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-contentui"]
 
 [tool.flit.metadata.urls]
-Documentation = "https://asyncitertools.readthedocs.io/en/latest/"
+Documentation = "https://asyncstdlib.readthedocs.io/en/latest/"

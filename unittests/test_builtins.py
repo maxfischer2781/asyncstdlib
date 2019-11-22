@@ -1,6 +1,6 @@
 import pytest
 
-import asyncitertools as a
+import asyncstdlib as a
 
 from .utility import sync, asyncify
 

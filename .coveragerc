@@ -1,5 +1,5 @@
 [run]
-source = asyncitertools
+source = asyncstdlib
 branch = TRUE
 cover_pylib = FALSE
 parallel = False
