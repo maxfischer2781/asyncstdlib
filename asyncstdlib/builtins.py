@@ -11,6 +11,7 @@ from typing import (
     Set,
     Optional,
     Dict,
+    Any,
 )
 
 from typing_extensions import Protocol
@@ -153,15 +154,6 @@ async def map(
 
     The ``function`` may be a regular or async callable.
     Multiple ``iterable`` may be mixed regular and async iterables.
-
-    .. note::
-
-        Whether ``func`` is regular or async is determined by its return type.
-        This supports async-producing factories, such as an ``async def``
-        function wrapped in :py:class:`functools.partial`.
-        However, this means that the result of ``func`` must consistently be *either*
-        regular or async,
-        and it is not possible to return an awaitable without wrapping it.
     """
     args_iter = zip(*iterable)
     args = await anext(args_iter)
@@ -184,7 +176,7 @@ __MAX_DEFAULT = Sentinel("<no default>")
 async def max(
     iterable: Union[Iterable[T], AsyncIterable[T]],
     *,
-    key: Optional[Callable] = None,
+    key: Optional[Callable[[T], Any]] = None,
     default: T = __MAX_DEFAULT,
 ) -> T:
     """
@@ -233,7 +225,7 @@ async def max(
 async def min(
     iterable: Union[Iterable[T], AsyncIterable[T]],
     *,
-    key: Optional[Callable] = None,
+    key: Optional[Callable[[T], Any]] = None,
     default: T = __MAX_DEFAULT,
 ) -> T:
     """

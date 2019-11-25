@@ -11,9 +11,10 @@
    :maxdepth: 1
    :caption: Contents:
 
+   source/api/asyncstdlib
    source/glossary
 
-The missing ``itertools`` and ``builtins`` for all your ``async`` iteration needs.
+The missing Python standard library functionality for all your ``async`` iteration needs.
 
 Indices and tables
 ==================

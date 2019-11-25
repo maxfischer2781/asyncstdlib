@@ -19,7 +19,7 @@ test = [
     "flake8-bugbear",
     "black; implementation_name=='cpython'",
 ]
-doc = ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-contentui", "sphinxcontrib-trio"]
+doc = ["sphinx", "python-docs-theme", "sphinxcontrib-contentui", "sphinxcontrib-trio"]
 
 [tool.flit.metadata.urls]
 Documentation = "https://asyncstdlib.readthedocs.io/en/latest/"
