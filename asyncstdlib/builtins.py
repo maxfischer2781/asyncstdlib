@@ -21,8 +21,12 @@ T = TypeVar("T", contravariant=True)
 R = TypeVar("R", covariant=True)
 
 
+AnyIterable = Union[Iterable[T], AsyncIterable[T]]
+
+
 class Sentinel:
     """Placeholder with configurable ``repr``"""
+
     def __init__(self, name):
         self.name = name
 
@@ -42,7 +46,7 @@ async def anext(iterator: AsyncIterator[T], default=__ANEXT_DEFAULT) -> T:
         return default
 
 
-async def all(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
+async def all(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`True` if none of the elements of the (async) ``iterable`` are false
     """
@@ -52,7 +56,7 @@ async def all(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
     return True
 
 
-async def any(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
+async def any(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`False` if none of the elements of the (async) ``iterable`` are true
     """
@@ -62,9 +66,7 @@ async def any(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
     return False
 
 
-async def zip(
-    *iterables: Union[Iterable[T], AsyncIterable[T]]
-) -> AsyncIterator[Tuple[T, ...]]:
+async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
     """
     Create an async iterator that aggregates elements from each of the (async) iterables
 
@@ -92,7 +94,7 @@ async def zip(
         return
 
 
-def iter(subject: Union[Iterable[T], AsyncIterable[T]]) -> AsyncIterator[T]:
+def iter(subject: AnyIterable[T]) -> AsyncIterator[T]:
     """
     An async iterator object yielding elements from ``subject``
 
@@ -124,19 +126,20 @@ async def _aiter_sync(iterable: Iterable):
 
 class SyncVariadic(Protocol[T, R]):
     """Type of a ``def`` function taking any number of arguments"""
+
     def __call__(self, *args: T) -> R:
         ...
 
 
 class AsyncVariadic(Protocol[T, R]):
     """Type of an ``async def`` function taking any number of arguments"""
+
     def __call__(self, *args: T) -> Awaitable[R]:
         ...
 
 
 async def map(
-    function: Union[SyncVariadic, AsyncVariadic],
-    *iterable: Union[Iterable[T], AsyncIterable[T]],
+    function: Union[SyncVariadic, AsyncVariadic], *iterable: AnyIterable[T],
 ) -> AsyncIterator[R]:
     r"""
     An async iterator mapping an (async) function to items from (async) iterables
@@ -174,7 +177,7 @@ __MAX_DEFAULT = Sentinel("<no default>")
 
 
 async def max(
-    iterable: Union[Iterable[T], AsyncIterable[T]],
+    iterable: AnyIterable[T],
     *,
     key: Optional[Callable[[T], Any]] = None,
     default: T = __MAX_DEFAULT,
@@ -223,7 +226,7 @@ async def max(
 
 
 async def min(
-    iterable: Union[Iterable[T], AsyncIterable[T]],
+    iterable: AnyIterable[T],
     *,
     key: Optional[Callable[[T], Any]] = None,
     default: T = __MAX_DEFAULT,
@@ -273,7 +276,7 @@ async def min(
 
 async def filter(
     function: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]], None],
-    iterable: Union[Iterable[T], AsyncIterable[T]],
+    iterable: AnyIterable[T],
 ) -> AsyncIterator[T]:
     """
     An async iterator of elements in an (async) iterable filtered by an (async) callable
@@ -308,9 +311,7 @@ async def filter(
                     yield item
 
 
-async def enumerate(
-    iterable: Union[Iterable[T], AsyncIterable[T]], start=0
-) -> AsyncIterator[Tuple[int, T]]:
+async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[int, T]]:
     """
     An async iterator of a tuple of count and element in an (async) iterable
 
@@ -322,7 +323,7 @@ async def enumerate(
         count += 1
 
 
-async def sum(iterable: Union[Iterable[T], AsyncIterable[T]], start: T = 0) -> T:
+async def sum(iterable: AnyIterable[T], start: T = 0) -> T:
     """
     Sum of ``start`` and all elements in the (async) iterable
     """
