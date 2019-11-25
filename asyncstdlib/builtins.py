@@ -17,8 +17,8 @@ from typing import (
 from typing_extensions import Protocol
 
 
-T = TypeVar("T")
-R = TypeVar("R")
+T = TypeVar("T", contravariant=True)
+R = TypeVar("R", covariant=True)
 
 
 class Sentinel:
@@ -46,7 +46,7 @@ async def all(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
     """
     Return :py:data:`True` if none of the elements of the (async) ``iterable`` are false
     """
-    async for element in iterable:
+    async for element in iter(iterable):
         if not element:
             return False
     return True
@@ -56,7 +56,7 @@ async def any(iterable: Union[Iterable[T], AsyncIterable[T]]) -> bool:
     """
     Return :py:data:`False` if none of the elements of the (async) ``iterable`` are true
     """
-    async for element in iterable:
+    async for element in iter(iterable):
         if element:
             return True
     return False
@@ -372,5 +372,5 @@ async def set(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> Se
     Create a :py:class:`set` from an (async) iterable
     """
     if iterable is None:
-        return {a for a in ()}
+        return {a for a in ()}  # type: ignore
     return {element async for element in iter(iterable)}
