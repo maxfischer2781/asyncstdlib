@@ -15,6 +15,7 @@ from .builtins import (
     set,
     tuple,
 )
+from .functools import reduce
 
 __version__ = "0.1.0"
 
@@ -33,4 +34,5 @@ __all__ = [
     "dict",
     "set",
     "tuple",
+    "reduce",
 ]
