@@ -105,7 +105,7 @@ def iter(subject: Union[Iterable[T], AsyncIterable[T]]) -> AsyncIterator[T]:
     method with integer arguments starting at 0).
     In either case, an async iterator is returned.
 
-    .. warning::
+    .. note::
 
         The two-argument form of :py:func:`iter` as ``iter(subject, sentinel)``
         is currently not supported.

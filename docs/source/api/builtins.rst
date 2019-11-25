@@ -29,6 +29,9 @@ Iterator reducing
 Iterator transforming
 =====================
 
+.. autofunction:: iter(iterable: (async) iter T)
+    :async-for: :T
+
 .. autofunction:: filter(function: (T, ...) → (await) bool, iterable: (async) iter T)
     :async-for: :T, ...
 
