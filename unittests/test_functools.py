@@ -1,5 +1,7 @@
 import functools
 
+import pytest
+
 import asyncstdlib as a
 
 from .utility import sync, asyncify
@@ -27,3 +29,14 @@ async def test_reduce():
             assert await a.reduce(reducer, itertype([]), 42) == functools.reduce(
                 lambda x, y: x + y, [], 42
             )
+
+
+@sync
+async def test_reduce_misuse():
+    with pytest.raises(TypeError):
+        await a.reduce(lambda x, y: x + y, [])
+    with pytest.raises(TypeError):
+        await a.reduce(lambda x, y: x + y, asyncify([]))
+    # make sure the stdlib behaves the same
+    with pytest.raises(TypeError):
+        functools.reduce(lambda x, y: x + y, [])
