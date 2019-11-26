@@ -6,7 +6,7 @@ The builtins library
     :synopsis: async builtins variants
 
 The :py:mod:`asyncstdlib.builtins` library implements
-Python's :ref:`built-in-funcs` for (async) functions and iterables.
+Python's :ref:`built-in-funcs` for (async) functions and (async) iterables.
 
 Iterator reducing
 =================

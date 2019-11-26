@@ -17,7 +17,7 @@ async def reduce(
     """
     Reduce an (async) iterable by cumulative application of an (async) function
 
-    :raises StopAsyncIteration: if ``iterable`` is empty and ``initial`` is not given
+    :raises TypeError: if ``iterable`` is empty and ``initial`` is not given
 
     Applies the ``function`` from the beginning of ``iterable``, as if executing
     ``await function(current, anext(iterable))`` until ``iterable`` is exhausted.

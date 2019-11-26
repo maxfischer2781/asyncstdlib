@@ -10,6 +10,7 @@ The ``async`` standard library
    :hidden:
 
    builtins
+   functools
 
 The ``asyncstdlib`` library re-implements functions and classes of the Python
 standard library to make them compatible with ``async`` callables, iterables
@@ -44,3 +45,7 @@ Async Neutral Modules
     Replicates any :ref:`built-in-funcs` that take an :term:`iterable`,
     such as :py:func:`~asyncstdlib.builtins.zip`, :py:func:`~asyncstdlib.builtins.sum`
     or :py:func:`~asyncstdlib.builtins.list`.
+
+:py:mod:`asyncstdlib.functools`
+    Replicates any :py:mod:`functools` that take an :term:`iterable`,
+    which is just :py:func:`~asyncstdlib.functools.reduce`.
