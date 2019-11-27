@@ -131,7 +131,7 @@ def lru_cache(maxsize: int = 128, typed: bool = False):
 
 
 class CallKey:
-    __slots__ = '_hash', 'values'
+    __slots__ = "_hash", "values"
 
     def __init__(self, values):
         self._hash = hash(values)

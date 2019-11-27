@@ -51,7 +51,7 @@ async def test_lru_cache_bounded():
         calls.append(args[0])
         return args, kwargs
 
-    for kwargs in ({}, {'foo': 'bar'}, {'foo': 'bar', 'baz': 12}):
+    for kwargs in ({}, {"foo": "bar"}, {"foo": "bar", "baz": 12}):
         for val in range(4):
             assert await pingpong(val, **kwargs) == ((val,), kwargs)
             assert pingpong.cache_info().hits == 0
@@ -81,7 +81,7 @@ async def test_lru_cache_unbounded():
         calls.append(args[0])
         return args, kwargs
 
-    for kwargs in ({}, {'foo': 'bar'}, {'foo': 'bar', 'baz': 12}):
+    for kwargs in ({}, {"foo": "bar"}, {"foo": "bar", "baz": 12}):
         for val in range(4):
             assert await pingpong(val, **kwargs) == ((val,), kwargs)
             assert pingpong.cache_info().hits == 0
