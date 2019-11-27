@@ -127,3 +127,39 @@ async def test_lru_cache_empty():
     pingpong.cache_clear()
     assert pingpong.cache_info().hits == 0
     assert pingpong.cache_info().misses == 0
+
+
+@sync
+async def test_lru_cache_typed():
+    @a.lru_cache(maxsize=4, typed=True)
+    async def pingpong(arg):
+        return arg
+
+    for val in range(20):
+        assert await pingpong(val) == val
+        assert await pingpong(float(val)) == val
+        assert pingpong.cache_info().misses == (val + 1) * 2
+        assert pingpong.cache_info().hits == val * 2
+        assert await pingpong(val) == val
+        assert await pingpong(float(val)) == val
+        assert pingpong.cache_info().misses == (val + 1) * 2
+        assert pingpong.cache_info().hits == (val + 1) * 2
+
+
+@sync
+async def test_lru_cache_bare():
+    @a.lru_cache
+    async def pingpong(arg):
+        return arg
+
+    # check that we are properly wrapped
+    assert pingpong.cache_info().hits == 0
+    assert pingpong.cache_info().misses == 0
+
+
+@sync
+async def test_lru_cache_misuse():
+    with pytest.raises(TypeError):
+        @a.lru_cache(maxsize=1.5)
+        async def pingpong(arg):
+            return arg
