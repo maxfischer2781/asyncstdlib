@@ -119,7 +119,12 @@ def lru_cache(maxsize: int = 128, typed: bool = False):
         )
 
     def lru_decorator(function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
-        wrapper = _bounded_lru(function=function, maxsize=maxsize, typed=typed)
+        if maxsize is None:
+            wrapper = _unbound_lru(function=function, typed=typed)
+        elif maxsize == 0:
+            wrapper = _empty_lru(function=function)
+        else:
+            wrapper = _bounded_lru(function=function, maxsize=maxsize, typed=typed)
         return update_wrapper(wrapper, function)
 
     return lru_decorator

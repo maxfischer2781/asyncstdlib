@@ -73,6 +73,37 @@ async def test_lru_cache_bounded():
 
 
 @sync
+async def test_lru_cache_unbounded():
+    calls = []
+
+    @a.lru_cache(maxsize=None)
+    async def pingpong(*args, **kwargs):
+        calls.append(args[0])
+        return args, kwargs
+
+    for kwargs in ({}, {'foo': 'bar'}, {'foo': 'bar', 'baz': 12}):
+        for val in range(4):
+            assert await pingpong(val, **kwargs) == ((val,), kwargs)
+            assert pingpong.cache_info().hits == 0
+            assert pingpong.cache_info().misses == val + 1
+        for idx in range(5):
+            for val in range(4):
+                assert await pingpong(val, **kwargs) == ((val,), kwargs)
+            assert len(calls) == 4
+            assert pingpong.cache_info().hits == (idx + 1) * 4
+        for idx in range(5):
+            print(idx)
+            for val in range(4, 9):
+                assert await pingpong(val, val, **kwargs) == ((val, val), kwargs)
+            assert len(calls) == 9
+
+        calls.clear()
+        pingpong.cache_clear()
+        assert pingpong.cache_info().hits == 0
+        assert pingpong.cache_info().misses == 0
+
+
+@sync
 async def test_lru_cache_empty():
     calls = []
 
