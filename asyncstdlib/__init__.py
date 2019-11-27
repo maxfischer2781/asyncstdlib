@@ -15,7 +15,7 @@ from .builtins import (
     set,
     tuple,
 )
-from .functools import reduce
+from .functools import reduce, lru_cache
 
 __version__ = "0.1.0"
 
@@ -35,4 +35,5 @@ __all__ = [
     "set",
     "tuple",
     "reduce",
+    "lru_cache",
 ]

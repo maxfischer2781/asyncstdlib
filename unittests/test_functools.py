@@ -40,3 +40,31 @@ async def test_reduce_misuse():
     # make sure the stdlib behaves the same
     with pytest.raises(TypeError):
         functools.reduce(lambda x, y: x + y, [])
+
+
+@sync
+async def test_lru_cache_bounded():
+    calls = []
+
+    @a.lru_cache(maxsize=4)
+    async def pingpong(value):
+        calls.append(value)
+        return value
+
+    for val in range(4):
+        assert await pingpong(val) == val
+        assert pingpong.cache_info().hits == 0
+        assert pingpong.cache_info().misses == val + 1
+    for idx in range(5):
+        for val in range(4):
+            assert await pingpong(val) == val
+        assert len(calls) == 4
+        assert pingpong.cache_info().hits == (idx + 1) * 4
+    for idx in range(5):
+        for val in range(4, 9):
+            assert await pingpong(val) == val
+        assert len(calls) == (idx + 1) * 5 + 4
+
+    pingpong.cache_clear()
+    assert pingpong.cache_info().hits == 0
+    assert pingpong.cache_info().misses == 0

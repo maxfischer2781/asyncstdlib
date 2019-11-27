@@ -2,6 +2,10 @@ from typing import Callable, TypeVar, Awaitable, Union
 
 from .builtins import iter, anext, AnyIterable, Sentinel
 
+from ._lrucache import lru_cache, CacheInfo, LRUAsyncCallable
+
+__all__ = ["lru_cache", "CacheInfo", "LRUAsyncCallable", "reduce"]
+
 
 T = TypeVar("T")
 
