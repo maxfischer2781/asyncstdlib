@@ -62,7 +62,7 @@ async def test_lru_cache_bounded():
         assert pingpong.cache_info().hits == (idx + 1) * 4
     for idx in range(5):
         for val in range(4, 9):
-            assert await pingpong(val) == val
+            assert await pingpong((val, val)) == (val, val)
         assert len(calls) == (idx + 1) * 5 + 4
 
     pingpong.cache_clear()

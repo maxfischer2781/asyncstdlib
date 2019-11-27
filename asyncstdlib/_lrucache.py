@@ -125,12 +125,12 @@ def lru_cache(maxsize: int = 128, typed: bool = False):
     return lru_decorator
 
 
-class CallKey(list):
-    __slots__ = ("_hash",)
+class CallKey:
+    __slots__ = '_hash', 'values'
 
-    def __new__(cls, values):
-        self = super().__new__(values)
+    def __init__(self, values):
         self._hash = hash(values)
+        self.values = values
 
     def __hash__(self):
         return self._hash
