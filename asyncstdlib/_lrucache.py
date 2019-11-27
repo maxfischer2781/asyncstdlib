@@ -140,19 +140,27 @@ class CallKey:
     def __hash__(self):
         return self._hash
 
+    def __eq__(self, other):
+        return type(self) is type(other) and self.values == other.values
+
     # DEVIATION: fast_types tuple vs. set contains is faster +40%/pypy vs. +20%/cpython
     @classmethod
     def from_call(
-        cls, args: Tuple, kwds: Dict, typed: bool, fast_types=(int, str),
+        cls,
+        args: Tuple,
+        kwds: Dict,
+        typed: bool,
+        fast_types=(int, str),
+        kwarg_sentinel=object(),
     ) -> "Union[CallKey, int, str]":
-        key = args if not kwds else (*args, object(), *kwds.items())
+        key = args if not kwds else (*args, kwarg_sentinel, *kwds.items())
         if typed:
             key += (
                 tuple(map(type, args))
                 if not kwds
                 else (*map(type, args), *map(type, kwds.values()))
             )
-        elif key and type(key[0]) in fast_types:
+        elif len(key) == 1 and type(key[0]) in fast_types:
             return key[0]
         return cls(key)
 
