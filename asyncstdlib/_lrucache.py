@@ -152,7 +152,7 @@ class CallKey:
         return cls(key)
 
 
-def _empty_lru(function: Callable[..., Awaitable[R]]) -> Callable[..., Awaitable[R]]:
+def _empty_lru(function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
     """Wrap the async ``function`` in an async LRU cache without any capacity"""
     # cache statistics
     misses = 0
@@ -176,7 +176,7 @@ def _empty_lru(function: Callable[..., Awaitable[R]]) -> Callable[..., Awaitable
 
 def _unbound_lru(
     function: Callable[..., Awaitable[R]], typed: bool
-) -> Callable[..., Awaitable[R]]:
+) -> LRUAsyncCallable[R]:
     """Wrap the async ``function`` in an async LRU cache with infinite capacity"""
     # local lookup
     make_key = CallKey.from_call
@@ -281,7 +281,7 @@ class LinkedListNode:
 
 def _bounded_lru(
     function: Callable[..., Awaitable[R]], typed: bool, maxsize: int,
-) -> Callable[..., Awaitable[R]]:
+) -> LRUAsyncCallable[R]:
     """Wrap the async ``function`` in an async LRU cache with fixed capacity"""
     # local lookup
     make_key = CallKey.from_call
