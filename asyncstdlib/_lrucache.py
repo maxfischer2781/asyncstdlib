@@ -249,8 +249,6 @@ class LinkedListNode:
 
     def move_back(self, root: "LinkedListNode"):
         """Move this node to the back of the linked list"""
-        if root.prev is self:
-            return
         self.prev.next = self.next
         self.next.prev = self.prev
         # prev <- node -> next
