@@ -2,13 +2,13 @@ from typing import TypeVar, AsyncIterator, Iterable, AsyncIterable, Union
 
 from ._utility import public_module
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 AnyIterable = Union[Iterable[T], AsyncIterable[T]]
 
 
-@public_module('asyncstdlib.builtins')
+@public_module("asyncstdlib.builtins")
 def iter(subject: AnyIterable[T]) -> AsyncIterator[T]:
     """
     An async iterator object yielding elements from ``subject``

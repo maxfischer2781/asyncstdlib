@@ -160,6 +160,7 @@ async def test_lru_cache_bare():
 @sync
 async def test_lru_cache_misuse():
     with pytest.raises(TypeError):
+
         @a.lru_cache(maxsize=1.5)
         async def pingpong(arg):
             return arg
