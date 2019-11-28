@@ -16,7 +16,7 @@ from typing import (
 
 from typing_extensions import Protocol
 
-from ._core import iter, AnyIterable
+from ._core import iter, AnyIterable, ScopedIter
 
 
 T = TypeVar("T", contravariant=True)
@@ -85,12 +85,12 @@ async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
     """
     if not iterables:
         return
-    aiters = (*(iter(it) for it in iterables),)
-    try:
-        while True:
-            yield (*[await anext(it) for it in aiters],)
-    except StopAsyncIteration:
-        return
+    async with ScopedIter(*iterables) as aiters:
+        try:
+            while True:
+                yield (*[await anext(it) for it in aiters],)
+        except StopAsyncIteration:
+            return
 
 
 class SyncVariadic(Protocol[T, R]):
