@@ -2,7 +2,7 @@ import pytest
 
 import asyncstdlib as a
 
-from .utility import sync, asyncify
+from .utility import sync, asyncify, inside_loop
 
 
 @sync
@@ -25,6 +25,27 @@ async def test_zip():
         assert vs[0] == vs[1] == idx
     async for _ in a.zip():
         assert False
+
+
+@sync
+async def test_zip_close_immediately():
+    closed = False
+
+    class SomeIterable:
+        async def __aiter__(self):
+            try:
+                while True:
+                    yield 1
+            finally:
+                nonlocal closed
+                if await inside_loop():
+                    closed = True
+
+    zip_iter = a.zip(asyncify(range(-5, 0)), SomeIterable())
+    async for va, vb in zip_iter:
+        assert va < 0
+        assert vb == 1
+    assert closed is True
 
 
 @sync

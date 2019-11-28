@@ -11,35 +11,39 @@ async def asyncify(iterable: Iterable[T]) -> AsyncIterator[T]:
         yield value
 
 
-class UnfinishedTest(RuntimeError):
-    """A test did never finish"""
+class PingPong:
+    """Signal to the event loop which gets returned unchanged"""
+    def __await__(self):
+        return (yield self)
 
-    def __init__(self, test_case):
-        self.test_case = test_case
-        super().__init__(
-            "Test case %r did not finish" % getattr(test_case, "__name__", test_case)
-        )
+
+async def inside_loop():
+    """Test whether there is an active event loop available"""
+    signal = PingPong()
+    return await signal is signal
 
 
 def sync(test_case: Callable[..., Coroutine]):
     """
     Mark an ``async def`` test case to be run synchronously
 
-    This emulates a primitive "event loop" which does not
-    respond to any events.
+    This emulates a primitive "event loop" which only responds
+    to the :py:class:`PingPong` by sending it back.
     """
 
     @wraps(test_case)
     def run_sync(*args, **kwargs):
         coro = test_case(*args, **kwargs)
         try:
-            event = coro.send(None)
+            event = None
+            while True:
+                event = coro.send(event)
+                if not isinstance(event, PingPong):
+                    raise RuntimeError(
+                        f"test case {test_case} yielded an unexpected event {event}"
+                    )
         except StopIteration as e:
             result = e.args[0] if e.args else None
-        else:
-            if event:
-                raise RuntimeError(f"test case {test_case} yielded an event")
-            raise UnfinishedTest(test_case)
         return result
 
     return run_sync
