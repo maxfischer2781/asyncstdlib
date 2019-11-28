@@ -17,7 +17,25 @@ Iterator reducing
 Async Function Cache
 ====================
 
-.. autofunction:: lru_cache
+The regular :py:func:`functools.lru_cache` is not appropriate for
+async callables, such as an ``async def`` :term:`coroutine function`:
+their direct return value is an :term:`awaitable` instead of the desired value.
+This causes the cache to store only temporary helpers, not the actual values.
+
+The :py:func:`~asyncstdlib.functools.lru_cache` of :py:mod:`asyncstdlib`
+works only with async callables (it is not :term:`async neutral`).
+Notably, this includes regular callables that return an :term:`awaitable`.
+The cache can be applied as a decorator, both with and without arguments:
+
+.. code-block:: python3
+
+    @a.lru_cache
+    async def get_pep(num):
+        url = f'http://www.python.org/dev/peps/pep-{num:04}/'
+        request = await asynclib.get(url)
+        return request.body()
+
+.. autofunction:: lru_cache(maxsize: int = 128, typed: bool = False)
     :decorator:
 
 The cache tracks *call argument patterns* and maps them to observed return values.
@@ -30,7 +48,13 @@ and ``f(b=2, a=1)`` are considered three distinct patterns.
 In addition, exceptions are not return values. This allows retrying a long-running
 query that may fail, caching any *eventual* result for quick and reliable lookup.
 
-.. autoclass:: LRUAsyncCallable
+A wrapped async callable can be queried for its cache metadata,
+and allows clearing the entire cache. This can be useful to explicitly monitor
+cache performance, and to manage caches of unrestricted size.
+Note that the ``maxsize`` of a cache cannot be changed at runtime -- however,
+the ``__wrapped__`` callable may be wrapped with new a cache of better size.
+
+.. autoclass:: LRUAsyncCallable()
 
     .. py:attribute:: __wrapped__
 
