@@ -1,4 +1,14 @@
-from typing import TypeVar, AsyncIterator, Iterable, AsyncIterable, Union, Generic, Optional, Tuple, Iterator
+from typing import (
+    TypeVar,
+    AsyncIterator,
+    Iterable,
+    AsyncIterable,
+    Union,
+    Generic,
+    Optional,
+    Tuple,
+    Iterator,
+)
 
 from ._utility import public_module
 
@@ -39,7 +49,11 @@ async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
         yield item
 
 
-async def close_temporary(iterator: AsyncIterator, source: Union[AsyncIterator, AsyncIterable, Iterator, Iterable]):
+async def close_temporary(
+    iterator: AsyncIterator,
+    source: Union[AsyncIterator, AsyncIterable, Iterator, Iterable],
+):
+    """Close an ``iterator`` created from ``source`` if it is a separate object"""
     if iterator is not source:
         try:
             aclose = iterator.aclose()
@@ -51,12 +65,13 @@ async def close_temporary(iterator: AsyncIterator, source: Union[AsyncIterator, 
 
 class ScopedIter(Generic[T]):
     """Context manager that provides iterators and cleans up any created ones"""
+
     def __init__(self, *iterables: AnyIterable[T]):
         self._iterables = iterables
         self._iterators: Optional[Tuple[AsyncIterator[T], ...]] = None
 
     async def __aenter__(self) -> Tuple[AsyncIterator, ...]:
-        assert self._iterators is None, f'{self.__class__.__name__} is not re-entrant'
+        assert self._iterators is None, f"{self.__class__.__name__} is not re-entrant"
         self._iterators = (*(iter(it) for it in self._iterables),)
         return self._iterators
 

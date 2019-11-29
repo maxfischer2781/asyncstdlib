@@ -49,3 +49,21 @@ Async Neutral Modules
 :py:mod:`asyncstdlib.functools`
     Replicates any :py:mod:`functools` that take an :term:`iterable`,
     which is just :py:func:`~asyncstdlib.functools.reduce`.
+
+Async Iterable Cleanup
+======================
+
+Cleanup of async iterables is special in that :meth:`~agen.aclose` may require
+an active event loop. This is not given when garbage collection finalizes an
+async iterable via its :py:meth:`~object.__del__` method. Thus, async iterators
+should be cleaned up deterministically whenever possible (see `PEP 533`_ for details).
+
+Whenever an async iterator of :py:mod:`asyncstdlib` creates a temporary
+async iterator [#1]_ during iteration, it assumes sole ownership of this iterator.
+It guarantees to clean up such temporary async iterators as soon as
+the :py:mod:`asyncstdlib` async iterator itself is cleaned up.
+
+.. [#1]: An iterator ``aiter = a.iter(source)`` is assumed to be temporary if
+         it is a new object, that is ``aiter is not source`` holds true.
+
+.. _PEP 533: https://www.python.org/dev/peps/pep-0533/

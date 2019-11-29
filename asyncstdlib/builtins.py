@@ -16,7 +16,7 @@ from typing import (
 
 from typing_extensions import Protocol
 
-from ._core import iter, AnyIterable, ScopedIter
+from ._core import iter, AnyIterable, ScopedIter, close_temporary as _close_temporary
 
 
 T = TypeVar("T", contravariant=True)
@@ -49,20 +49,28 @@ async def all(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`True` if none of the elements of the (async) ``iterable`` are false
     """
-    async for element in iter(iterable):
-        if not element:
-            return False
-    return True
+    item_iter = iter(iterable)
+    try:
+        async for element in item_iter:
+            if not element:
+                return False
+        return True
+    finally:
+        await _close_temporary(item_iter, iterable)
 
 
 async def any(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`False` if none of the elements of the (async) ``iterable`` are true
     """
-    async for element in iter(iterable):
-        if element:
-            return True
-    return False
+    item_iter = iter(iterable)
+    try:
+        async for element in item_iter:
+            if element:
+                return True
+        return False
+    finally:
+        await _close_temporary(item_iter, iterable)
 
 
 async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
@@ -128,18 +136,21 @@ async def map(
     Multiple ``iterable`` may be mixed regular and async iterables.
     """
     args_iter = zip(*iterable)
-    args = await anext(args_iter)
-    result = function(*args)
-    if isinstance(result, Awaitable):
-        yield await result
-        async for args in args_iter:
-            result = function(*args)
+    try:
+        args = await anext(args_iter)
+        result = function(*args)
+        if isinstance(result, Awaitable):
             yield await result
-    else:
-        yield result
-        async for args in args_iter:
-            result = function(*args)
+            async for args in args_iter:
+                result = function(*args)
+                yield await result
+        else:
             yield result
+            async for args in args_iter:
+                result = function(*args)
+                yield result
+    finally:
+        await args_iter.aclose()
 
 
 __MAX_DEFAULT = Sentinel("<no default>")
@@ -256,28 +267,31 @@ async def filter(
     The ``function`` may be a regular or async callable.
     The ``iterable`` may be a regular or async iterable.
     """
-    if function is None:
-        async for item in iter(iterable):
-            if item:
-                yield item
-    else:
-        item_iter = iter(iterable)
-        item = await anext(item_iter)
-        result = function(item)
-        if isinstance(result, Awaitable):
-            if await result:
-                yield item
-            del result
+    item_iter = iter(iterable)
+    try:
+        if function is None:
             async for item in item_iter:
-                if await function(item):  # type: ignore
+                if item:
                     yield item
         else:
-            if result:
-                yield item
-            del result
-            async for item in item_iter:
-                if function(item):
+            item = await anext(item_iter)
+            result = function(item)
+            if isinstance(result, Awaitable):
+                if await result:
                     yield item
+                del result
+                async for item in item_iter:
+                    if await function(item):  # type: ignore
+                        yield item
+            else:
+                if result:
+                    yield item
+                del result
+                async for item in item_iter:
+                    if function(item):
+                        yield item
+    finally:
+        await _close_temporary(item_iter, iterable)
 
 
 async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[int, T]]:
@@ -287,9 +301,13 @@ async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[in
     The ``iterable`` may be a regular or async iterable.
     """
     count = start
-    async for item in iter(iterable):
-        yield count, item
-        count += 1
+    item_iter = iter(iterable)
+    try:
+        async for item in item_iter:
+            yield count, item
+            count += 1
+    finally:
+        await _close_temporary(item_iter, iterable)
 
 
 async def sum(iterable: AnyIterable[T], start: T = 0) -> T:

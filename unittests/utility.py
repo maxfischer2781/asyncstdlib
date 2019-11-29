@@ -13,6 +13,7 @@ async def asyncify(iterable: Iterable[T]) -> AsyncIterator[T]:
 
 class PingPong:
     """Signal to the event loop which gets returned unchanged"""
+
     def __await__(self):
         return (yield self)
 
