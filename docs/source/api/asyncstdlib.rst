@@ -54,7 +54,7 @@ Async Neutral Modules
 Async Iterable Cleanup
 ======================
 
-Cleanup of async iterables is special in that :meth:`~agen.aclose` may require
+Cleanup of async iterables is special in that :py:meth:`~agen.aclose` may require
 an active event loop. This is not given when garbage collection finalizes an
 async iterable via its :py:meth:`~object.__del__` method. Thus, async iterators
 should be cleaned up deterministically whenever possible (see `PEP 533`_ for details).
