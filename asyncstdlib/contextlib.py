@@ -1,5 +1,5 @@
-from typing import TypeVar, Generic, AsyncContextManager, AsyncGenerator, Callable
-from typing_extensions import Protocol
+from typing import TypeVar, Generic, AsyncGenerator, Callable
+from typing_extensions import Protocol, AsyncContextManager
 from functools import wraps
 
 
