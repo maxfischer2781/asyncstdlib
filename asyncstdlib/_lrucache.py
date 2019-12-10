@@ -17,6 +17,7 @@ from typing import (
     Any,
 )
 from functools import update_wrapper
+from collections import OrderedDict
 
 from typing_extensions import Protocol
 
@@ -226,72 +227,6 @@ def _unbound_lru(
     return wrapper
 
 
-class LinkedListNode:
-    """
-    Node in a circular LRU FIFO linked list
-
-    Nodes form a circular linked list of ``key, value`` pairs,
-    with an empty :py:meth:`root` node acting as an anchor.
-    The ``root.next`` node is the oldest member,
-    while the ``root.prev`` node is the youngest member of the list.
-    For example, a length-2 linked list forms the sequence
-    ``... node_a node_b root node_a ...``.
-    """
-
-    __slots__ = "next", "prev", "key", "value"
-
-    #: the node previously added, i.e. older than self
-    prev: "LinkedListNode"
-    #: the node added next, i.e. younger than self
-    next: "LinkedListNode"
-    key: Union[int, str, CallKey]
-    value: Any
-
-    def __init__(self, prev, next, key, value):
-        self.prev = prev
-        self.next = next
-        self.key = key
-        self.value = value
-
-    @classmethod
-    def root(cls) -> "LinkedListNode":
-        """Create a new root node whose ``key`` and ``value`` are ``None``"""
-        rt = cls(None, None, None, None)
-        rt.prev = rt.next = rt
-        return rt
-
-    def move_back(self, root: "LinkedListNode"):
-        """Move this node to the back of the linked list"""
-        self.prev.next = self.next
-        self.next.prev = self.prev
-        # prev <- node -> next
-        # ... last root head ...
-        youngest = root.prev
-        # ... last self root head ...
-        youngest.next = root.prev = self
-        self.prev = youngest
-        self.next = root
-
-    def insert_back(
-        self, key: Union[int, str, CallKey], value: Any
-    ) -> "LinkedListNode":
-        """
-        Insert-and-return a ``key, value`` node in a list where ``self`` is the root
-        """
-        assert self.key is None, "must insert_back at root node"
-        youngest = self.prev
-        inserted = LinkedListNode(youngest, self, key, value)
-        youngest.next = self.prev = inserted
-        return inserted
-
-    def clear(self):
-        """
-        Clear a list where ``self`` is the root
-        """
-        assert self.key is None, "must clear at root node"
-        self.prev = self.next = self
-
-
 def _bounded_lru(
     function: Callable[..., Awaitable[R]], typed: bool, maxsize: int,
 ) -> LRUAsyncCallable[R]:
@@ -302,15 +237,14 @@ def _bounded_lru(
     hits = 0
     misses = 0
     # cache content
-    cache: Dict[Union[int, str, CallKey], LinkedListNode] = {}
-    fifo_root = LinkedListNode.root()
+    cache: OrderedDict[Union[int, str, CallKey], R] = OrderedDict()
     filled = False
 
     async def wrapper(*args, **kwargs) -> R:
-        nonlocal hits, misses, filled, fifo_root
+        nonlocal hits, misses, filled
         key = make_key(args, kwargs, typed=typed)
         try:
-            link = cache[key]
+            result = cache[key]
         except KeyError:
             misses += 1
             result = await function(*args, **kwargs)
@@ -321,24 +255,18 @@ def _bounded_lru(
             # the cache is filled already
             # push the new content to the current root and rotate the list once
             elif filled:
-                fifo_root.key = key
-                fifo_root.value = result
-                cache[key] = fifo_root
-                # discard the oldest entry and make it the new root
-                fifo_root = fifo_root.next
-                del cache[fifo_root.key]
-                fifo_root.key = fifo_root.value = None
+                cache.popitem(last=False)
+                cache[key] = result
             # the cache still has room
             # insert the new element at the back
             else:
-                inserted = fifo_root.insert_back(key, result)
-                cache[key] = inserted
+                cache[key] = result
                 filled = len(cache) >= maxsize
             return result
         else:
-            link.move_back(fifo_root)
+            cache.move_to_end(key)
             hits += 1
-            return link.value
+            return result
 
     def cache_info() -> CacheInfo:
         return CacheInfo(hits, misses, maxsize, len(cache))
@@ -348,7 +276,6 @@ def _bounded_lru(
         misses = 0
         hits = 0
         filled = False
-        fifo_root.clear()
         cache.clear()
 
     wrapper.cache_info = cache_info
