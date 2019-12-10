@@ -2,7 +2,7 @@ import pytest
 
 import asyncstdlib as a
 
-from .utility import sync, asyncify
+from .utility import sync
 
 
 @sync
@@ -70,20 +70,20 @@ async def test_contextmanager_raise_asyncstop():
     async def no_raise():
         yield
 
-    with pytest.raises(StopAsyncIteration, match='outside'):
+    with pytest.raises(StopAsyncIteration, match="outside"):
         async with no_raise():
-            raise StopAsyncIteration('outside')
+            raise StopAsyncIteration("outside")
 
     @a.contextmanager
     async def replace():
         try:
             yield
         except StopAsyncIteration:
-            raise StopAsyncIteration('inside')
+            raise StopAsyncIteration("inside")
 
     with pytest.raises(RuntimeError):
         async with replace():
-            raise StopAsyncIteration('outside')
+            raise StopAsyncIteration("outside")
 
 
 @sync
@@ -92,20 +92,20 @@ async def test_contextmanager_raise_runtimeerror():
     async def no_raise():
         yield
 
-    with pytest.raises(RuntimeError, match='outside'):
+    with pytest.raises(RuntimeError, match="outside"):
         async with no_raise():
-            raise RuntimeError('outside')
+            raise RuntimeError("outside")
 
     @a.contextmanager
     async def replace():
         try:
             yield
         except RuntimeError:
-            raise RuntimeError('inside')
+            raise RuntimeError("inside")
 
-    with pytest.raises(RuntimeError, match='inside'):
+    with pytest.raises(RuntimeError, match="inside"):
         async with replace():
-            raise RuntimeError('outside')
+            raise RuntimeError("outside")
 
 
 @sync
@@ -117,20 +117,20 @@ async def test_contextmanager_raise_same():
         except BaseException as err:
             raise err
 
-    with pytest.raises(KeyError, match='outside'):
+    with pytest.raises(KeyError, match="outside"):
         async with reraise():
-            raise KeyError('outside')
+            raise KeyError("outside")
 
     @a.contextmanager
     async def recreate():
         try:
             yield
         except BaseException as err:
-            raise type(err)('inside')
+            raise type(err)("inside")
 
-    with pytest.raises(KeyError, match='inside'):
+    with pytest.raises(KeyError, match="inside"):
         async with recreate():
-            raise KeyError('outside')
+            raise KeyError("outside")
 
 
 @sync
