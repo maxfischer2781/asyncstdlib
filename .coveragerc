@@ -5,6 +5,8 @@ cover_pylib = FALSE
 parallel = False
 
 [report]
+fail_under = 80
+show_missing = True
 exclude_lines =
     # default
     pragma: no cover
