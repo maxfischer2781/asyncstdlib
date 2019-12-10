@@ -23,7 +23,7 @@ from typing_extensions import Protocol
 from ._utility import public_module
 
 
-R = TypeVar("R", covariant=True)
+R = TypeVar("R")
 
 
 @public_module("asyncstdlib.functools")
@@ -197,7 +197,7 @@ def _unbound_lru(
     hits = 0
     misses = 0
     # cache content
-    cache = {}
+    cache: Dict[Union[CallKey, int, str], R] = {}
 
     async def wrapper(*args, **kwargs) -> R:
         nonlocal hits, misses
