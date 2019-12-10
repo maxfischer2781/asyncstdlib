@@ -264,7 +264,7 @@ def _bounded_lru(
                 filled = len(cache) >= maxsize
             return result
         else:
-            cache.move_to_end(key)
+            cache.move_to_end(key, last=True)
             hits += 1
             return result
 
