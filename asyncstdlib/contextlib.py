@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, AsyncContextManager, AsyncGenerator, Callable
 from typing_extensions import Protocol
 from functools import wraps
 
@@ -8,21 +8,45 @@ class ACloseable(Protocol):
         """Asynchronously close this object"""
 
 
-T = TypeVar('T')
-AC = TypeVar('AC', bound=ACloseable)
+T = TypeVar("T")
+AC = TypeVar("AC", bound=ACloseable)
 
 
-def contextmanager(func):
+def contextmanager(
+    func: Callable[..., AsyncGenerator[T, None]]
+) -> Callable[..., AsyncContextManager[T]]:
+    """
+    Create an asynchronous context manager out of an asynchronous generator function
+
+    This is intended as a decorator for an asynchronous generator function.
+    The asynchronous generator should ``yield`` once, at which point the body of the
+    context manager executes. If ``yield`` provides a value, this becomes the value
+    of the context in the block.
+
+    .. code-block:: python3
+
+        @contextmanager
+        async def Context(*args, **kwargs):
+            # __aenter__
+            yield  # context value
+            # __aexit__
+
+    Note that if an exception ends the context block, it gets re-raised at the ``yield``
+    inside the asynchronous generator (via :py:meth:`~agen.athrow`). In order to handle
+    this exception, the ``yield`` should be wrapped in a ``try`` statement.
+    """
+
     @wraps(func)
     def helper(*args, **kwds):
         return _AsyncGeneratorContextManager(func, args, kwds)
+
     return helper
 
 
 class _AsyncGeneratorContextManager:
     def __init__(self, func, args, kwds):
         self.gen = func(*args, **kwds)
-        self.__doc__ = getattr(func, '__doc__', type(self).__doc__)
+        self.__doc__ = getattr(func, "__doc__", type(self).__doc__)
 
     async def __aenter__(self):
         try:
@@ -60,15 +84,15 @@ class _AsyncGeneratorContextManager:
 
 class closing(Generic[AC]):
     """
-    Create an :term:`asynchronous context manager` to ``aclose`` ``thing`` on exit
+    Create an :term:`asynchronous context manager` to ``aclose`` some ``thing`` on exit
 
     Once entered, the context manager guarantees to ``await thing.aclose()``
     at the end of its block. This is useful for safe cleanup even if errors
     occur.
 
-    Use :py:class:`~.closing` for objects that need cleanup but do not support
-    the context manager. For example, it is advisable to clean up any
-    :term:`asynchronous iterator` promptly:
+    Use :py:class:`~.closing` for objects that need reliable cleanup but do not support
+    the context manager protocol. For example, it is advisable to prompty clean up any
+    :term:`asynchronous iterator` that holds resources:
 
     .. code-block:: python3
 
@@ -78,6 +102,7 @@ class closing(Generic[AC]):
             async for element in async_iter:
                 ...
     """
+
     def __init__(self, thing: AC):
         self.thing = thing
 
@@ -110,6 +135,7 @@ class nullcontext(Generic[T]):
             async with acm as async_iter:
                 ...
     """
+
     def __init__(self, enter_result: T = None):
         self.enter_result = enter_result
 

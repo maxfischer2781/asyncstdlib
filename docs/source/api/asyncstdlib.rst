@@ -11,6 +11,7 @@ The ``async`` standard library
 
    builtins
    functools
+   contextlib
 
 The ``asyncstdlib`` library re-implements functions and classes of the Python
 standard library to make them compatible with ``async`` callables, iterables
@@ -50,6 +51,12 @@ Async Neutral Modules
     Replicates any :py:mod:`functools` that take an :term:`iterable`,
     which is just :py:func:`~asyncstdlib.functools.reduce`
     and :py:func:`~asyncstdlib.functools.lru_cache`.
+
+:py:mod:`asyncstdlib.contextlib`
+    Replicates any :py:mod:`contextlib` objects working with an :term:`iterable`
+    or :term:`context manager`,
+    such as :py:func:`~asyncstdlib.contextlib.contextmanager` or
+    :py:func:`~asyncstdlib.contextlib.closing`.
 
 Async Iterable Cleanup
 ======================
