@@ -1,3 +1,4 @@
+from inspect import iscoroutinefunction
 from typing import (
     TypeVar,
     AsyncIterator,
@@ -8,6 +9,8 @@ from typing import (
     Optional,
     Tuple,
     Iterator,
+    Awaitable,
+    Callable,
 )
 
 from ._utility import public_module
@@ -79,3 +82,38 @@ class ScopedIter(Generic[T]):
         for iterable, iterator in zip(self._iterables, self._iterators):
             await close_temporary(iterator, iterable)
         return False
+
+
+def awaitify(
+    function: Union[Callable[..., T], Callable[..., Awaitable[T]]]
+) -> Callable[..., Awaitable[T]]:
+    if iscoroutinefunction(function):
+        return function
+    else:
+        return Awaitify(function)
+
+
+class Awaitify(Generic[T]):
+    __slots__ = "function", "is_async"
+
+    def __init__(self, function: Union[Callable[..., T], Callable[..., Awaitable[T]]]):
+        self.function = function
+        self.is_async = None
+
+    def __call__(self, *args, **kwargs) -> Awaitable[T]:
+        value = self.function(*args, **kwargs)
+        if self.is_async is None:
+            if isinstance(value, Awaitable):
+                self.is_async = True
+                return value
+            else:
+                self.is_async = False
+                return await_value(value)
+        elif self.is_async:
+            return value
+        else:
+            return await_value(value)
+
+
+async def await_value(value: T) -> T:
+    return value

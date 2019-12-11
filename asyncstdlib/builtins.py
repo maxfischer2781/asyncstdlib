@@ -16,7 +16,13 @@ from typing import (
 
 from typing_extensions import Protocol
 
-from ._core import iter, AnyIterable, ScopedIter, close_temporary as _close_temporary
+from ._core import (
+    iter,
+    AnyIterable,
+    ScopedIter,
+    close_temporary as _close_temporary,
+    awaitify as _awaitify,
+)
 
 
 T = TypeVar("T", contravariant=True)
@@ -136,19 +142,11 @@ async def map(
     Multiple ``iterable`` may be mixed regular and async iterables.
     """
     args_iter = zip(*iterable)
+    function = _awaitify(function)
     try:
-        args = await anext(args_iter)
-        result = function(*args)
-        if isinstance(result, Awaitable):
+        async for args in args_iter:
+            result = function(*args)
             yield await result
-            async for args in args_iter:
-                result = function(*args)
-                yield await result
-        else:
-            yield result
-            async for args in args_iter:
-                result = function(*args)
-                yield result
     finally:
         await args_iter.aclose()
 
