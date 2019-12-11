@@ -175,32 +175,25 @@ async def max(
 
         The two-or-more-arguments variant is not supported yet.
     """
-    item_iter = iter(iterable)
-    best = await anext(item_iter, default=__MAX_DEFAULT)
-    if best is __MAX_DEFAULT:
-        if default is __MAX_DEFAULT:
-            raise ValueError("max() arg is an empty sequence")
-        return default
-    if key is None:
-        async for item in item_iter:
-            if item > best:
-                best = item
-    else:
-        best_key = key(best)
-        if isinstance(best_key, Awaitable):
-            best_key = await best_key
+    async with ScopedIter(iterable) as (item_iter,):
+        best = await anext(item_iter, default=__MAX_DEFAULT)
+        if best is __MAX_DEFAULT:
+            if default is __MAX_DEFAULT:
+                raise ValueError("max() arg is an empty sequence")
+            return default
+        if key is None:
+            async for item in item_iter:
+                if item > best:
+                    best = item
+        else:
+            key = _awaitify(key)
+            best_key = await key(best)
             async for item in item_iter:
                 item_key = await key(item)
                 if item_key > best_key:
                     best = item
                     best_key = item_key
-        else:
-            async for item in item_iter:
-                item_key = key(item)
-                if item_key > best_key:
-                    best = item
-                    best_key = item_key
-    return best
+        return best
 
 
 async def min(
@@ -224,32 +217,25 @@ async def min(
 
         The two-or-more-arguments variant is not supported yet.
     """
-    item_iter = iter(iterable)
-    best = await anext(item_iter, default=__MAX_DEFAULT)
-    if best is __MAX_DEFAULT:
-        if default is __MAX_DEFAULT:
-            raise ValueError("max() arg is an empty sequence")
-        return default
-    if key is None:
-        async for item in item_iter:
-            if item < best:
-                best = item
-    else:
-        best_key = key(best)
-        if isinstance(best_key, Awaitable):
-            best_key = await best_key
+    async with ScopedIter(iterable) as (item_iter,):
+        best = await anext(item_iter, default=__MAX_DEFAULT)
+        if best is __MAX_DEFAULT:
+            if default is __MAX_DEFAULT:
+                raise ValueError("min() arg is an empty sequence")
+            return default
+        if key is None:
+            async for item in item_iter:
+                if item < best:
+                    best = item
+        else:
+            key = _awaitify(key)
+            best_key = await key(best)
             async for item in item_iter:
                 item_key = await key(item)
                 if item_key < best_key:
                     best = item
                     best_key = item_key
-        else:
-            async for item in item_iter:
-                item_key = key(item)
-                if item_key < best_key:
-                    best = item
-                    best_key = item_key
-    return best
+        return best
 
 
 async def filter(
@@ -265,31 +251,16 @@ async def filter(
     The ``function`` may be a regular or async callable.
     The ``iterable`` may be a regular or async iterable.
     """
-    item_iter = iter(iterable)
-    try:
+    async with ScopedIter(iterable) as (item_iter,):
         if function is None:
             async for item in item_iter:
                 if item:
                     yield item
         else:
-            item = await anext(item_iter)
-            result = function(item)
-            if isinstance(result, Awaitable):
-                if await result:
+            function = _awaitify(function)
+            async for item in item_iter:
+                if await function(item):  # type: ignore
                     yield item
-                del result
-                async for item in item_iter:
-                    if await function(item):  # type: ignore
-                        yield item
-            else:
-                if result:
-                    yield item
-                del result
-                async for item in item_iter:
-                    if function(item):
-                        yield item
-    finally:
-        await _close_temporary(item_iter, iterable)
 
 
 async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[int, T]]:

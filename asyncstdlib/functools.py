@@ -1,7 +1,7 @@
 from typing import Callable, TypeVar, Awaitable, Union
 
-from ._core import ScopedIter
-from .builtins import iter, anext, AnyIterable, Sentinel
+from ._core import ScopedIter, awaitify as _awaitify
+from .builtins import anext, AnyIterable, Sentinel
 
 from ._lrucache import lru_cache, CacheInfo, LRUAsyncCallable
 
@@ -40,17 +40,7 @@ async def reduce(
             )
         except StopAsyncIteration:
             raise TypeError("reduce() of empty sequence with no initial value")
-        try:
-            head = await anext(item_iter)
-        except StopAsyncIteration:
-            return value
-        else:
-            value = function(value, head)
-        if isinstance(value, Awaitable):
-            async for head in item_iter:
-                value = function(await value, head)
-            return await value
-        else:
-            async for head in item_iter:
-                value = function(value, head)
-            return value
+        function = _awaitify(function)
+        async for head in item_iter:
+            value = await function(value, head)
+        return value
