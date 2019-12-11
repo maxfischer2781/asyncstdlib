@@ -1,5 +1,6 @@
 from typing import Callable, TypeVar, Awaitable, Union
 
+from ._core import ScopedIter
 from .builtins import iter, anext, AnyIterable, Sentinel
 
 from ._lrucache import lru_cache, CacheInfo, LRUAsyncCallable
@@ -32,22 +33,24 @@ async def reduce(
     and ``iterable`` contains exactly one item, it is returned without
     calling ``function``.
     """
-    item_iter = iter(iterable)
-    try:
-        value = initial if initial is not __REDUCE_SENTINEL else await anext(item_iter)
-    except StopAsyncIteration:
-        raise TypeError("reduce() of empty sequence with no initial value")
-    try:
-        head = await anext(item_iter)
-    except StopAsyncIteration:
-        return value
-    else:
-        value = function(value, head)
-    if isinstance(value, Awaitable):
-        async for head in item_iter:
-            value = function(await value, head)
-        return await value
-    else:
-        async for head in item_iter:
+    async with ScopedIter(iterable) as (item_iter,):
+        try:
+            value = (
+                initial if initial is not __REDUCE_SENTINEL else await anext(item_iter)
+            )
+        except StopAsyncIteration:
+            raise TypeError("reduce() of empty sequence with no initial value")
+        try:
+            head = await anext(item_iter)
+        except StopAsyncIteration:
+            return value
+        else:
             value = function(value, head)
-        return value
+        if isinstance(value, Awaitable):
+            async for head in item_iter:
+                value = function(await value, head)
+            return await value
+        else:
+            async for head in item_iter:
+                value = function(value, head)
+            return value
