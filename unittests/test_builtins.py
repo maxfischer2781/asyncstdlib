@@ -5,6 +5,13 @@ import asyncstdlib as a
 from .utility import sync, asyncify, inside_loop
 
 
+def hide_coroutine(corofunc):
+    def wrapper(*args, **kwargs):
+        return corofunc(*args, **kwargs)
+
+    return wrapper
+
+
 @sync
 async def test_all():
     assert await a.all(asyncify((True, True, True)))
@@ -54,9 +61,9 @@ async def test_map_as():
         return value * 2
 
     assert [value async for value in a.map(map_op, range(5))] == list(range(0, 10, 2))
-    assert [value async for value in a.map(map_op, range(5, 10, 2))] == list(
-        range(10, 20, 4)
-    )
+    assert [
+        value async for value in a.map(hide_coroutine(map_op), range(5, 10, 2))
+    ] == list(range(10, 20, 4))
 
 
 @sync
@@ -80,9 +87,10 @@ async def test_map_aa():
     assert [value async for value in a.map(map_op, asyncify(range(5)))] == list(
         range(0, 10, 2)
     )
-    assert [value async for value in a.map(map_op, asyncify(range(5, 10, 2)))] == list(
-        range(10, 20, 4)
-    )
+    assert [
+        value
+        async for value in a.map(hide_coroutine(map_op), asyncify(range(5, 10, 2)))
+    ] == list(range(10, 20, 4))
 
 
 @sync
@@ -137,7 +145,9 @@ async def test_filter_as():
         return value % 2 == 0
 
     assert [value async for value in a.filter(map_op, range(5))] == list(range(0, 5, 2))
-    assert [value async for value in a.filter(map_op, range(5, 10, 2))] == []
+    assert [
+        value async for value in a.filter(hide_coroutine(map_op), range(5, 10, 2))
+    ] == []
     assert [value async for value in a.filter(map_op, range(4, 10, 2))] == list(
         range(4, 10, 2)
     )
@@ -167,7 +177,8 @@ async def test_filter_aa():
     )
     assert [value async for value in a.filter(map_op, asyncify(range(5, 10, 2)))] == []
     assert [
-        value async for value in a.filter(map_op, asyncify(range(4, 10, 2)))
+        value
+        async for value in a.filter(hide_coroutine(map_op), asyncify(range(4, 10, 2)))
     ] == list(range(4, 10, 2))
 
 
