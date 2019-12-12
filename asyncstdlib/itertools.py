@@ -107,9 +107,6 @@ async def dropwhile(predicate, iterable: AnyIterable[T]) -> AsyncIterator[T]:
             yield item
 
 
-__ISLICE_SENTINEL = Sentinel("<no default>")
-
-
 async def islice(iterable: AnyIterable[T], *args: Optional[int]):
     s = slice(*args)
     start, stop, step = s.start or 0, s.stop, s.step or 1
@@ -125,7 +122,7 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]):
                     yield element
         else:
             async for idx, element in aenumerate(async_iter, start=start):
-                if idx == stop:
+                if idx >= stop:
                     return
                 if not idx % step:
                     yield element

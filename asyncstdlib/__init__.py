@@ -17,7 +17,7 @@ from .builtins import (
 )
 from .functools import reduce, lru_cache
 from .contextlib import closing, contextmanager, nullcontext
-from .itertools import accumulate, cycle, chain
+from .itertools import accumulate, cycle, chain, compress, dropwhile, islice
 
 __version__ = "0.1.0"
 
@@ -47,4 +47,7 @@ __all__ = [
     "accumulate",
     "cycle",
     "chain",
+    "compress",
+    "dropwhile",
+    "islice",
 ]

@@ -1,4 +1,4 @@
-from typing import Callable, Coroutine, Iterable, AsyncIterator, TypeVar
+from typing import Callable, Coroutine, Iterable, AsyncIterator, TypeVar, Awaitable
 from functools import wraps
 
 
@@ -9,6 +9,13 @@ async def asyncify(iterable: Iterable[T]) -> AsyncIterator[T]:
     """Convert an iterable to async iterable"""
     for value in iterable:
         yield value
+
+
+def awaitify(call: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+    async def await_wrapper(*args, **kwargs):
+        return call(*args, **kwargs)
+
+    return await_wrapper
 
 
 class PingPong:
