@@ -81,28 +81,11 @@ async def compress(
 
 async def dropwhile(predicate, iterable: AnyIterable[T]) -> AsyncIterator[T]:
     async with ScopedIter(iterable) as (async_iter,):
-        item = await anext(async_iter)
-        result = predicate(item)
-        if isinstance(result, Awaitable):
-            if not await result:
+        predicate = _awaitify(predicate)
+        async for item in async_iter:
+            if not await predicate(item):  # type: ignore
                 yield item
-                del result
-            else:
-                del result
-                async for item in async_iter:
-                    if not await predicate(item):  # type: ignore
-                        yield item
-                        break
-        else:
-            if not result:
-                yield item
-                del result
-            else:
-                del result
-                async for item in async_iter:
-                    if not predicate(item):
-                        yield item
-                        break
+                break
         async for item in async_iter:
             yield item
 
