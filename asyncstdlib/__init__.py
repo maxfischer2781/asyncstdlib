@@ -17,7 +17,7 @@ from .builtins import (
 )
 from .functools import reduce, lru_cache
 from .contextlib import closing, contextmanager, nullcontext
-from .itertools import accumulate, cycle
+from .itertools import accumulate, cycle, chain
 
 __version__ = "0.1.0"
 
@@ -46,4 +46,5 @@ __all__ = [
     # itertools
     "accumulate",
     "cycle",
+    "chain",
 ]

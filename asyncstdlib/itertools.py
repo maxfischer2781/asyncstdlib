@@ -57,17 +57,17 @@ async def chain(*iterables: AnyIterable[T]) -> AsyncIterator[T]:
 
 
 @public_module(__name__, "chain.from_iterable")
-async def _chain_from_iterable(
+async def chain_from_iterable(
     iterable: AnyIterable[AnyIterable[T]],
 ) -> AsyncIterator[T]:
     async with ScopedIter(iterable) as (iterables,):
-        for sub_iterable in iterables:
+        async for sub_iterable in iterables:
             async with ScopedIter(sub_iterable) as (iterator,):
                 async for item in iterator:
                     yield item
 
 
-chain.from_iterable = _chain_from_iterable
+chain.from_iterable = chain_from_iterable
 
 
 async def compress(

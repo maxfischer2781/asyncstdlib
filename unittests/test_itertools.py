@@ -46,3 +46,18 @@ async def test_cycle():
         if idx == 6:
             break
     assert idx == 6
+
+
+chains = [
+    ([0, 1, 2, 3], [4, 5, 6, 7]),
+    ([4], [3], [2], [1]),
+    ([], [], [], [1], [], []),
+]
+
+
+@pytest.mark.parametrize('iterables', chains)
+@sync
+async def test_chain(iterables):
+    for itertype in (asyncify, list):
+        assert await a.list(a.chain(*map(itertype, iterables))) == list(itertools.chain(*iterables))
+        assert await a.list(a.chain.from_iterable(map(itertype, iterables))) == list(itertools.chain.from_iterable(iterables))
