@@ -34,3 +34,15 @@ async def test_accumulate():
 async def test_accumulate_misuse():
     with pytest.raises(TypeError):
         assert await a.list(a.accumulate([]))
+
+
+@sync
+async def test_cycle():
+    async for _ in a.cycle([]):
+        assert False
+    assert True
+    async for idx, val in a.enumerate(a.cycle([0, 1])):
+        assert idx % 2 == val
+        if idx == 6:
+            break
+    assert idx == 6
