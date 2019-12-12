@@ -17,6 +17,7 @@ from .builtins import (
 )
 from .functools import reduce, lru_cache
 from .contextlib import closing, contextmanager, nullcontext
+from .itertools import accumulate
 
 __version__ = "0.1.0"
 
@@ -35,9 +36,13 @@ __all__ = [
     "dict",
     "set",
     "tuple",
+    # functools
     "reduce",
     "lru_cache",
+    # contextlib
     "closing",
     "contextmanager",
     "nullcontext",
+    # itertools
+    "accumulate",
 ]
