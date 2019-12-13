@@ -31,6 +31,7 @@ async def add(x, y):
 async def accumulate(
     iterable: AnyIterable[T],
     function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]] = add,
+    *,
     initial: T = __ACCUMULATE_SENTINEL,
 ) -> AsyncIterator[T]:
     async with ScopedIter(iterable) as (item_iter,):
