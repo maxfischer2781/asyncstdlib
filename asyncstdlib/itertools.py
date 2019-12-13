@@ -81,10 +81,10 @@ async def accumulate(
         except StopAsyncIteration:
             raise TypeError("accumulate() of empty sequence with no initial value")
         function = _awaitify(function)
-        async for head in item_iter:
-            yield value
-            value = await function(value, head)
         yield value
+        async for head in item_iter:
+            value = await function(value, head)
+            yield value
 
 
 async def chain(*iterables: AnyIterable[T]) -> AsyncIterator[T]:
