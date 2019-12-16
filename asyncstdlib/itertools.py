@@ -1,8 +1,20 @@
-from typing import TypeVar, AsyncIterator, List, Awaitable, Union, Callable, Optional
+from typing import (
+    TypeVar,
+    AsyncIterator,
+    List,
+    Awaitable,
+    Union,
+    Callable,
+    Optional,
+    Deque,
+    Generic,
+    Iterator,
+)
+from collections import deque
 
 from ._utility import public_module
 from ._core import ScopedIter, AnyIterable, awaitify as _awaitify
-from .builtins import anext, Sentinel, zip, enumerate as aenumerate
+from .builtins import anext, Sentinel, zip, enumerate as aenumerate, iter as aiter
 
 
 T = TypeVar("T")
@@ -191,3 +203,152 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
                     return
                 if not idx % step:
                     yield element
+
+
+async def starmap(
+    function: Union[Callable[..., T], Callable[..., Awaitable[T]]],
+    iterable: AnyIterable,
+) -> AsyncIterator[T]:
+    """
+    An :term:`asynchronous iterator` applying a function to arguments from an iterable
+
+    This is conceptually similar to :py:func:`~asyncstdlib.builtins.map`, but applies
+    a single iterable of multiple arguments instead of
+    multiple iterables of a single argument each.
+    The same way that
+    ``function(a, b)`` can be generalized to ``map(function, iter_a, iter_b)``,
+    ``function(*c)`` can be generalized to ``starmap(function, iter_c)``.
+    """
+    function = _awaitify(function)
+    async with ScopedIter(iterable) as (async_iter,):
+        async for args in async_iter:
+            yield await function(*args)
+
+
+async def takewhile(
+    predicate: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]]],
+    iterable: AnyIterable[T],
+) -> AsyncIterator[T]:
+    """
+    Yield items from ``iterable`` as long as ``predicate(item)`` is true
+
+    This lazily iterates over ``iterable``, yielding items as long as evaluating
+    ``predicate`` for the current item is true. As soon as ``predicate`` evaluates
+    as false for the current item, no more items are yielded. Note that if
+    ``iterable`` is a single-use iterator, the item is available neither from
+    ``iterable`` nor ``takewhile`` and effectively discarded.
+    """
+    async with ScopedIter(iterable) as (async_iter,):
+        predicate = _awaitify(predicate)
+        async for item in async_iter:
+            if await predicate(item):
+                yield item
+            else:
+                break
+
+
+async def tee_peer(
+    iterator: AsyncIterator[T],
+    buffer: Deque[T],
+    peers: List[Deque[T]],
+    cleanup: bool,
+) -> AsyncIterator[T]:
+    while True:
+        if not buffer:
+            try:
+                item = await iterator.__anext__()
+            except StopAsyncIteration:
+                break
+            else:
+                # Append to all buffers, including our own. We'll fetch our
+                # item from the buffer again, instead of yielding it directly.
+                # This ensures the proper item ordering if any of our peers
+                # are fetching items concurrently. They may have buffered their
+                # item already.
+                for peer in peers:
+                    peer.append(item)
+        yield buffer.popleft()
+    for idx, item in enumerate(peers):
+        if item is buffer:
+            peers.pop(idx)
+            break
+    if cleanup and not peers and hasattr(iterator, "aclose"):
+        await iterator.aclose()
+
+
+@public_module(__name__, "tee")
+class Tee(Generic[T]):
+    """
+    Create ``n`` separate asynchronous iterators over ``iterable``
+
+    This splits a single ``iterable`` into multiple iterators, each providing
+    the same items in the same order.
+    All child iterators may advance separately but share the same items
+    from ``iterable`` -- when the most advanced iterator retrieves an item,
+    it is buffered until the least advanced iterator has yielded it as well.
+    A ``tee`` works lazily and can handle an infinite ``iterable``, provided
+    that all iterators advance.
+
+    .. code-block:: python3
+
+        async def derivative(sensor_data):
+            previous, current = a.tee(sensor_data, n=2)
+            await a.anext(previous)  # advance one iterator
+            return a.map(operator.sub, previous, current)
+
+    Unlike :py:func:`itertools.tee`, :py:func:`~.tee` returns a custom type instead
+    of a :py:class:`tuple`. Like a tuple, it can be indexed, iterated and unpacked
+    to get the child iterators. In addition, its :py:meth:`~.tee.aclose` method
+    immediately closes all children, and it can be used in an ``async with`` context
+    for the same effect.
+
+    If ``iterable`` is an iterator and read elsewhere, ``tee`` will *not*
+    provide these items. Also ``tee`` must internally buffer each item until the
+    last iterator has yielded it; if the most and least advanced iterator differ
+    by most data, using a :py:class:`list` is faster (but not lazy).
+
+    If the underlying iterable is concurrency safe (``anext`` may be awaited
+    concurrently) the resulting iterators are concurrency safe as well. Otherwise,
+    the iterators are safe if there is only ever one single "most advanced" iterator.
+    """
+
+    def __init__(
+        self,
+        iterable: AnyIterable[T],
+        n: int = 2,
+    ):
+        self._iterator = aiter(iterable)
+        self._cleanup = self._iterator is iterable
+        self._buffers = [deque() for _ in range(n)]
+        self._children = tuple(
+            tee_peer(
+                iterator=self._iterator,
+                buffer=buffer,
+                peers=self._buffers,
+                cleanup=self._cleanup,
+            )
+            for buffer in self._buffers
+        )
+
+    def __len__(self):
+        return len(self._children)
+
+    def __getitem__(self, item):
+        return self._children[item]
+
+    def __iter__(self) -> Iterator[AnyIterable[T]]:
+        yield from self._children
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.aclose()
+        return False
+
+    async def aclose(self):
+        for child in self._children:
+            await child.aclose()
+
+
+tee = Tee

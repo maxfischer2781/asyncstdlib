@@ -85,14 +85,14 @@ async def test_compress(data, selectors):
     assert await a.list(a.compress(asyncify(data), asyncify(selectors))) == expected
 
 
-dropwhile_cases = [
+droptakewhile_cases = [
     (range(20), lambda x: x < 5),
     (range(20), lambda x: x > 5),
     ([1] * 12, lambda y: y > 5),
 ]
 
 
-@pytest.mark.parametrize("iterable, predicate", dropwhile_cases)
+@pytest.mark.parametrize("iterable, predicate", droptakewhile_cases)
 @sync
 async def test_dropwhile(iterable, predicate):
     expected = list(itertools.dropwhile(predicate, iterable))
@@ -104,6 +104,18 @@ async def test_dropwhile(iterable, predicate):
     )
 
 
+@pytest.mark.parametrize("iterable, predicate", droptakewhile_cases)
+@sync
+async def test_takewhile(iterable, predicate):
+    expected = list(itertools.takewhile(predicate, iterable))
+    assert await a.list(a.takewhile(predicate, iterable)) == expected
+    assert await a.list(a.takewhile(awaitify(predicate), iterable)) == expected
+    assert await a.list(a.takewhile(predicate, asyncify(iterable))) == expected
+    assert (
+        await a.list(a.takewhile(awaitify(predicate), asyncify(iterable))) == expected
+    )
+
+
 @sync
 async def test_islice():
     for iterable in ((), (1, 2, 3, 4), range(25), range(500)):
@@ -112,3 +124,21 @@ async def test_islice():
             expected = list(itertools.islice(iterable, *slicing))
             assert await a.list(a.islice(iterable, *slicing)) == expected
             assert await a.list(a.islice(asyncify(iterable), *slicing)) == expected
+
+
+starmap_cases = [
+    (lambda x, y: x + y, [(1, 2), (3, 4)]),
+    (lambda *args: sum(args), [range(i) for i in range(1, 10)]),
+]
+
+
+@pytest.mark.parametrize("function, iterable", starmap_cases)
+@sync
+async def test_starmap(function, iterable):
+    expected = list(itertools.starmap(function, iterable))
+    assert await a.list(a.starmap(function, iterable)) == expected
+    assert await a.list(a.starmap(awaitify(function), iterable)) == expected
+    assert await a.list(a.starmap(function, asyncify(iterable))) == expected
+    assert (
+        await a.list(a.starmap(awaitify(function), asyncify(iterable))) == expected
+    )
