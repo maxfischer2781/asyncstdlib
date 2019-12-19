@@ -140,3 +140,17 @@ async def test_starmap(function, iterable):
     assert await a.list(a.starmap(awaitify(function), iterable)) == expected
     assert await a.list(a.starmap(function, asyncify(iterable))) == expected
     assert await a.list(a.starmap(awaitify(function), asyncify(iterable))) == expected
+
+
+@sync
+async def test_tee():
+    iterable = [1, 2, 3, -5, 12, 78, -1, 111]
+    async with a.tee(iterable, n=3) as iterators:
+        assert len(iterators) == 3
+        for idx, iterator in enumerate(iterators):
+            assert iterators[idx] == iterator
+        for iterator in (iterators[1], iterators[0], iterators[2]):
+            assert await a.list(iterator) == iterable
+    async with a.tee(asyncify(iterable), n=3) as iterators:
+        for iterator in iterators:
+            assert await a.list(iterator) == iterable

@@ -325,16 +325,16 @@ class Tee(Generic[T]):
             for buffer in self._buffers
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._children)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> AsyncIterator[T]:
         return self._children[item]
 
     def __iter__(self) -> Iterator[AnyIterable[T]]:
         yield from self._children
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "Tee[T]":
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

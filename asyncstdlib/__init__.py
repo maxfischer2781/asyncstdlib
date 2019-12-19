@@ -26,6 +26,7 @@ from .itertools import (
     islice,
     takewhile,
     starmap,
+    tee,
 )
 
 __version__ = "0.1.0"
@@ -61,4 +62,5 @@ __all__ = [
     "takewhile",
     "islice",
     "starmap",
+    "tee",
 ]
