@@ -17,7 +17,16 @@ from .builtins import (
 )
 from .functools import reduce, lru_cache
 from .contextlib import closing, contextmanager, nullcontext
-from .itertools import accumulate, cycle, chain, compress, dropwhile, islice, takewhile, starmap
+from .itertools import (
+    accumulate,
+    cycle,
+    chain,
+    compress,
+    dropwhile,
+    islice,
+    takewhile,
+    starmap,
+)
 
 __version__ = "0.1.0"
 

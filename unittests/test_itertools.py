@@ -139,6 +139,4 @@ async def test_starmap(function, iterable):
     assert await a.list(a.starmap(function, iterable)) == expected
     assert await a.list(a.starmap(awaitify(function), iterable)) == expected
     assert await a.list(a.starmap(function, asyncify(iterable))) == expected
-    assert (
-        await a.list(a.starmap(awaitify(function), asyncify(iterable))) == expected
-    )
+    assert await a.list(a.starmap(awaitify(function), asyncify(iterable))) == expected

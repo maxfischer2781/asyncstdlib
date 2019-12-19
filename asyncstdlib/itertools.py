@@ -248,10 +248,7 @@ async def takewhile(
 
 
 async def tee_peer(
-    iterator: AsyncIterator[T],
-    buffer: Deque[T],
-    peers: List[Deque[T]],
-    cleanup: bool,
+    iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]], cleanup: bool,
 ) -> AsyncIterator[T]:
     while True:
         if not buffer:
@@ -313,9 +310,7 @@ class Tee(Generic[T]):
     """
 
     def __init__(
-        self,
-        iterable: AnyIterable[T],
-        n: int = 2,
+        self, iterable: AnyIterable[T], n: int = 2,
     ):
         self._iterator = aiter(iterable)
         self._cleanup = self._iterator is iterable
