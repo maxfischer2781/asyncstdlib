@@ -154,3 +154,14 @@ async def test_tee():
     async with a.tee(asyncify(iterable), n=3) as iterators:
         for iterator in iterators:
             assert await a.list(iterator) == iterable
+
+
+@sync
+async def test_zip_longest():
+    async for va, vb in a.zip_longest(asyncify(range(5)), range(5)):
+        assert va == vb
+    async for idx, vs in a.enumerate(a.zip_longest(asyncify(range(5)), range(5), [])):
+        assert vs[0] == vs[1] == idx
+        assert vs[2] == None
+    async for _ in a.zip_longest():
+        assert False

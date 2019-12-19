@@ -14,14 +14,17 @@ Infinite iterators
 .. autofunction:: cycle(iterable: (async) iter T)
     :async-for: :T
 
-Iterator flattening
-===================
+Iterator merging
+================
 
 .. autofunction:: chain(*iterables: (async) iter T)
     :async-for: :T
 
 .. autofunction:: asyncstdlib.itertools::chain.from_iterable(iterable: (async) iter (async) iter T)
     :async-for: :T
+
+.. autofunction:: zip_longest(*iterables: (async) iter T, fillvalue: S = None)
+    :async-for: :T or S, ...
 
 Iterator filtering
 ==================

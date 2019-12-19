@@ -9,6 +9,7 @@ from typing import (
     Deque,
     Generic,
     Iterator,
+    Tuple,
 )
 from collections import deque
 
@@ -18,6 +19,7 @@ from .builtins import anext, Sentinel, zip, enumerate as aenumerate, iter as ait
 
 
 T = TypeVar("T")
+S = TypeVar("S")
 
 
 async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
@@ -347,3 +349,45 @@ class Tee(Generic[T]):
 
 
 tee = Tee
+
+
+async def _repeat(value):
+    while True:
+        yield value
+
+
+async def zip_longest(
+    *iterables: AnyIterable[T], fillvalue: S = None
+) -> AsyncIterator[Tuple[Union[T, S], ...]]:
+    """
+    Create an async iterator that aggregates elements from each of the (async) iterables
+
+    The next element of ``zip_longest`` is a :py:class:`tuple` of the next element of
+    each of its ``iterables``. As soon as all of its ``iterables`` is exhausted,
+    ``zip_longest`` is exhausted as well. Shorter iterables are padded by ``fillvalue``.
+    This means that if ``zip_longest`` receives *n* ``iterables``,
+    with the longest having *m* elements, it becomes a generator *m*-times producing
+    an *n*-tuple.
+
+    If ``iterables`` is empty, the ``zip_longest`` iterator is empty as well.
+    Multiple ``iterables`` may be mixed regular and async iterables.
+    """
+    if not iterables:
+        return
+    async with ScopedIter(*iterables, _repeat(fillvalue)) as (*async_iters, fill_iter):
+        remaining = len(async_iters)
+        while True:
+            values = []
+            for index, aiterator in enumerate(async_iters):
+                try:
+                    value = await anext(aiterator)
+                except StopAsyncIteration:
+                    remaining -= 1
+                    if not remaining:
+                        return
+                    async_iters[index] = fill_iter
+                    values.append(fillvalue)
+                else:
+                    values.append(value)
+                    del value
+            yield tuple(values)
