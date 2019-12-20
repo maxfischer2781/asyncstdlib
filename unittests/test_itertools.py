@@ -162,6 +162,6 @@ async def test_zip_longest():
         assert va == vb
     async for idx, vs in a.enumerate(a.zip_longest(asyncify(range(5)), range(5), [])):
         assert vs[0] == vs[1] == idx
-        assert vs[2] == None
+        assert vs[2] is None
     async for _ in a.zip_longest():
         assert False
