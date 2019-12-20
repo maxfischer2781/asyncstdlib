@@ -7,6 +7,18 @@
 The missing ``async`` toolbox
 =============================
 
+.. image:: https://readthedocs.org/projects/asyncstdlib/badge/?version=latest
+    :target: http://asyncstdlib.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. image:: https://img.shields.io/pypi/v/asyncstdlib.svg
+    :alt: Available on PyPI
+    :target: https://pypi.python.org/pypi/asyncstdlib/
+
+.. image:: https://img.shields.io/github/license/maxfischer2781/asyncstdlib.svg
+    :alt: License
+    :target: https://github.com/maxfischer2781/asyncstdlib/blob/master/LICENSE
+
 .. py:module:: asyncstdlib
     :synopsis: The async standard library
 
