@@ -1,4 +1,4 @@
-"""itertools in an async world"""
+"""The missing ``async`` toolbox"""
 from .builtins import (
     zip,
     map,
@@ -30,7 +30,7 @@ from .itertools import (
     zip_longest,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "zip",

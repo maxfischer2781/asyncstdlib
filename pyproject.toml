@@ -8,7 +8,7 @@ author = "Max Fischer"
 author-email = "maxfischer2781@gmail.com"
 home-page = "https://github.com/maxfischer2781/asyncstdlib"
 description-file = "README.rst"
-keywords = "async itertools"
+keywords = "async enumerate itertools builtins functools contextlib"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires = ["typing_extensions"]
 
