@@ -11,11 +11,15 @@ Python's :py:mod:`contextlib` for (async) iterables and (async) context managers
 Context Managers
 ================
 
+.. py:function:: contextmanager(func: (...) → async iter T)(...)
+    :async-with: :T
+    :noindex:
+
 .. autofunction:: contextmanager(func: (...) → async iter T) -> (...) → async with T
     :decorator:
 
-.. autofunction:: closing(thing: AC) -> AC
-    :async-with:
+.. autofunction:: closing(thing: AC)
+    :async-with: :AC
 
-.. autofunction:: nullcontext(enter_result: T) -> T
-    :async-with:
+.. autofunction:: nullcontext(enter_result: T)
+    :async-with: :T

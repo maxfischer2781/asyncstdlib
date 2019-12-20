@@ -32,17 +32,17 @@ Iterator transforming
 .. autofunction:: iter(iterable: (async) iter T)
     :async-for: :T
 
-.. autofunction:: filter(function: (T, ...) → (await) bool, iterable: (async) iter T)
-    :async-for: :T, ...
+.. autofunction:: filter(function: (T) → (await) bool, iterable: (async) iter T)
+    :async-for: :T
 
 .. autofunction:: zip(*iterables: (async) iter T)
-    :async-for: :T, ...
+    :async-for: :(T, ...)
 
 .. autofunction:: map(function: (T, ...) → (await) R, iterable: (async) iter T, ...)
-    :async-for: :R, ...
+    :async-for: :R
 
 .. autofunction:: enumerate(iterable: (async) iter T, start=0)
-    :async-for: :int, :T
+    :async-for: :(int, T)
 
 Standard types
 ==============

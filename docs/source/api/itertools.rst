@@ -24,7 +24,7 @@ Iterator merging
     :async-for: :T
 
 .. autofunction:: zip_longest(*iterables: (async) iter T, fillvalue: S = None)
-    :async-for: :T or S, ...
+    :async-for: :(T or S, ...)
 
 Iterator filtering
 ==================
@@ -40,6 +40,7 @@ Iterator filtering
 
 .. py:function:: islice(iterable: (async) iter T, stop: int)
     :async-for: :T
+    :noindex:
 
 .. autofunction:: islice(iterable: (async) iter T, start: int, stop: int [, step: int])
     :async-for: :T
@@ -57,4 +58,4 @@ Iterator splitting
 ==================
 
 .. autofunction:: tee(iterable: (async) iter T, n: int = 2)
-    :for: :async iter T, ...
+    :for: :(async iter T, ...)
