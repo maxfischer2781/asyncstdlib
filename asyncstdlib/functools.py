@@ -1,7 +1,7 @@
 from typing import Callable, TypeVar, Awaitable, Union
 
-from ._core import ScopedIter, awaitify as _awaitify
-from .builtins import anext, AnyIterable, Sentinel
+from ._core import ScopedIter, awaitify as _awaitify, Sentinel
+from .builtins import anext, AnyIterable
 
 from ._lrucache import lru_cache, CacheInfo, LRUAsyncCallable
 

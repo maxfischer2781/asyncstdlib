@@ -22,22 +22,12 @@ from ._core import (
     ScopedIter,
     close_temporary as _close_temporary,
     awaitify as _awaitify,
+    Sentinel,
 )
 
 
 T = TypeVar("T", contravariant=True)
 R = TypeVar("R", covariant=True)
-
-
-class Sentinel:
-    """Placeholder with configurable ``repr``"""
-
-    def __init__(self, name):
-        self.name = name
-
-    def __repr__(self):
-        return self.name
-
 
 __ANEXT_DEFAULT = Sentinel("<no default>")
 

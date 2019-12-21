@@ -14,9 +14,8 @@ from typing import (
 from collections import deque
 
 from ._utility import public_module
-from ._core import ScopedIter, AnyIterable, awaitify as _awaitify
-from .builtins import anext, Sentinel, zip, enumerate as aenumerate, iter as aiter
-
+from ._core import ScopedIter, AnyIterable, awaitify as _awaitify, Sentinel
+from .builtins import anext, zip, enumerate as aenumerate, iter as aiter
 
 T = TypeVar("T")
 S = TypeVar("S")

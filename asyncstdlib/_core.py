@@ -21,6 +21,16 @@ T = TypeVar("T")
 AnyIterable = Union[Iterable[T], AsyncIterable[T]]
 
 
+class Sentinel:
+    """Placeholder with configurable ``repr``"""
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return self.name
+
+
 @public_module("asyncstdlib.builtins")
 def iter(subject: AnyIterable[T]) -> AsyncIterator[T]:
     """
