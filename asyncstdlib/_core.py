@@ -13,8 +13,6 @@ from typing import (
     Callable,
 )
 
-from ._utility import public_module
-
 T = TypeVar("T")
 
 
@@ -31,8 +29,10 @@ class Sentinel:
         return self.name
 
 
-@public_module("asyncstdlib.builtins")
-def iter(subject: AnyIterable[T]) -> AsyncIterator[T]:
+__ITER_SENTINEL = Sentinel("<no default>")
+
+
+def aiter(subject: AnyIterable[T]) -> AsyncIterator[T]:
     """
     An async iterator object yielding elements from ``subject``
 
@@ -44,11 +44,6 @@ def iter(subject: AnyIterable[T]) -> AsyncIterator[T]:
     or it must support the sequence protocol (the :py:meth:`object.__getitem__`
     method with integer arguments starting at 0).
     In either case, an async iterator is returned.
-
-    .. note::
-
-        The two-argument form of :py:func:`iter` as ``iter(subject, sentinel)``
-        is currently not supported.
     """
     if isinstance(subject, AsyncIterable):
         return subject.__aiter__()
@@ -85,7 +80,7 @@ class ScopedIter(Generic[T]):
 
     async def __aenter__(self) -> Tuple[AsyncIterator[T], ...]:
         assert self._iterators is None, f"{self.__class__.__name__} is not re-entrant"
-        self._iterators = (*(iter(it) for it in self._iterables),)
+        self._iterators = (*(aiter(it) for it in self._iterables),)
         return self._iterators
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

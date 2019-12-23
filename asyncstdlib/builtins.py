@@ -12,12 +12,13 @@ from typing import (
     Optional,
     Dict,
     Any,
+    overload,
 )
 
 from typing_extensions import Protocol
 
 from ._core import (
-    iter,
+    aiter,
     AnyIterable,
     ScopedIter,
     close_temporary as _close_temporary,
@@ -41,11 +42,63 @@ async def anext(iterator: AsyncIterator[T], default=__ANEXT_DEFAULT) -> T:
         return default
 
 
+__ITER_DEFAULT = Sentinel("<no default>")
+
+
+@overload
+def iter(subject: AnyIterable[T]) -> AsyncIterator[T]:
+    pass
+
+
+@overload
+def iter(subject: Callable[[], Awaitable[T]], sentinel: T) -> AsyncIterator[T]:
+    pass
+
+
+def iter(
+    subject: Union[AnyIterable[T], Callable[[], Awaitable[T]]],
+    sentinel: Union[Sentinel, T] = __ITER_DEFAULT,
+) -> AsyncIterator[T]:
+    """
+    An async iterator object yielding elements from ``subject``
+
+    :raises TypeError: if ``subject`` does not support any iteration protocol
+
+    If ``sentinel`` is not given, the ``subject`` must support
+    the async iteration protocol (the :py:meth:`object.__aiter__` method),
+    the regular iteration protocol (the :py:meth:`object.__iter__` method),
+    or it must support the sequence protocol (the :py:meth:`object.__getitem__`
+    method with integer arguments starting at 0).
+    In either case, an async iterator is returned.
+
+    If ``sentinel`` is given, subject must be an (async) callable. In this case,
+    :py:func:`~.iter` provides an async iterator that uses ``await subject()``
+    to produce new values. Once a value equals ``sentinel``, the value is discarded
+    and iteration stops.
+    """
+    if sentinel is __ITER_DEFAULT:
+        return aiter(subject)
+    elif not callable(subject):
+        raise TypeError("iter(v, w): v must be callable")
+    else:
+        return acallable_iterator(subject, sentinel)
+
+
+async def acallable_iterator(
+    subject: Callable[[], Awaitable[T]], sentinel: T
+) -> AsyncIterator[T]:
+    subject = _awaitify(subject)
+    value = await subject()
+    while value != sentinel:
+        yield value
+        value = await subject()
+
+
 async def all(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`True` if none of the elements of the (async) ``iterable`` are false
     """
-    item_iter = iter(iterable)
+    item_iter = aiter(iterable)
     try:
         async for element in item_iter:
             if not element:
@@ -59,7 +112,7 @@ async def any(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`False` if none of the elements of the (async) ``iterable`` are true
     """
-    item_iter = iter(iterable)
+    item_iter = aiter(iterable)
     try:
         async for element in item_iter:
             if element:
@@ -260,7 +313,7 @@ async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[in
     The ``iterable`` may be a regular or async iterable.
     """
     count = start
-    item_iter = iter(iterable)
+    item_iter = aiter(iterable)
     try:
         async for item in item_iter:
             yield count, item
@@ -274,7 +327,7 @@ async def sum(iterable: AnyIterable[T], start: T = 0) -> T:
     Sum of ``start`` and all elements in the (async) iterable
     """
     total = start
-    async for item in iter(iterable):
+    async for item in aiter(iterable):
         total += item
     return total
 
@@ -285,7 +338,7 @@ async def list(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> L
     """
     if iterable is None:
         return []
-    return [element async for element in iter(iterable)]
+    return [element async for element in aiter(iterable)]
 
 
 async def tuple(
@@ -296,7 +349,7 @@ async def tuple(
     """
     if iterable is None:
         return ()
-    return (*[element async for element in iter(iterable)],)
+    return (*[element async for element in aiter(iterable)],)
 
 
 async def dict(
@@ -308,7 +361,7 @@ async def dict(
     """
     if iterable is None:
         return {**kwargs}
-    base_dict = {key: value async for key, value in iter(iterable)}
+    base_dict = {key: value async for key, value in aiter(iterable)}
     if kwargs:
         base_dict.update(kwargs)
     return base_dict
@@ -320,4 +373,4 @@ async def set(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> Se
     """
     if iterable is None:
         return {a for a in ()}  # type: ignore
-    return {element async for element in iter(iterable)}
+    return {element async for element in aiter(iterable)}

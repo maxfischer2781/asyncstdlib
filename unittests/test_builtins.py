@@ -2,7 +2,7 @@ import pytest
 
 import asyncstdlib as a
 
-from .utility import sync, asyncify, inside_loop
+from .utility import sync, asyncify, awaitify, inside_loop
 
 
 def hide_coroutine(corofunc):
@@ -10,6 +10,27 @@ def hide_coroutine(corofunc):
         return corofunc(*args, **kwargs)
 
     return wrapper
+
+
+@sync
+async def test_iter1():
+    for iterable in ([], [1, 2, 5, 20], range(20)):
+        assert await a.list(a.iter(iterable)) == list(iterable)
+        assert await a.list(a.iter(asyncify(iterable))) == list(iterable)
+
+
+@sync
+async def test_iter2():
+    for call, sentinel in (
+        (lambda: lambda: 1, 1),
+        (lambda: lambda x=[]: x.append(1) or len(x), 5),
+    ):
+        assert await a.list(a.iter(call(), sentinel)) == list(iter(call(), sentinel))
+        assert await a.list(a.iter(awaitify(call()), sentinel)) == list(
+            iter(call(), sentinel)
+        )
+    with pytest.raises(TypeError):
+        a.iter(1, 1)
 
 
 @sync
