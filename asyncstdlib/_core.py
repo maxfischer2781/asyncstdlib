@@ -83,7 +83,7 @@ class ScopedIter(Generic[T]):
         self._iterables = iterables
         self._iterators: Optional[Tuple[AsyncIterator[T], ...]] = None
 
-    async def __aenter__(self) -> Tuple[AsyncIterator, ...]:
+    async def __aenter__(self) -> Tuple[AsyncIterator[T], ...]:
         assert self._iterators is None, f"{self.__class__.__name__} is not re-entrant"
         self._iterators = (*(iter(it) for it in self._iterables),)
         return self._iterators
@@ -97,6 +97,7 @@ class ScopedIter(Generic[T]):
 def awaitify(
     function: Union[Callable[..., T], Callable[..., Awaitable[T]]]
 ) -> Callable[..., Awaitable[T]]:
+    """Ensure that ``function`` can be used in ``await`` expressions"""
     if iscoroutinefunction(function):
         return function
     else:
@@ -104,6 +105,8 @@ def awaitify(
 
 
 class Awaitify(Generic[T]):
+    """Helper to peek at the return value of ``function`` and make it ``async``"""
+
     __slots__ = "function", "is_async"
 
     def __init__(self, function: Union[Callable[..., T], Callable[..., Awaitable[T]]]):
