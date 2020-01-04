@@ -336,30 +336,26 @@ async def sum(iterable: AnyIterable[T], start: T = 0) -> T:
     return total
 
 
-async def list(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> List[T]:
+async def list(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> List[T]:
     """
     Create a :py:class:`list` from an (async) iterable
 
     This is equivalent to ``[element async for element in iterable]``.
     """
-    if iterable is None:
-        return []
     return [element async for element in aiter(iterable)]
 
 
 async def tuple(
-    iterable: Union[Iterable[T], AsyncIterable[T], None] = None
+    iterable: Union[Iterable[T], AsyncIterable[T]] = ()
 ) -> Tuple[T, ...]:
     """
     Create a :py:class:`tuple` from an (async) iterable
     """
-    if iterable is None:
-        return ()
     return (*[element async for element in aiter(iterable)],)
 
 
 async def dict(
-    iterable: Union[Iterable[Tuple[str, T]], AsyncIterable[Tuple[str, T]], None] = None,
+    iterable: Union[Iterable[Tuple[str, T]], AsyncIterable[Tuple[str, T]]] = (),
     **kwargs: T,
 ) -> Dict[str, T]:
     """
@@ -368,7 +364,7 @@ async def dict(
     This is equivalent to ``{key: value async for key, value in iterable}``
     if no keywords are provided.
     """
-    if iterable is None:
+    if not iterable:
         return {**kwargs}
     base_dict = {key: value async for key, value in aiter(iterable)}
     if kwargs:
@@ -376,12 +372,10 @@ async def dict(
     return base_dict
 
 
-async def set(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> Set[T]:
+async def set(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Set[T]:
     """
     Create a :py:class:`set` from an (async) iterable
 
     This is equivalent to ``{element async for element in iterable}``.
     """
-    if iterable is None:
-        return {a for a in ()}  # type: ignore
     return {element async for element in aiter(iterable)}

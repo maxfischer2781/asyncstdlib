@@ -47,14 +47,14 @@ Iterator transforming
 Standard types
 ==============
 
-.. autofunction:: dict(iterable: ?(async) iter (str, T) = None) -> {str: T, ...}
+.. autofunction:: dict(iterable: (async) iter (str, T) = ()) -> {str: T, ...}
     :async:
 
-.. autofunction:: list(iterable: ?(async) iter T = None) -> [T, ...]
+.. autofunction:: list(iterable: (async) iter T = ()) -> [T, ...]
     :async:
 
-.. autofunction:: set(iterable: ?(async) iter T = None) -> {T, ...}
+.. autofunction:: set(iterable: (async) iter T = ()) -> {T, ...}
     :async:
 
-.. autofunction:: tuple(iterable: ?(async) iter T = None) -> (T, ...)
+.. autofunction:: tuple(iterable: (async) iter T = ()) -> (T, ...)
     :async:
