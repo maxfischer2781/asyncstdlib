@@ -339,6 +339,8 @@ async def sum(iterable: AnyIterable[T], start: T = 0) -> T:
 async def list(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> List[T]:
     """
     Create a :py:class:`list` from an (async) iterable
+
+    This is equivalent to ``[element async for element in iterable]``.
     """
     if iterable is None:
         return []
@@ -361,7 +363,10 @@ async def dict(
     **kwargs: T,
 ) -> Dict[str, T]:
     """
-    Create a :py:class:`dict` from an (async) iterable
+    Create a :py:class:`dict` from an (async) iterable and keywords
+
+    This is equivalent to ``{key: value async for key, value in iterable}``
+    if no keywords are provided.
     """
     if iterable is None:
         return {**kwargs}
@@ -374,6 +379,8 @@ async def dict(
 async def set(iterable: Union[Iterable[T], AsyncIterable[T], None] = None) -> Set[T]:
     """
     Create a :py:class:`set` from an (async) iterable
+
+    This is equivalent to ``{element async for element in iterable}``.
     """
     if iterable is None:
         return {a for a in ()}  # type: ignore
