@@ -216,7 +216,9 @@ async def max(
 
     .. note::
 
-        The two-or-more-arguments variant is not supported yet.
+        The two-or-more-arguments variant is not supported,
+        as it does not benefit from being ``async``.
+        Use the builtin :py:func:`max` function instead.
     """
     async with ScopedIter(iterable) as (item_iter,):
         best = await anext(item_iter, default=__MAX_DEFAULT)
@@ -258,7 +260,9 @@ async def min(
 
     .. note::
 
-        The two-or-more-arguments variant is not supported yet.
+        The two-or-more-arguments variant is not supported,
+        as it does not benefit from being ``async``.
+        Use the builtin :py:func:`min` function instead.
     """
     async with ScopedIter(iterable) as (item_iter,):
         best = await anext(item_iter, default=__MAX_DEFAULT)
