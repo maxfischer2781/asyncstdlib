@@ -28,6 +28,7 @@ from ._core import (
 
 
 T = TypeVar("T", contravariant=True)
+K = TypeVar("K")
 R = TypeVar("R", covariant=True)
 
 __ANEXT_DEFAULT = Sentinel("<no default>")
@@ -352,10 +353,25 @@ async def tuple(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Tuple[T,
     return (*[element async for element in aiter(iterable)],)
 
 
+@overload
 async def dict(
-    iterable: Union[Iterable[Tuple[str, T]], AsyncIterable[Tuple[str, T]]] = (),
+    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
+) -> Dict[K, T]:
+    ...
+
+
+@overload
+async def dict(
+    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
     **kwargs: T,
-) -> Dict[str, T]:
+) -> Dict[Union[K, str], T]:
+    ...
+
+
+async def dict(
+    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
+    **kwargs: T,
+) -> Dict[Union[K, str], T]:
     """
     Create a :py:class:`dict` from an (async) iterable and keywords
 
@@ -364,7 +380,9 @@ async def dict(
     """
     if not iterable:
         return {**kwargs}
-    base_dict = {key: value async for key, value in aiter(iterable)}
+    base_dict: Dict[Union[K, str], T] = {
+        key: value async for key, value in aiter(iterable)
+    }
     if kwargs:
         base_dict.update(kwargs)
     return base_dict
