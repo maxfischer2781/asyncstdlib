@@ -345,9 +345,7 @@ async def list(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> List[T]:
     return [element async for element in aiter(iterable)]
 
 
-async def tuple(
-    iterable: Union[Iterable[T], AsyncIterable[T]] = ()
-) -> Tuple[T, ...]:
+async def tuple(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Tuple[T, ...]:
     """
     Create a :py:class:`tuple` from an (async) iterable
     """
