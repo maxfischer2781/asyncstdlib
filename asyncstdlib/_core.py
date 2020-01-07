@@ -102,26 +102,31 @@ def awaitify(
 class Awaitify(Generic[T]):
     """Helper to peek at the return value of ``function`` and make it ``async``"""
 
-    __slots__ = "function", "is_async"
+    __slots__ = "__wrapped__", "_async_call"
 
     def __init__(self, function: Union[Callable[..., T], Callable[..., Awaitable[T]]]):
-        self.function = function
-        self.is_async = None
+        self.__wrapped__ = function
+        self._async_call: Optional[Callable[..., Awaitable[T]]] = None
 
     def __call__(self, *args, **kwargs) -> Awaitable[T]:
-        value = self.function(*args, **kwargs)
-        if self.is_async is None:
+        async_call = self._async_call
+        if async_call is None:
+            value = self.__wrapped__(*args, **kwargs)
             if isinstance(value, Awaitable):
-                self.is_async = True
+                self._async_call = self.__wrapped__
                 return value
             else:
-                self.is_async = False
+                self._async_call = force_async(self.__wrapped__)
                 return await_value(value)
-        elif self.is_async:
-            return value
         else:
-            return await_value(value)
+            return async_call(*args, **kwargs)
 
 
 async def await_value(value: T) -> T:
     return value
+
+
+def force_async(call: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+    async def async_wrapped(*args, **kwargs):
+        return call(*args, **kwargs)
+    return async_wrapped
