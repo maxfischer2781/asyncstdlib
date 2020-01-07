@@ -155,14 +155,14 @@ class SyncVariadic(Protocol[T, R]):
     """Type of a ``def`` function taking any number of arguments"""
 
     def __call__(self, *args: T) -> R:
-        ...
+        raise NotImplementedError
 
 
 class AsyncVariadic(Protocol[T, R]):
     """Type of an ``async def`` function taking any number of arguments"""
 
     def __call__(self, *args: T) -> Awaitable[R]:
-        ...
+        raise NotImplementedError
 
 
 async def map(
