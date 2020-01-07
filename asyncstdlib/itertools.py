@@ -314,14 +314,14 @@ class Tee(Generic[T]):
         self, iterable: AnyIterable[T], n: int = 2,
     ):
         self._iterator = aiter(iterable)
-        self._cleanup = self._iterator is iterable
+        _cleanup = self._iterator is iterable
         self._buffers = [deque() for _ in range(n)]
         self._children = tuple(
             tee_peer(
                 iterator=self._iterator,
                 buffer=buffer,
                 peers=self._buffers,
-                cleanup=self._cleanup,
+                cleanup=_cleanup,
             )
             for buffer in self._buffers
         )
