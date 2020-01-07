@@ -353,22 +353,22 @@ async def tuple(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Tuple[T,
     return (*[element async for element in aiter(iterable)],)
 
 
-@overload
+@overload  # noqa: F811
 async def dict(
     iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
 ) -> Dict[K, T]:
-    ...
+    pass
 
 
-@overload
+@overload  # noqa: F811
 async def dict(
     iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
     **kwargs: T,
 ) -> Dict[Union[K, str], T]:
-    ...
+    pass
 
 
-async def dict(
+async def dict(  # noqa: F811
     iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
     **kwargs: T,
 ) -> Dict[Union[K, str], T]:
