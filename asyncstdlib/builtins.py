@@ -47,7 +47,7 @@ async def anext(iterator: AsyncIterator[T], default=__ANEXT_DEFAULT) -> T:
 
         This function is not :term:`async neutral`.
         The ``iterator`` must be an :term:`asynchronous iterator`,
-        i.e. support the :py:meth:`~object.__anext__`` method.
+        i.e. support the :py:meth:`~object.__anext__` method.
     """
     try:
         return await iterator.__anext__()
