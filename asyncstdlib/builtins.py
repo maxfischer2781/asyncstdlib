@@ -35,6 +35,20 @@ __ANEXT_DEFAULT = Sentinel("<no default>")
 
 
 async def anext(iterator: AsyncIterator[T], default=__ANEXT_DEFAULT) -> T:
+    """
+    Retrieve the next item from the async iterator
+
+    :raises StopAsyncIteration: if ``iterator`` is exhausted and ``default`` is not set
+
+    If ``default`` is given, it is returned if the ``iterator`` is exhausted.
+    Otherwise, :py:exc:`StopAsyncIteration` is raised for an exhausted ``iterator``.
+
+    .. note::
+
+        This function is not :term:`async neutral`.
+        The ``iterator`` must be an :term:`asynchronous iterator`,
+        i.e. support the :py:meth:`~object.__anext__`` method.
+    """
     try:
         return await iterator.__anext__()
     except StopAsyncIteration:
