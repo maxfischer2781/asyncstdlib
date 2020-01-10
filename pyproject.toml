@@ -9,7 +9,13 @@ author-email = "maxfischer2781@gmail.com"
 home-page = "https://github.com/maxfischer2781/asyncstdlib"
 description-file = "README.rst"
 keywords = "async enumerate itertools builtins functools contextlib"
-classifiers = ["License :: OSI Approved :: MIT License"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+]
 requires = ["typing_extensions"]
 
 [tool.flit.metadata.requires-extra]
