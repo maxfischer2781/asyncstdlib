@@ -1,5 +1,6 @@
 """The missing ``async`` toolbox"""
 from .builtins import (
+    anext,
     zip,
     map,
     filter,
@@ -33,6 +34,7 @@ from .itertools import (
 __version__ = "0.2.0"
 
 __all__ = [
+    "anext",
     "zip",
     "map",
     "filter",

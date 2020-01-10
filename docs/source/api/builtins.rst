@@ -11,6 +11,9 @@ Python's :ref:`built-in-funcs` for (async) functions and (async) iterables.
 Iterator reducing
 =================
 
+.. autofunction:: anext(iterable: async iter T [, default: T]) -> T
+    :async:
+
 .. autofunction:: all(iterable: (async) iter T) -> bool
     :async:
 
