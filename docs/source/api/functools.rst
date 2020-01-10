@@ -52,7 +52,7 @@ A wrapped async callable can be queried for its cache metadata,
 and allows clearing the entire cache. This can be useful to explicitly monitor
 cache performance, and to manage caches of unrestricted size.
 Note that the ``maxsize`` of a cache cannot be changed at runtime -- however,
-the ``__wrapped__`` callable may be wrapped with new a cache of better size.
+the ``__wrapped__`` callable may be wrapped with a new cache of different size.
 
 .. autoclass:: LRUAsyncCallable()
 

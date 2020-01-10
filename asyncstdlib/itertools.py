@@ -79,10 +79,10 @@ async def accumulate(
 
         async def accumulate(iterable, function, *, initial):
             current = initial
-            async for value in accumulate:
-                yield current
-                current = await function(current, value)
             yield current
+            async for value in accumulate:
+                current = await function(current, value)
+                yield current
     """
     async with ScopedIter(iterable) as (item_iter,):
         try:
@@ -301,7 +301,7 @@ class Tee(Generic[T]):
     for the same effect.
 
     If ``iterable`` is an iterator and read elsewhere, ``tee`` will *not*
-    provide these items. Also ``tee`` must internally buffer each item until the
+    provide these items. Also, ``tee`` must internally buffer each item until the
     last iterator has yielded it; if the most and least advanced iterator differ
     by most data, using a :py:class:`list` is faster (but not lazy).
 
@@ -362,7 +362,7 @@ async def zip_longest(
     Create an async iterator that aggregates elements from each of the (async) iterables
 
     The next element of ``zip_longest`` is a :py:class:`tuple` of the next element of
-    each of its ``iterables``. As soon as all of its ``iterables`` is exhausted,
+    each of its ``iterables``. As soon as all of its ``iterables`` are exhausted,
     ``zip_longest`` is exhausted as well. Shorter iterables are padded by ``fillvalue``.
     This means that if ``zip_longest`` receives *n* ``iterables``,
     with the longest having *m* elements, it becomes a generator *m*-times producing

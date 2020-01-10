@@ -327,8 +327,10 @@ async def filter(
 
 async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[int, T]]:
     """
-    An async iterator of a tuple of count and element in an (async) iterable
+    An async iterator of running count and element in an (async) iterable
 
+    The count begins at ``start`` for the first element of ``iterable``,
+    and is incremented by ``1`` for each further element.
     The ``iterable`` may be a regular or async iterable.
     """
     count = start

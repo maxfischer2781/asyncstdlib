@@ -28,7 +28,7 @@ async def reduce(
     ``await function(current, anext(iterable))`` until ``iterable`` is exhausted.
     Note that the output of ``function`` should be valid as its first input.
 
-    The optional ``initial`` is the prepended to all items of ``iterable``
+    The optional ``initial`` is prepended to all items of ``iterable``
     when applying ``function``. If the combination of ``initial``
     and ``iterable`` contains exactly one item, it is returned without
     calling ``function``.
