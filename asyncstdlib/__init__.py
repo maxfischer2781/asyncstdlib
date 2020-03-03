@@ -29,6 +29,7 @@ from .itertools import (
     starmap,
     tee,
     zip_longest,
+    groupby,
 )
 
 __version__ = "1.0.0"
@@ -67,4 +68,5 @@ __all__ = [
     "starmap",
     "tee",
     "zip_longest",
+    "groupby",
 ]

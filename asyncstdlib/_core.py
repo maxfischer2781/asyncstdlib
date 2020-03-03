@@ -17,6 +17,7 @@ T = TypeVar("T")
 
 
 AnyIterable = Union[Iterable[T], AsyncIterable[T]]
+AnyIterator = Union[Iterator[T], AsyncIterator[T]]
 
 
 class Sentinel:

@@ -165,3 +165,53 @@ async def test_zip_longest():
         assert vs[2] is None
     async for _ in a.zip_longest():
         assert False
+
+
+groupby_cases = [
+    [0, 1, 1, 2, 2, 2, 3, 2],
+    list(range(15)) + list(range(15)) + list(range(15)),
+    [num for num in range(5) for _ in range(5)],
+    [num for num in range(5) for _ in range(num)],
+    [1, 1, 2, 2, 2, 2, 3, 3, 1, 2, 5, 5, 2, 2],
+]
+
+
+def identity(x):
+    return x
+
+
+def modulo(x):
+    return x % 3
+
+
+def divide(x):
+    return x // 3
+
+
+async def keys(gby):
+    return [k async for k, _ in a.iter(gby)]
+
+
+async def values(gby):
+    return [await a.list(g) async for _, g in a.iter(gby)]
+
+
+@pytest.mark.parametrize("iterable", groupby_cases)
+@pytest.mark.parametrize("key", [identity, modulo, divide])
+@pytest.mark.parametrize("view", [keys, values])
+@sync
+async def test_groupby(iterable, key, view):
+
+    for akey in (key, awaitify(key)):
+        assert await view(a.groupby(iterable)) == await view(
+            itertools.groupby(iterable)
+        )
+        assert await view(a.groupby(asyncify(iterable))) == await view(
+            itertools.groupby(iterable)
+        )
+        assert await view(a.groupby(iterable, key=akey)) == await view(
+            itertools.groupby(iterable, key=key)
+        )
+        assert await view(a.groupby(asyncify(iterable), key=akey)) == await view(
+            itertools.groupby(iterable, key=key)
+        )
