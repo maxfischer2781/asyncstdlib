@@ -455,6 +455,10 @@ async def groupby(  # noqa: F811
         # fast-forward mode: advance to the next group
         async def seek_group() -> AsyncIterator[T]:
             nonlocal current_value, current_key, exhausted
+            # Note: `value` always ends up being some T
+            # - value is something: we can never unset it
+            # - value is `nothing`: the previous group was not exhausted,
+            #                       and we scan at least one new value
             value: T = current_value
             if not exhausted:
                 previous_key = current_key
@@ -468,9 +472,7 @@ async def groupby(  # noqa: F811
         # the lazy iterable of all items with the same key
         async def group(desired_key, value: T) -> AsyncIterator[T]:
             nonlocal current_value, current_key, exhausted
-            # there may be one value stored, push it out if needed
-            if value is not nothing:
-                yield value
+            yield value
             async for value in async_iter:
                 next_key = await make_key(value)
                 if next_key == desired_key:
