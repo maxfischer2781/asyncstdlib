@@ -1,4 +1,5 @@
 from typing import (
+    Any,
     TypeVar,
     AsyncIterator,
     List,
@@ -10,6 +11,7 @@ from typing import (
     Generic,
     Iterator,
     Tuple,
+    overload,
 )
 from collections import deque
 
@@ -398,9 +400,30 @@ async def identity(x: T) -> T:
     return x
 
 
+@overload
 async def groupby(
     iterable: AnyIterable[T],
-    key: Optional[Union[Callable[[R], T], Callable[[T], Awaitable[R]]]] = identity
+) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]:
+    ...
+
+
+@overload
+async def groupby(
+    iterable: AnyIterable[T], key: None
+) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]:
+    ...
+
+
+@overload
+async def groupby(
+    iterable: AnyIterable[T], key: Union[Callable[[T], R], Callable[[T], Awaitable[R]]]
+) -> AsyncIterator[Tuple[R, AsyncIterator[T]]]:
+    ...
+
+
+async def groupby(
+    iterable: AnyIterable[T],
+    key: Optional[Union[Callable[[T], R], Callable[[T], Awaitable[R]]]] = identity,
 ):
     """
     Create an async iterator over consecutive keys and groups from the (async) iterable
@@ -412,13 +435,15 @@ async def groupby(
     # whether the current group was exhausted and the next begins already
     exhausted = False
     # `current_*`: buffer for key/value the current group peeked beyond its end
-    current_key = current_value = nothing = object()
-    make_key = _awaitify(key) if key is not None else identity
+    current_key = current_value = nothing = object()  # type: Any
+    make_key: Callable[[T], Awaitable[R]] = _awaitify(
+        key
+    ) if key is not None else identity
     async with ScopedIter(iterable) as (async_iter,):
         # fast-forward mode: advance to the next group
-        async def seek_group():
+        async def seek_group() -> AsyncIterator[T]:
             nonlocal current_value, current_key, exhausted
-            value = current_value
+            value: T = current_value
             if not exhausted:
                 previous_key = current_key
                 while previous_key == current_key:
@@ -429,7 +454,7 @@ async def groupby(
             return group(current_key, value=value)
 
         # the lazy iterable of all items with the same key
-        async def group(desired_key, value):
+        async def group(desired_key, value: T) -> AsyncIterator[T]:
             nonlocal current_value, current_key, exhausted
             # there may be one value stored, push it out if needed
             if value is not nothing:
