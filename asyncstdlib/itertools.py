@@ -400,28 +400,28 @@ async def identity(x: T) -> T:
     return x
 
 
-@overload
+@overload  # noqa: F811
 async def groupby(
     iterable: AnyIterable[T],
 ) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]:
     ...
 
 
-@overload
+@overload  # noqa: F811
 async def groupby(
     iterable: AnyIterable[T], key: None
 ) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]:
     ...
 
 
-@overload
+@overload  # noqa: F811
 async def groupby(
     iterable: AnyIterable[T], key: Union[Callable[[T], R], Callable[[T], Awaitable[R]]]
 ) -> AsyncIterator[Tuple[R, AsyncIterator[T]]]:
     ...
 
 
-async def groupby(
+async def groupby(  # noqa: F811
     iterable: AnyIterable[T],
     key: Optional[Union[Callable[[T], R], Callable[[T], Awaitable[R]]]] = identity,
 ):
