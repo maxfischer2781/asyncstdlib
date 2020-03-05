@@ -113,28 +113,22 @@ async def all(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`True` if none of the elements of the (async) ``iterable`` are false
     """
-    item_iter = aiter(iterable)
-    try:
+    async with ScopedIter(iterable) as (item_iter,):
         async for element in item_iter:
             if not element:
                 return False
         return True
-    finally:
-        await _close_temporary(item_iter, iterable)
 
 
 async def any(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`False` if none of the elements of the (async) ``iterable`` are true
     """
-    item_iter = aiter(iterable)
-    try:
+    async with ScopedIter(iterable) as (item_iter,):
         async for element in item_iter:
             if element:
                 return True
         return False
-    finally:
-        await _close_temporary(item_iter, iterable)
 
 
 async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
@@ -199,14 +193,11 @@ async def map(
     The ``function`` may be a regular or async callable.
     Multiple ``iterable`` may be mixed regular and async iterables.
     """
-    args_iter = zip(*iterable)
     function = _awaitify(function)
-    try:
+    async with ScopedIter(zip(*iterable)) as (args_iter,):
         async for args in args_iter:
             result = function(*args)
             yield await result
-    finally:
-        await args_iter.aclose()
 
 
 __MAX_DEFAULT = Sentinel("<no default>")
@@ -334,13 +325,10 @@ async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[in
     The ``iterable`` may be a regular or async iterable.
     """
     count = start
-    item_iter = aiter(iterable)
-    try:
+    async with ScopedIter(iterable) as (item_iter,):
         async for item in item_iter:
             yield count, item
             count += 1
-    finally:
-        await _close_temporary(item_iter, iterable)
 
 
 async def sum(iterable: AnyIterable[T], start: T = 0) -> T:
