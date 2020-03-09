@@ -1,3 +1,4 @@
+from builtins import zip as _zip
 from typing import (
     Iterable,
     AsyncIterable,
@@ -21,6 +22,7 @@ from ._core import (
     aiter,
     AnyIterable,
     ScopedIter,
+    close_temporary as _close_temporary,
     awaitify as _awaitify,
     Sentinel,
 )
@@ -150,12 +152,15 @@ async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
     """
     if not iterables:
         return
-    async with ScopedIter(*iterables) as aiters:
-        try:
-            while True:
-                yield (*[await anext(it) for it in aiters],)
-        except StopAsyncIteration:
-            return
+    aiters = (*(aiter(it) for it in iterables),)
+    try:
+        while True:
+            yield (*[await anext(it) for it in aiters],)
+    except StopAsyncIteration:
+        return
+    finally:
+        for iterable, iterator in _zip(iterables, aiters):
+            await _close_temporary(iterator, iterable)
 
 
 class SyncVariadic(Protocol[T, R]):

@@ -1,3 +1,4 @@
+from builtins import zip as _zip
 from typing import (
     Any,
     TypeVar,
@@ -16,7 +17,7 @@ from typing import (
 from collections import deque
 
 from ._utility import public_module
-from ._core import ScopedIter, AnyIterable, awaitify as _awaitify, Sentinel
+from ._core import ScopedIter, AnyIterable, awaitify as _awaitify, Sentinel, close_temporary as _close_temporary
 from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
 
 T = TypeVar("T")
@@ -376,7 +377,9 @@ async def zip_longest(
     """
     if not iterables:
         return
-    async with ScopedIter(*iterables, _repeat(fillvalue)) as (*async_iters, fill_iter):
+    fill_iter = aiter(_repeat(fillvalue))
+    async_iters = list(aiter(it) for it in iterables)
+    try:
         remaining = len(async_iters)
         while True:
             values = []
@@ -393,6 +396,10 @@ async def zip_longest(
                     values.append(value)
                     del value
             yield tuple(values)
+    finally:
+        await fill_iter.aclose()
+        for iterable, iterator in _zip(iterables, async_iters):
+            await _close_temporary(iterator, iterable)
 
 
 async def identity(x: T) -> T:
