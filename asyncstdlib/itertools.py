@@ -13,6 +13,7 @@ from typing import (
     Iterator,
     Tuple,
     overload,
+    AsyncGenerator,
 )
 from collections import deque
 
@@ -260,28 +261,30 @@ async def takewhile(
 
 async def tee_peer(
     iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]], cleanup: bool,
-) -> AsyncIterator[T]:
-    while True:
-        if not buffer:
-            try:
-                item = await iterator.__anext__()
-            except StopAsyncIteration:
+) -> AsyncGenerator[T, None]:
+    try:
+        while True:
+            if not buffer:
+                try:
+                    item = await iterator.__anext__()
+                except StopAsyncIteration:
+                    break
+                else:
+                    # Append to all buffers, including our own. We'll fetch our
+                    # item from the buffer again, instead of yielding it directly.
+                    # This ensures the proper item ordering if any of our peers
+                    # are fetching items concurrently. They may have buffered their
+                    # item already.
+                    for peer in peers:
+                        peer.append(item)
+            yield buffer.popleft()
+    finally:
+        for idx, item in enumerate(peers):
+            if item is buffer:
+                peers.pop(idx)
                 break
-            else:
-                # Append to all buffers, including our own. We'll fetch our
-                # item from the buffer again, instead of yielding it directly.
-                # This ensures the proper item ordering if any of our peers
-                # are fetching items concurrently. They may have buffered their
-                # item already.
-                for peer in peers:
-                    peer.append(item)
-        yield buffer.popleft()
-    for idx, item in enumerate(peers):
-        if item is buffer:
-            peers.pop(idx)
-            break
-    if cleanup and not peers and hasattr(iterator, "aclose"):
-        await iterator.aclose()
+        if cleanup and not peers and hasattr(iterator, "aclose"):
+            await iterator.aclose()
 
 
 @public_module(__name__, "tee")
