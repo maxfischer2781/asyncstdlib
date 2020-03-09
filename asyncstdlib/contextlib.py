@@ -2,6 +2,8 @@ from typing import TypeVar, Generic, AsyncGenerator, Callable
 from typing_extensions import Protocol, AsyncContextManager
 from functools import wraps
 
+from ._utility import public_module
+
 
 class ACloseable(Protocol):
     async def aclose(self):
@@ -82,7 +84,8 @@ class _AsyncGeneratorContextManager:
                 raise RuntimeError("generator did not stop after throw() in __aexit__")
 
 
-class closing(Generic[AC]):
+@public_module(__name__, "closing")
+class Closing(Generic[AC]):
     """
     Create an :term:`asynchronous context manager` to ``aclose`` some ``thing`` on exit
 
@@ -113,7 +116,11 @@ class closing(Generic[AC]):
         await self.thing.aclose()
 
 
-class nullcontext(Generic[T]):
+closing = Closing
+
+
+@public_module(__name__, "nullcontext")
+class NullContext(Generic[T]):
     """
     Create an :term:`asynchronous context manager` that only returns ``enter_result``
 
@@ -144,3 +151,6 @@ class nullcontext(Generic[T]):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
+
+
+nullcontext = NullContext
