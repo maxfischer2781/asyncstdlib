@@ -17,7 +17,13 @@ from typing import (
 from collections import deque
 
 from ._utility import public_module
-from ._core import ScopedIter, AnyIterable, awaitify as _awaitify, Sentinel, close_temporary as _close_temporary
+from ._core import (
+    ScopedIter,
+    AnyIterable,
+    awaitify as _awaitify,
+    Sentinel,
+    close_temporary as _close_temporary,
+)
 from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
 
 T = TypeVar("T")
