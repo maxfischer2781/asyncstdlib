@@ -33,7 +33,7 @@ async def reduce(
     and ``iterable`` contains exactly one item, it is returned without
     calling ``function``.
     """
-    async with ScopedIter(iterable) as (item_iter,):
+    async with ScopedIter(iterable) as item_iter:
         try:
             value = (
                 initial if initial is not __REDUCE_SENTINEL else await anext(item_iter)

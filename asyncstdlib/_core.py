@@ -7,7 +7,6 @@ from typing import (
     Union,
     Generic,
     Optional,
-    Tuple,
     Iterator,
     Awaitable,
     Callable,
@@ -72,20 +71,19 @@ async def close_temporary(
 
 
 class ScopedIter(Generic[T]):
-    """Context manager that provides iterators and cleans up any created ones"""
+    """Context manager that provides and cleans up an iterator for an iterable"""
 
-    def __init__(self, *iterables: AnyIterable[T]):
-        self._iterables = iterables
-        self._iterators: Optional[Tuple[AsyncIterator[T], ...]] = None
+    def __init__(self, iterable: AnyIterable[T]):
+        self._iterable = iterable
+        self._iterator: Optional[AsyncIterator[T]] = None
 
-    async def __aenter__(self) -> Tuple[AsyncIterator[T], ...]:
-        assert self._iterators is None, f"{self.__class__.__name__} is not re-entrant"
-        self._iterators = (*(aiter(it) for it in self._iterables),)
-        return self._iterators
+    async def __aenter__(self) -> AsyncIterator[T]:
+        assert self._iterator is None, f"{self.__class__.__name__} is not re-entrant"
+        self._iterator = aiter(self._iterable)
+        return self._iterator
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        for iterable, iterator in zip(self._iterables, self._iterators):
-            await close_temporary(iterator, iterable)
+        await close_temporary(self._iterator, self._iterable)
         return False
 
 

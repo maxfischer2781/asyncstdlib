@@ -1,3 +1,4 @@
+from builtins import zip as _zip
 from typing import (
     Any,
     TypeVar,
@@ -12,11 +13,18 @@ from typing import (
     Iterator,
     Tuple,
     overload,
+    AsyncGenerator,
 )
 from collections import deque
 
 from ._utility import public_module
-from ._core import ScopedIter, AnyIterable, awaitify as _awaitify, Sentinel
+from ._core import (
+    ScopedIter,
+    AnyIterable,
+    awaitify as _awaitify,
+    Sentinel,
+    close_temporary as _close_temporary,
+)
 from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
 
 T = TypeVar("T")
@@ -39,7 +47,7 @@ async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
     significant memory.
     """
     buffer: List[T] = []
-    async with ScopedIter(iterable) as (async_iter,):
+    async with ScopedIter(iterable) as async_iter:
         async for item in async_iter:  # type: T
             buffer.append(item)
             yield item
@@ -87,7 +95,7 @@ async def accumulate(
                 current = await function(current, value)
                 yield current
     """
-    async with ScopedIter(iterable) as (item_iter,):
+    async with ScopedIter(iterable) as item_iter:
         try:
             value = (
                 initial
@@ -111,8 +119,8 @@ async def chain(*iterables: AnyIterable[T]) -> AsyncIterator[T]:
     each of the ``iterables``. This is similar to converting all ``iterables`` to
     sequences and concatenating them, but lazily exhausts each iterable.
     """
-    async with ScopedIter(*iterables) as iterators:
-        for iterator in iterators:
+    for iterable in iterables:
+        async with ScopedIter(iterable) as iterator:
             async for item in iterator:
                 yield item
 
@@ -124,9 +132,9 @@ async def chain_from_iterable(
     """
     Alternate constructor for :py:func:`~.chain` that lazily exhausts iterables as well
     """
-    async with ScopedIter(iterable) as (iterables,):
+    async with ScopedIter(iterable) as iterables:
         async for sub_iterable in iterables:
-            async with ScopedIter(sub_iterable) as (iterator,):
+            async with ScopedIter(sub_iterable) as iterator:
                 async for item in iterator:
                     yield item
 
@@ -149,7 +157,7 @@ async def compress(
         async def compress(data, selectors):
             return (item async for item, select in zip(data, selectors) if select)
     """
-    async with ScopedIter(data, selectors) as (data_iter, selectors_iter):
+    async with ScopedIter(data) as data_iter, ScopedIter(selectors) as selectors_iter:
         async for item, keep in zip(data_iter, selectors_iter):
             if keep:
                 yield item
@@ -168,7 +176,7 @@ async def dropwhile(
     yielded immediately as they become available, without evaluating ``predicate``
     for them.
     """
-    async with ScopedIter(iterable) as (async_iter,):
+    async with ScopedIter(iterable) as async_iter:
         predicate = _awaitify(predicate)
         async for item in async_iter:
             if not await predicate(item):  # type: ignore
@@ -191,18 +199,19 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
     """
     s = slice(*args)
     start, stop, step = s.start or 0, s.stop, s.step or 1
-    async with ScopedIter(iterable) as (async_iter,):
+    async with ScopedIter(iterable) as async_iter:
         # always consume the first ``start - 1`` items, even if the slice is empty
         if start > 0:
             async for _count, element in aenumerate(async_iter, start=1):
                 if _count == start:
                     break
         if stop is None:
-            async for idx, element in aenumerate(async_iter, start=start):
+            async for idx, element in aenumerate(async_iter, start=0):
                 if idx % step == 0:
                     yield element
         else:
-            async for idx, element in aenumerate(async_iter, start=start):
+            stop -= start
+            async for idx, element in aenumerate(async_iter, start=0):
                 if idx >= stop:
                     return
                 if not idx % step:
@@ -224,7 +233,7 @@ async def starmap(
     ``function(*c)`` can be generalized to ``starmap(function, iter_c)``.
     """
     function = _awaitify(function)
-    async with ScopedIter(iterable) as (async_iter,):
+    async with ScopedIter(iterable) as async_iter:
         async for args in async_iter:
             yield await function(*args)
 
@@ -242,7 +251,7 @@ async def takewhile(
     ``iterable`` is a single-use iterator, the item is available neither from
     ``iterable`` nor ``takewhile`` and effectively discarded.
     """
-    async with ScopedIter(iterable) as (async_iter,):
+    async with ScopedIter(iterable) as async_iter:
         predicate = _awaitify(predicate)
         async for item in async_iter:
             if await predicate(item):
@@ -253,28 +262,30 @@ async def takewhile(
 
 async def tee_peer(
     iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]], cleanup: bool,
-) -> AsyncIterator[T]:
-    while True:
-        if not buffer:
-            try:
-                item = await iterator.__anext__()
-            except StopAsyncIteration:
+) -> AsyncGenerator[T, None]:
+    try:
+        while True:
+            if not buffer:
+                try:
+                    item = await iterator.__anext__()
+                except StopAsyncIteration:
+                    break
+                else:
+                    # Append to all buffers, including our own. We'll fetch our
+                    # item from the buffer again, instead of yielding it directly.
+                    # This ensures the proper item ordering if any of our peers
+                    # are fetching items concurrently. They may have buffered their
+                    # item already.
+                    for peer in peers:
+                        peer.append(item)
+            yield buffer.popleft()
+    finally:
+        for idx, item in enumerate(peers):
+            if item is buffer:
+                peers.pop(idx)
                 break
-            else:
-                # Append to all buffers, including our own. We'll fetch our
-                # item from the buffer again, instead of yielding it directly.
-                # This ensures the proper item ordering if any of our peers
-                # are fetching items concurrently. They may have buffered their
-                # item already.
-                for peer in peers:
-                    peer.append(item)
-        yield buffer.popleft()
-    for idx, item in enumerate(peers):
-        if item is buffer:
-            peers.pop(idx)
-            break
-    if cleanup and not peers and hasattr(iterator, "aclose"):
-        await iterator.aclose()
+        if cleanup and not peers and hasattr(iterator, "aclose"):
+            await iterator.aclose()
 
 
 @public_module(__name__, "tee")
@@ -376,7 +387,9 @@ async def zip_longest(
     """
     if not iterables:
         return
-    async with ScopedIter(*iterables, _repeat(fillvalue)) as (*async_iters, fill_iter):
+    fill_iter = aiter(_repeat(fillvalue))
+    async_iters = list(aiter(it) for it in iterables)
+    try:
         remaining = len(async_iters)
         while True:
             values = []
@@ -393,6 +406,10 @@ async def zip_longest(
                     values.append(value)
                     del value
             yield tuple(values)
+    finally:
+        await fill_iter.aclose()
+        for iterable, iterator in _zip(iterables, async_iters):
+            await _close_temporary(iterator, iterable)
 
 
 async def identity(x: T) -> T:
@@ -451,7 +468,7 @@ async def groupby(  # noqa: F811
     make_key: Callable[[T], Awaitable[R]] = _awaitify(
         key
     ) if key is not None else identity
-    async with ScopedIter(iterable) as (async_iter,):
+    async with ScopedIter(iterable) as async_iter:
         # fast-forward mode: advance to the next group
         async def seek_group() -> AsyncIterator[T]:
             nonlocal current_value, current_key, exhausted
@@ -486,7 +503,7 @@ async def groupby(  # noqa: F811
         try:
             while True:
                 next_group = await seek_group()
-                async with ScopedIter(next_group) as (scoped_group,):
+                async with ScopedIter(next_group) as scoped_group:
                     yield current_key, scoped_group
         except StopAsyncIteration:
             return
