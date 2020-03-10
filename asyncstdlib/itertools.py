@@ -206,11 +206,12 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
                 if _count == start:
                     break
         if stop is None:
-            async for idx, element in aenumerate(async_iter, start=start):
+            async for idx, element in aenumerate(async_iter, start=0):
                 if idx % step == 0:
                     yield element
         else:
-            async for idx, element in aenumerate(async_iter, start=start):
+            stop -= start
+            async for idx, element in aenumerate(async_iter, start=0):
                 if idx >= stop:
                     return
                 if not idx % step:
