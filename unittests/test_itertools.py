@@ -88,7 +88,10 @@ async def test_compress(data, selectors):
 droptakewhile_cases = [
     (range(20), lambda x: x < 5),
     (range(20), lambda x: x > 5),
-    ([1] * 12, lambda y: y > 5),
+    ([1] * 12, lambda x: x > 5),
+    ([1, 2, 3, 4] * 4, lambda x: x < 3),
+    ([1, 2, 3, 4] * 4, lambda x: True),
+    ([1, 2, 3, 4] * 4, lambda x: False),
 ]
 
 
