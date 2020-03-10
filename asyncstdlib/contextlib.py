@@ -5,6 +5,11 @@ from functools import wraps
 from ._utility import public_module
 
 
+# typing.AsyncContextManager uses contextlib.AbstractAsyncContextManager if available,
+# and a custom implementation otherwise. No need to replicate it.
+AbstractContextManager = AsyncContextManager
+
+
 class ACloseable(Protocol):
     async def aclose(self):
         """Asynchronously close this object"""
