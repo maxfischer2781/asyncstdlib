@@ -119,14 +119,16 @@ async def test_takewhile(iterable, predicate):
     )
 
 
+@pytest.mark.parametrize("iterable", ((), (1, 2, 3, 4), range(25), range(500)))
+@pytest.mark.parametrize(
+    "slicing",
+    ((None, None, None), (0,), (5,), (0, 20, 3), (5, 0, 1), (3, 50, 4), (5, None, 6)),
+)
 @sync
-async def test_islice():
-    for iterable in ((), (1, 2, 3, 4), range(25), range(500)):
-        for slicing in ((0,), (5,), (None, None, None), (0, 20, 3), (5, 0, 1)):
-            print(slicing)
-            expected = list(itertools.islice(iterable, *slicing))
-            assert await a.list(a.islice(iterable, *slicing)) == expected
-            assert await a.list(a.islice(asyncify(iterable), *slicing)) == expected
+async def test_islice(iterable, slicing):
+    expected = list(itertools.islice(iterable, *slicing))
+    assert await a.list(a.islice(iterable, *slicing)) == expected
+    assert await a.list(a.islice(asyncify(iterable), *slicing)) == expected
 
 
 starmap_cases = [
