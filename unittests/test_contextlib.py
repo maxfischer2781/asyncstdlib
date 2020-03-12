@@ -222,7 +222,13 @@ async def test_exit_stack_push():
             exit_stack.push(partial(replace, new=IndexError()))
             exit_stack.push(observe)
             raise KeyError()
-    assert list(map(type, seen)) == [KeyError, KeyError, IndexError, type(None), ValueError]
+    assert list(map(type, seen)) == [
+        KeyError,
+        KeyError,
+        IndexError,
+        type(None),
+        ValueError,
+    ]
     assert seen[2].__context__ == seen[1]
     assert exc_info.type == TypeError
     assert exc_info.value.__context__ == seen[-1]
