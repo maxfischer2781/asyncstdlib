@@ -238,7 +238,7 @@ async def test_exit_stack_push():
 async def test_exit_stack_stitch_context():
     async def replace(exc_type, exc_val, tb, new):
         try:
-            {}['a']
+            {}["a"]
         except KeyError:
             raise new
 
