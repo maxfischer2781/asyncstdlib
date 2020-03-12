@@ -232,3 +232,27 @@ async def test_exit_stack_push():
     assert seen[2].__context__ == seen[1]
     assert exc_info.type == TypeError
     assert exc_info.value.__context__ == seen[-1]
+
+
+@sync
+async def test_exit_stack_stitch_context():
+    async def replace(exc_type, exc_val, tb, new):
+        try:
+            {}['a']
+        except KeyError:
+            raise new
+
+    async def extend(exc_type, exc_val, tb, new):
+        try:
+            raise exc_val
+        except exc_type:
+            raise new
+
+    replacement_exc, middle_exc, initial_exc = TypeError(), ValueError(), IndexError()
+    with pytest.raises(type(replacement_exc)) as exc_info:
+        async with a.ExitStack() as exit_stack:
+            exit_stack.push(partial(extend, new=replacement_exc))
+            exit_stack.push(partial(replace, new=middle_exc))
+            raise initial_exc
+    assert exc_info.value.__context__ == middle_exc
+    assert exc_info.value.__context__.__context__ == initial_exc
