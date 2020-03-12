@@ -139,8 +139,36 @@ async def test_nullcontext():
         assert value == 1337
 
 
+class MockContext:
+    def __init__(self, value=None):
+        self._value = value
+        self.entered = False
+        self.exited = False
+
+    async def __aenter__(self):
+        self.entered = True
+        return self._value
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.exited = True
+
+
 @sync
 async def test_exist_stack():
-    async with a.ExitStack() as exist_stack:
+    async with a.ExitStack() as exit_stack:
         for value in (0, 1, 2, 3, -5, None, "Hello"):
-            assert value == await exist_stack.enter_context(a.nullcontext(value))
+            assert value == await exit_stack.enter_context(a.nullcontext(value))
+
+
+@sync
+async def test_exit_stack_pop_all():
+    async with a.ExitStack() as exit_stack:
+        contexts = list(map(MockContext, range(10)))
+        values = await a.list(a.map(exit_stack.enter_context, contexts))
+        assert values == list(range(10))
+        assert all(cm.entered for cm in contexts)
+        assert all(not cm.exited for cm in contexts)
+        clone_stack = exit_stack.pop_all()
+    assert all(not cm.exited for cm in contexts)
+    await clone_stack.aclose()
+    assert all(cm.exited for cm in contexts)
