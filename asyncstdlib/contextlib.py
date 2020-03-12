@@ -185,6 +185,19 @@ SE = TypeVar(
 
 
 class ExitStack:
+    """
+    Context Manager emulating several nested Context Managers
+
+    Once an :py:class:`~.ExitStack` is entered, :py:meth:`enter_context` can be used to
+    emulate entering further context managers. When unwinding the stack, context
+    managers are exited in LIFO order, effectively emulating nested context managers.
+    The primary use-case is programmatically entering optional or a dynamically sized
+    number of context managers.
+
+    In addition, arbitrary cleanup functions and callbacks can be registered using
+    :py:meth:`push` and :py:meth:`callback`. This allows running additional cleanup,
+    similar to ``defer`` statements in other languages.
+    """
     def __init__(self):
         self._exit_callbacks = deque()
 
@@ -218,8 +231,8 @@ class ExitStack:
         :return: the ``exit`` parameter, unchanged
 
         When the stack is unwound, callbacks receive the current exception details, and
-        are expected to return a ``bool`` to indicate whether the exception should be
-        suppressed. Two normalizations are applied to match the ``__aexit__`` signature:
+        are expected to return :py:data:`True` if the exception should be suppressed.
+        Two normalizations are applied to match the ``__aexit__`` signature:
 
         * If ``exit`` has an ``__aexit__`` method, this method is used instead.
 
@@ -265,7 +278,7 @@ class ExitStack:
         )
         return callback
 
-    async def enter_context(self, cm):
+    async def enter_context(self, cm: AsyncContextManager):
         """
         Enter the supplied context manager, and register it for exit if successful
 
@@ -290,7 +303,8 @@ class ExitStack:
         stack of ``async with`` (that is, in LIFO order). It receives the current
         exception details and may suppress it as usual.
         As with the ``async with`` statement, if the context cannot be entered
-        (that is, ``await cm.__enter__()`` throws an exception) it is not exited either.
+        (that is, ``await cm.__aenter__()`` throws an exception) it is not exited
+        either.
         """
         bound_exit_method = type(cm).__aexit__.__get__(cm, type(cm))
         context_value = await type(cm).__aenter__(cm)
