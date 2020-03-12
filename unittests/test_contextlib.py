@@ -1,3 +1,5 @@
+from functools import partial
+
 import pytest
 
 import asyncstdlib as a
@@ -172,3 +174,55 @@ async def test_exit_stack_pop_all():
     assert all(not cm.exited for cm in contexts)
     await clone_stack.aclose()
     assert all(cm.exited for cm in contexts)
+
+
+@sync
+async def test_exit_stack_callback():
+    """Test that callbacks are run regardless of exceptions"""
+    unwind_values = []
+
+    async def push(value):
+        unwind_values.append(value)
+        return True  # attempt to suppress - this must not succeed
+
+    with pytest.raises(KeyError):
+        async with a.ExitStack() as exit_stack:
+            for value in range(5):
+                exit_stack.callback(push, value)
+            raise KeyError()
+    assert unwind_values == list(reversed(range(5)))
+
+
+@sync
+async def test_exit_stack_push():
+    seen = []
+
+    async def observe(exc_type, exc_val, tb):
+        seen.append(exc_val)
+        return False
+
+    @a.contextmanager
+    async def suppress():
+        try:
+            yield
+        except BaseException as exc_val:
+            await observe(type(exc_val), exc_val, exc_val.__traceback__)
+
+    async def replace(exc_type, exc_val, tb, new):
+        await observe(exc_type, exc_val, tb)
+        raise new
+
+    with pytest.raises(TypeError) as exc_info:
+        async with a.ExitStack() as exit_stack:
+            exit_stack.push(partial(replace, new=TypeError()))
+            exit_stack.push(partial(replace, new=ValueError()))
+            s = suppress()
+            await s.__aenter__()
+            exit_stack.push(s)
+            exit_stack.push(partial(replace, new=IndexError()))
+            exit_stack.push(observe)
+            raise KeyError()
+    assert list(map(type, seen)) == [KeyError, KeyError, IndexError, type(None), ValueError]
+    assert seen[2].__context__ == seen[1]
+    assert exc_info.type == TypeError
+    assert exc_info.value.__context__ == seen[-1]
