@@ -137,3 +137,10 @@ async def test_contextmanager_raise_same():
 async def test_nullcontext():
     async with a.nullcontext(1337) as value:
         assert value == 1337
+
+
+@sync
+async def test_exist_stack():
+    async with a.ExitStack() as exist_stack:
+        for value in (0, 1, 2, 3, -5, None, "Hello"):
+            assert value == await exist_stack.enter_context(a.nullcontext(value))
