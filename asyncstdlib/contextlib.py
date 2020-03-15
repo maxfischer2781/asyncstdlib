@@ -15,7 +15,7 @@ from functools import partial
 import sys
 
 from ._core import awaitify
-from ._utility import public_module
+from ._utility import public_module, slot_get as _slot_get
 
 
 # typing.AsyncContextManager uses contextlib.AbstractAsyncContextManager if available,
@@ -253,11 +253,11 @@ class ExitStack:
             instead.
         """
         try:
-            exit_method = type(exit).__aexit__
+            exit_method = _slot_get(exit, "__aexit__")
         except AttributeError:
             self._exit_callbacks.append(awaitify(exit))
         else:
-            self._exit_callbacks.append(exit_method.__get__(exit, type(exit)))
+            self._exit_callbacks.append(exit_method)
         return exit
 
     def callback(self, callback: Callable, *args, **kwargs):
@@ -306,8 +306,8 @@ class ExitStack:
         (that is, ``await cm.__aenter__()`` throws an exception) it is not exited
         either.
         """
-        bound_exit_method = type(cm).__aexit__.__get__(cm, type(cm))
-        context_value = await type(cm).__aenter__(cm)
+        bound_exit_method = _slot_get(cm, "__aexit__")
+        context_value = await _slot_get(cm, "__aenter__")()
         self._exit_callbacks.append(bound_exit_method)
         return context_value
 

@@ -14,3 +14,14 @@ def public_module(module_name: str, qual_name: str = None):
         return thing
 
     return decorator
+
+
+def slot_get(instance, name: str):
+    owner = type(instance)
+    descriptor = getattr(owner, name)
+    try:
+        get = descriptor.__get__
+    except AttributeError:
+        return descriptor
+    else:
+        return get(instance, owner)
