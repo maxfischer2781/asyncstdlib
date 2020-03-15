@@ -39,37 +39,37 @@ It is fully agnostic to ``async`` event loops and seamlessly works with
 :py:mod:`asyncio`, third-party libraries such as :py:mod:`trio`, as well as
 any custom ``async`` event loop.
 
-All re-implementations are located in submodules of :py:mod:`asyncstdlib`
-with the same name as those of the Python standard library.
-For simplicity, the :py:mod:`asyncstdlib` namespace also exposes all individual
-functions and classes directly.
-For example, :py:mod:`asyncstdlib.builtins.enumerate` is also available
-as ``asyncstdlib.enumerate``.
-
 Standard Library Modules
 ========================
 
+All re-implementations are located in submodules of :py:mod:`asyncstdlib`
+with the same name as those of the Python standard library.
+
 :py:mod:`asyncstdlib.builtins`
-    Replicates any :ref:`built-in-funcs` that take an :term:`iterable`,
+    Replicates any :ref:`built-in-funcs` that benefit from being asynchronous,
     such as :py:func:`~asyncstdlib.builtins.zip`, :py:func:`~asyncstdlib.builtins.sum`
     or :py:func:`~asyncstdlib.builtins.list`.
 
 :py:mod:`asyncstdlib.functools`
-    Replicates any :py:mod:`functools` that take an :term:`iterable`,
+    Replicates any :py:mod:`functools` that benefit from being asynchronous,
     which is just :py:func:`~asyncstdlib.functools.reduce`
     and :py:func:`~asyncstdlib.functools.lru_cache`.
 
 :py:mod:`asyncstdlib.contextlib`
-    Replicates any :py:mod:`contextlib` objects working with an :term:`iterable`
-    or :term:`context manager`,
+    Replicates any :py:mod:`contextlib` tools that benefit from being asynchronous,
     such as :py:func:`~asyncstdlib.contextlib.contextmanager` or
     :py:func:`~asyncstdlib.contextlib.closing`.
 
 :py:mod:`asyncstdlib.itertools`
-    Replicates any :py:mod:`itertools` that lazily take an :term:`iterable`,
+    Replicates any :py:mod:`itertools` that benefit from being asynchronous,
     such as :py:func:`~asyncstdlib.itertools.cycle`,
     :py:func:`~asyncstdlib.itertools.chain`
     or :py:func:`~asyncstdlib.itertools.accumulate`.
+
+For simplicity, the :py:mod:`asyncstdlib` namespace also exposes all individual
+functions and classes directly.
+For example, :py:mod:`asyncstdlib.builtins.enumerate` is also available
+as ``asyncstdlib.enumerate``.
 
 Async Neutral Arguments
 =======================
@@ -90,8 +90,9 @@ regular or async.
 
 Note that only *arguments* to :py:mod:`asyncstdlib` may be async neutral.
 All callables of :py:mod:`asyncstdlib` consistently provide
-:term:`awaitables <awaitable>` and
-:term:`asynchronous iterators <asynchronous iterator>`.
+:term:`awaitables <awaitable>`,
+:term:`asynchronous iterators <asynchronous iterator>`, and
+:term:`asynchronous context managers <asynchronous context manager>`.
 
 Async Iterator Cleanup
 ======================
@@ -110,7 +111,6 @@ the :py:mod:`asyncstdlib` async iterator itself is cleaned up.
          it is a new object, that is ``aiter is not source`` holds true.
 
 .. _PEP 533: https://www.python.org/dev/peps/pep-0533/
-
 
 Indices and tables
 ==================
