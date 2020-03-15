@@ -1,4 +1,5 @@
 from functools import partial
+from contextlib import contextmanager
 
 import pytest
 
@@ -141,7 +142,7 @@ async def test_nullcontext():
         assert value == 1337
 
 
-class MockContext:
+class MockAsyncContext:
     def __init__(self, value=None):
         self._value = value
         self.entered = False
@@ -155,6 +156,20 @@ class MockContext:
         self.exited = True
 
 
+class MockContext:
+    def __init__(self, value=None):
+        self._value = value
+        self.entered = False
+        self.exited = False
+
+    def __enter__(self):
+        self.entered = True
+        return self._value
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.exited = True
+
+
 @sync
 async def test_exist_stack():
     async with a.ExitStack() as exit_stack:
@@ -165,7 +180,9 @@ async def test_exist_stack():
 @sync
 async def test_exit_stack_pop_all():
     async with a.ExitStack() as exit_stack:
-        contexts = list(map(MockContext, range(10)))
+        contexts = list(
+            map(lambda v: MockAsyncContext(v) if v % 2 else MockContext(v), range(10))
+        )
         values = await a.list(a.map(exit_stack.enter_context, contexts))
         assert values == list(range(10))
         assert all(cm.entered for cm in contexts)
@@ -197,19 +214,23 @@ async def test_exit_stack_callback():
 async def test_exit_stack_push():
     seen = []
 
-    async def observe(exc_type, exc_val, tb):
-        seen.append(exc_val)
-        return False
+    @contextmanager
+    def observe():
+        try:
+            yield
+        except BaseException as exc_val:
+            seen.append(exc_val)
+            raise
 
     @a.contextmanager
     async def suppress():
         try:
             yield
         except BaseException as exc_val:
-            await observe(type(exc_val), exc_val, exc_val.__traceback__)
+            seen.append(exc_val)
 
     async def replace(exc_type, exc_val, tb, new):
-        await observe(exc_type, exc_val, tb)
+        seen.append(exc_val)
         raise new
 
     with pytest.raises(TypeError) as exc_info:
@@ -220,7 +241,9 @@ async def test_exit_stack_push():
             await s.__aenter__()
             exit_stack.push(s)
             exit_stack.push(partial(replace, new=IndexError()))
-            exit_stack.push(observe)
+            o = observe()
+            o.__enter__()
+            exit_stack.push(o)
             raise KeyError()
     assert list(map(type, seen)) == [
         KeyError,
