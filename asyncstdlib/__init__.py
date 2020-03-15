@@ -17,7 +17,7 @@ from .builtins import (
     tuple,
 )
 from .functools import reduce, lru_cache
-from .contextlib import closing, contextmanager, nullcontext
+from .contextlib import closing, contextmanager, nullcontext, ExitStack
 from .itertools import (
     accumulate,
     cycle,
@@ -57,6 +57,7 @@ __all__ = [
     "closing",
     "contextmanager",
     "nullcontext",
+    "ExitStack",
     # itertools
     "accumulate",
     "cycle",

@@ -1,3 +1,6 @@
+from functools import partial
+from contextlib import contextmanager
+
 import pytest
 
 import asyncstdlib as a
@@ -137,3 +140,156 @@ async def test_contextmanager_raise_same():
 async def test_nullcontext():
     async with a.nullcontext(1337) as value:
         assert value == 1337
+
+
+class MockAsyncContext:
+    def __init__(self, value=None):
+        self._value = value
+        self.entered = False
+        self.exited = False
+
+    async def __aenter__(self):
+        self.entered = True
+        return self._value
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.exited = True
+
+
+class MockContext:
+    def __init__(self, value=None):
+        self._value = value
+        self.entered = False
+        self.exited = False
+
+    def __enter__(self):
+        self.entered = True
+        return self._value
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.exited = True
+
+
+@sync
+async def test_exist_stack():
+    async with a.ExitStack() as exit_stack:
+        for value in (0, 1, 2, 3, -5, None, "Hello"):
+            assert value == await exit_stack.enter_context(a.nullcontext(value))
+
+
+@sync
+async def test_exit_stack_pop_all():
+    async with a.ExitStack() as exit_stack:
+        contexts = list(
+            map(lambda v: MockAsyncContext(v) if v % 2 else MockContext(v), range(10))
+        )
+        values = await a.list(a.map(exit_stack.enter_context, contexts))
+        assert values == list(range(10))
+        assert all(cm.entered for cm in contexts)
+        assert all(not cm.exited for cm in contexts)
+        clone_stack = exit_stack.pop_all()
+    assert all(not cm.exited for cm in contexts)
+    await clone_stack.aclose()
+    assert all(cm.exited for cm in contexts)
+
+
+@sync
+async def test_exit_stack_callback():
+    """Test that callbacks are run regardless of exceptions"""
+    unwind_values = []
+
+    async def push(value):
+        unwind_values.append(value)
+        return True  # attempt to suppress - this must not succeed
+
+    with pytest.raises(KeyError):
+        async with a.ExitStack() as exit_stack:
+            for value in range(5):
+                exit_stack.callback(push, value)
+            raise KeyError()
+    assert unwind_values == list(reversed(range(5)))
+
+
+@sync
+async def test_exit_stack_push():
+    seen = []
+
+    @contextmanager
+    def observe():
+        try:
+            yield
+        except BaseException as exc_val:
+            seen.append(exc_val)
+            raise
+
+    @a.contextmanager
+    async def suppress():
+        try:
+            yield
+        except BaseException as exc_val:
+            seen.append(exc_val)
+
+    async def replace(exc_type, exc_val, tb, new):
+        seen.append(exc_val)
+        raise new
+
+    with pytest.raises(TypeError) as exc_info:
+        async with a.ExitStack() as exit_stack:
+            exit_stack.push(partial(replace, new=TypeError()))
+            exit_stack.push(partial(replace, new=ValueError()))
+            s = suppress()
+            await s.__aenter__()
+            exit_stack.push(s)
+            exit_stack.push(partial(replace, new=IndexError()))
+            o = observe()
+            o.__enter__()
+            exit_stack.push(o)
+            raise KeyError()
+    assert list(map(type, seen)) == [
+        KeyError,
+        KeyError,
+        IndexError,
+        type(None),
+        ValueError,
+    ]
+    assert seen[2].__context__ == seen[1]
+    assert exc_info.type == TypeError
+    assert exc_info.value.__context__ == seen[-1]
+
+
+@sync
+async def test_exit_stack_stitch_context():
+    async def replace(exc_type, exc_val, tb, new):
+        try:
+            {}["a"]
+        except KeyError:
+            raise new
+
+    async def extend(exc_type, exc_val, tb, new):
+        try:
+            raise exc_val
+        except exc_type:
+            raise new
+
+    replacement_exc, middle_exc, initial_exc = TypeError(), ValueError(), IndexError()
+    with pytest.raises(type(replacement_exc)) as exc_info:
+        async with a.ExitStack() as exit_stack:
+            exit_stack.push(partial(extend, new=replacement_exc))
+            exit_stack.push(partial(replace, new=middle_exc))
+            raise initial_exc
+    assert exc_info.value.__context__ == middle_exc
+    assert exc_info.value.__context__.__context__ == initial_exc
+
+
+@sync
+async def test_misuse_enter_context():
+    async with a.ExitStack() as exit_stack:
+        with pytest.raises(AttributeError):
+            await exit_stack.enter_context(None)
+    async with a.ExitStack() as exit_stack:
+        with pytest.raises(AttributeError) as exc_info:
+            try:
+                {}[1]
+            except KeyError:
+                await exit_stack.enter_context(None)
+        assert type(exc_info.value.__context__.__context__) is KeyError
