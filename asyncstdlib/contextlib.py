@@ -198,6 +198,7 @@ class ExitStack:
     :py:meth:`push` and :py:meth:`callback`. This allows running additional cleanup,
     similar to ``defer`` statements in other languages.
     """
+
     def __init__(self):
         self._exit_callbacks = deque()
 
@@ -236,6 +237,9 @@ class ExitStack:
 
         * If ``exit`` has an ``__aexit__`` method, this method is used instead.
 
+        * If ``exit`` has an ``__exit__`` method, this method is used instead.
+          It is automatically treated as asynchronous.
+
         * If ``exit`` is not asynchronous, it is automatically treated as such.
 
         Note that ``exit`` is only treated as :term:`async neutral` when it does not
@@ -253,11 +257,13 @@ class ExitStack:
             instead.
         """
         try:
-            exit_method = _slot_get(exit, "__aexit__")
+            aexit = _slot_get(exit, "__aexit__")
         except AttributeError:
-            self._exit_callbacks.append(awaitify(exit))
-        else:
-            self._exit_callbacks.append(exit_method)
+            try:
+                aexit = awaitify(_slot_get(exit, "__exit__"))
+            except AttributeError:
+                aexit = awaitify(exit)
+        self._exit_callbacks.append(aexit)
         return exit
 
     def callback(self, callback: Callable, *args, **kwargs):
@@ -282,7 +288,8 @@ class ExitStack:
         """
         Enter the supplied context manager, and register it for exit if successful
 
-        This method is equivalent to using ``cm`` in an ``async with`` statement.
+        This method is equivalent to using ``cm`` in an ``async with`` statement;
+        if ``cm`` can only be used in a ``with`` statement, it is silently promoted.
         It will enter ``cm`` and, if successful, ensure that ``cm`` is exited when
         the stack unwinds. The return value of this method is the value that ``cm``
         provides in an ``async with`` statement.
@@ -306,9 +313,18 @@ class ExitStack:
         (that is, ``await cm.__aenter__()`` throws an exception) it is not exited
         either.
         """
-        bound_exit_method = _slot_get(cm, "__aexit__")
-        context_value = await _slot_get(cm, "__aenter__")()
-        self._exit_callbacks.append(bound_exit_method)
+        try:
+            aexit = _slot_get(cm, "__aexit__")
+        except AttributeError as aexit_err:
+            try:
+                aexit = awaitify(_slot_get(cm, "__exit__"))
+            except AttributeError:
+                raise aexit_err from aexit_err.__context__
+            else:
+                context_value = _slot_get(cm, "__enter__")()
+        else:
+            context_value = await _slot_get(cm, "__aenter__")()
+        self._exit_callbacks.append(aexit)
         return context_value
 
     async def aclose(self):
