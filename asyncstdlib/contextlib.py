@@ -315,13 +315,9 @@ class ExitStack:
         """
         try:
             aexit = _slot_get(cm, "__aexit__")
-        except AttributeError as aexit_err:
-            try:
-                aexit = awaitify(_slot_get(cm, "__exit__"))
-            except AttributeError:
-                raise aexit_err from aexit_err.__context__
-            else:
-                context_value = _slot_get(cm, "__enter__")()
+        except AttributeError:
+            aexit = awaitify(_slot_get(cm, "__exit__"))
+            context_value = _slot_get(cm, "__enter__")()
         else:
             context_value = await _slot_get(cm, "__aenter__")()
         self._exit_callbacks.append(aexit)

@@ -279,3 +279,17 @@ async def test_exit_stack_stitch_context():
             raise initial_exc
     assert exc_info.value.__context__ == middle_exc
     assert exc_info.value.__context__.__context__ == initial_exc
+
+
+@sync
+async def test_misuse_enter_context():
+    async with a.ExitStack() as exit_stack:
+        with pytest.raises(AttributeError):
+            await exit_stack.enter_context(None)
+    async with a.ExitStack() as exit_stack:
+        with pytest.raises(AttributeError) as exc_info:
+            try:
+                {}[1]
+            except KeyError:
+                await exit_stack.enter_context(None)
+        assert type(exc_info.value.__context__.__context__) is KeyError
