@@ -30,11 +30,14 @@ Context Managers
 
 .. autoclass:: ExitStack(enter_result: T)
 
-    .. automethod:: enter_context(cm: async with T) -> T
+    .. automethod:: enter_context(cm: (async) with T) -> T
 
     .. automethod:: callback(callback: T as (*args, **kwargs) -> None, *args, **kwargs) -> T
 
     .. py:method:: push(exit: T as {.__aexit__}) -> T
+        :noindex:
+
+    .. py:method:: push(exit: T as {.__exit__}) -> T
         :noindex:
 
     .. automethod:: push(exit: T as (Type[BaseException], BaseException, traceback) -> (await) bool) -> T

@@ -8,7 +8,7 @@ from typing import (
     Any,
     Awaitable,
 )
-from typing_extensions import Protocol, AsyncContextManager
+from typing_extensions import Protocol, AsyncContextManager, ContextManager
 from functools import wraps
 from collections import deque
 from functools import partial
@@ -178,6 +178,7 @@ SE = TypeVar(
     "SE",
     bound=Union[
         AsyncContextManager,
+        ContextManager,
         Callable[[Any, BaseException, Any], Optional[bool]],
         Callable[[Any, BaseException, Any], Awaitable[Optional[bool]]],
     ],
