@@ -198,6 +198,12 @@ class ExitStack:
     In addition, arbitrary cleanup functions and callbacks can be registered using
     :py:meth:`push` and :py:meth:`callback`. This allows running additional cleanup,
     similar to ``defer`` statements in other languages.
+
+    .. note::
+
+        Unlike :py:class:`contextlib.AsyncExitStack`, this is class provides
+        an :term:`async neutral` version of the :py:class:`contextlib.ExitStack`.
+        There are no separate methods to distinguish async and regular arguments.
     """
 
     def __init__(self):
@@ -252,8 +258,8 @@ class ExitStack:
 
         .. seealso::
 
-            When receiving a context manager, this method only sets up ``__aexit__``
-            for being called. It does not *enter* the context manager.
+            When receiving a context manager, this method only sets up ``__aexit__`` or
+            ``__exit__`` for being called. It does not *enter* the context manager.
             If a context manager must also be entered, use :py:meth:`~.enter_context`
             instead.
         """
@@ -291,9 +297,9 @@ class ExitStack:
 
         This method is equivalent to using ``cm`` in an ``async with`` statement;
         if ``cm`` can only be used in a ``with`` statement, it is silently promoted.
-        It will enter ``cm`` and, if successful, ensure that ``cm`` is exited when
-        the stack unwinds. The return value of this method is the value that ``cm``
-        provides in an ``async with`` statement.
+        The stack will enter ``cm`` and, if successful, ensure that ``cm`` is exited
+        when the stack unwinds. The return value of this method is the value that
+        ``cm`` provides in an ``async with`` statement.
 
         .. code-block:: python3
 
@@ -302,7 +308,7 @@ class ExitStack:
                 ...
 
             # programmatically enter context managers
-            async with ExitStack() as exit_stack:
+            async with a.ExitStack() as exit_stack:
                 value_a = exit_stack.enter_context(cm_a)
                 value_b = exit_stack.enter_context(cm_b)
                 ...
@@ -325,7 +331,14 @@ class ExitStack:
         return context_value
 
     async def aclose(self):
-        """Immediately unwind the context stack"""
+        """
+        Immediately unwind the context stack
+
+        .. note::
+
+            Unlike the regular :py:meth:`contextlib.ExitStack.close` method,
+            this method is ``async`` and follows the ``aclose`` naming convention.
+        """
         await self.__aexit__(None, None, None)
 
     @staticmethod

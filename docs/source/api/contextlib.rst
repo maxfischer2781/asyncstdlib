@@ -11,7 +11,15 @@ Python's :py:mod:`contextlib` for (async) iterables and (async) context managers
 Context Managers
 ================
 
-.. autoclass:: AbstractContextManager
+.. py:class:: AbstractContextManager
+
+    An :term:`abstract base class` for asynchronous context managers
+
+    This class can be used to check whether some object is an
+    asynchronous context manager. If a class may inherit from
+    ``AbstractContextManager``, in which case it must implement
+    an ``__aenter__`` method; the default ``__aenter__`` returns
+    the asynchronous context manager itself.
 
     .. versionadded:: 1.1.0
 
@@ -28,7 +36,7 @@ Context Managers
 .. autofunction:: nullcontext(enter_result: T)
     :async-with: :T
 
-.. autoclass:: ExitStack(enter_result: T)
+.. autoclass:: ExitStack
 
     .. automethod:: enter_context(cm: (async) with T) -> T
 
