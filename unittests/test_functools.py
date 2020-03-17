@@ -27,6 +27,21 @@ async def test_cached_property():
 
 
 @sync
+async def test_cache_property_nodict():
+    with pytest.raises(BaseException):
+        class Pair:
+            __slots__ = "a", "b"
+
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
+
+            @a.cached_property
+            async def total(self):
+                return self.a + self.b
+
+
+@sync
 async def test_reduce():
     async def reduction(x, y):
         return x + y
