@@ -14,18 +14,26 @@ Iterator reducing
 .. autofunction:: reduce(function: (T, T) → (await) T, iterable: (async) iter T, initial: T) -> T
     :async:
 
-Async Function Cache
-====================
+Async Caches
+============
 
-The regular :py:func:`functools.lru_cache` is not appropriate for
+The regular :py:func:`functools.lru_cache` and :py:func:`functools.cached_property`
+are not appropriate for
 async callables, such as an ``async def`` :term:`coroutine function`:
 their direct return value is an :term:`awaitable` instead of the desired value.
 This causes the cache to store only temporary helpers, not the actual values.
 
-The :py:func:`~asyncstdlib.functools.lru_cache` of :py:mod:`asyncstdlib`
-works only with async callables (it is not :term:`async neutral`).
+Both :py:func:`~asyncstdlib.functools.lru_cache`
+and :py:func:`~asyncstdlib.functools.cached_property`
+of :py:mod:`asyncstdlib` work only with async callables
+(they are not :term:`async neutral`).
 Notably, this includes regular callables that return an :term:`awaitable`.
-The cache can be applied as a decorator, both with and without arguments:
+
+.. autofunction:: cached_property
+    :decorator:
+
+The :py:func:`~asyncstdlib.functools.lru_cache`
+can be applied as a decorator, both with and without arguments:
 
 .. code-block:: python3
 

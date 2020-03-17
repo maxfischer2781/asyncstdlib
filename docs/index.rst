@@ -47,23 +47,25 @@ with the same name as those of the Python standard library.
 
 :py:mod:`asyncstdlib.builtins`
     Replicates any :ref:`built-in-funcs` that benefit from being asynchronous,
-    such as :py:func:`~asyncstdlib.builtins.zip`, :py:func:`~asyncstdlib.builtins.sum`
+    such as :py:func:`~asyncstdlib.builtins.zip`,
+    :py:func:`~asyncstdlib.builtins.sum`,
     or :py:func:`~asyncstdlib.builtins.list`.
 
 :py:mod:`asyncstdlib.functools`
     Replicates any :py:mod:`functools` that benefit from being asynchronous,
-    which is just :py:func:`~asyncstdlib.functools.reduce`
-    and :py:func:`~asyncstdlib.functools.lru_cache`.
+    which is just :py:func:`~asyncstdlib.functools.reduce`,
+    :py:func:`~asyncstdlib.functools.cached_property`, and
+    :py:func:`~asyncstdlib.functools.lru_cache`.
 
 :py:mod:`asyncstdlib.contextlib`
     Replicates any :py:mod:`contextlib` tools that benefit from being asynchronous,
-    such as :py:func:`~asyncstdlib.contextlib.contextmanager` or
+    such as :py:func:`~asyncstdlib.contextlib.contextmanager`, or
     :py:func:`~asyncstdlib.contextlib.closing`.
 
 :py:mod:`asyncstdlib.itertools`
     Replicates any :py:mod:`itertools` that benefit from being asynchronous,
     such as :py:func:`~asyncstdlib.itertools.cycle`,
-    :py:func:`~asyncstdlib.itertools.chain`
+    :py:func:`~asyncstdlib.itertools.chain`,
     or :py:func:`~asyncstdlib.itertools.accumulate`.
 
 For simplicity, the :py:mod:`asyncstdlib` namespace also exposes all individual
