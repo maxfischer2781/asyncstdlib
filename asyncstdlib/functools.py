@@ -16,7 +16,7 @@ __REDUCE_SENTINEL = Sentinel("<no default>")
 
 
 class AwaitableValue:
-    __slots__ = "value",
+    __slots__ = ("value",)
 
     def __init__(self, value):
         self.value = value
@@ -36,10 +36,10 @@ class CachedProperty:
 
     def __set_name__(self, owner, name):
         # Check whether we can store anything on the instance
-        # Note that this is a heuristic, and might look ugly.
+        # Note that this is a failsafe, and might fail ugly.
         # People who are clever enough to avoid this heuristic
         # should also be clever enough to know the why and what.
-        if not any('__dict__' in dir(cls) for cls in owner.__mro__):
+        if not any("__dict__" in dir(cls) for cls in owner.__mro__):
             raise TypeError(
                 "'cached_property' requires '__dict__' "
                 f"on {owner.__name__!r} to store {name}"
