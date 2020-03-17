@@ -24,6 +24,7 @@ async def test_cached_property():
     assert (await pair.total) == 3
     del pair.total
     assert (await pair.total) == 4
+    assert type(Pair.total) is a.cached_property
 
 
 @sync

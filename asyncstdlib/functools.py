@@ -46,10 +46,12 @@ class CachedProperty:
             )
         self._name = name
 
-    # noinspection Annotator
-    async def __get__(self, instance, owner):
+    def __get__(self, instance, owner):
         if instance is None:
             return self
+        return self._get_attribute(instance)
+
+    async def _get_attribute(self, instance):
         attributes = instance.__dict__
         try:
             return attributes[self._name]
