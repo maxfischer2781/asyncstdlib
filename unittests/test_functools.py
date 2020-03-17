@@ -29,6 +29,7 @@ async def test_cached_property():
 @sync
 async def test_cache_property_nodict():
     with pytest.raises(BaseException):
+
         class Pair:
             __slots__ = "a", "b"
 
