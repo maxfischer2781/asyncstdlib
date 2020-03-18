@@ -222,3 +222,24 @@ async def test_lru_cache_misuse():
         @a.lru_cache(maxsize=1.5)
         async def pingpong(arg):
             return arg
+
+
+@pytest.mark.parametrize('size', [16, None])
+@multi_sync
+async def test_lru_cache_concurrent(size):
+    current = 0
+
+    @a.lru_cache(maxsize=size)
+    async def count():
+        nonlocal current
+        value = current = current + 1
+        await Switch()
+        return value
+
+    async def verify(expected):
+        assert (await count()) == expected
+
+    await Schedule(*(verify(n + 1) for n in range(5)))
+    await verify(6)
+    await Switch()
+    await verify(1)
