@@ -1,5 +1,16 @@
-from typing import Callable, Coroutine, Iterable, AsyncIterator, TypeVar, Awaitable
+from typing import (
+    Callable,
+    Coroutine,
+    Iterable,
+    AsyncIterator,
+    TypeVar,
+    Awaitable,
+    Deque,
+    Tuple,
+    Any,
+)
 from functools import wraps
+from collections import deque
 
 
 T = TypeVar("T")
@@ -53,5 +64,57 @@ def sync(test_case: Callable[..., Coroutine]):
         except StopIteration as e:
             result = e.args[0] if e.args else None
         return result
+
+    return run_sync
+
+
+class Schedule:
+    """Signal to the event loop to adopt and run a new coroutine"""
+
+    def __init__(self, *coros: Coroutine):
+        self.coros = coros
+
+    def __await__(self):
+        yield self
+
+
+class Switch:
+    """Signal to the event loop to run another coroutine"""
+
+    def __await__(self):
+        yield self
+
+
+def multi_sync(test_case: Callable[..., Coroutine]):
+    """
+    Mark an ``async def`` test case to be run synchronously with chicldren
+
+    This emulates a primitive "event loop" which only responds
+    to the :py:class:`PingPong`, :py:class:`Schedule` and :py:class:`Switch`.
+    """
+
+    @wraps(test_case)
+    def run_sync(*args, **kwargs):
+        run_queue: Deque[Tuple[Coroutine, Any]] = deque()
+        run_queue.append((test_case(*args, **kwargs), None))
+        while run_queue:
+            coro, event = run_queue.popleft()
+            try:
+                event = coro.send(event)
+            except StopIteration as e:
+                result = e.args[0] if e.args else None
+                assert result is None
+            else:
+                if isinstance(event, PingPong):
+                    run_queue.appendleft((coro, event))
+                elif isinstance(event, Schedule):
+                    run_queue.extend((new_coro, None) for new_coro in event.coros)
+                    run_queue.append((coro, event))
+                elif isinstance(event, Switch):
+                    run_queue.append((coro, event))
+                else:
+                    raise RuntimeError(
+                        f"test case {test_case} yielded an unexpected event {event}"
+                    )
 
     return run_sync
