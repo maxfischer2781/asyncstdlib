@@ -8,6 +8,42 @@ from .utility import sync, asyncify
 
 
 @sync
+async def test_cached_property():
+    class Pair:
+        def __init__(self, a, b):
+            self.a = a
+            self.b = b
+
+        @a.cached_property
+        async def total(self):
+            return self.a + self.b
+
+    pair = Pair(1, 2)
+    assert (await pair.total) == 3
+    pair.a = 2
+    assert (await pair.total) == 3
+    del pair.total
+    assert (await pair.total) == 4
+    assert type(Pair.total) is a.cached_property
+
+
+@sync
+async def test_cache_property_nodict():
+    with pytest.raises(BaseException):
+
+        class Pair:
+            __slots__ = "a", "b"
+
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
+
+            @a.cached_property
+            async def total(self):
+                return self.a + self.b
+
+
+@sync
 async def test_reduce():
     async def reduction(x, y):
         return x + y
