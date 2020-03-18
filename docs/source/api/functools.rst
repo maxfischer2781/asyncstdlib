@@ -32,6 +32,8 @@ Notably, this includes regular callables that return an :term:`awaitable`.
 .. autofunction:: cached_property
     :decorator:
 
+    .. versionadded:: 1.1.0
+
 The :py:func:`~asyncstdlib.functools.lru_cache`
 can be applied as a decorator, both with and without arguments:
 

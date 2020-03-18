@@ -38,7 +38,7 @@ class CachedProperty:
     Transform a method into an attribute whose value is cached
 
     When applied to an asynchronous method of a class, instances have an attribute
-    of the same name as the method (similar to :py:class::`property`). Using this
+    of the same name as the method (similar to :py:class:`property`). Using this
     attribute with ``await`` provides the value of using the method with ``await``.
 
     The attribute value is cached on the instance after being computed;
