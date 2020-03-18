@@ -224,7 +224,7 @@ async def test_lru_cache_misuse():
             return arg
 
 
-@pytest.mark.parametrize('size', [16, None])
+@pytest.mark.parametrize("size", [16, None])
 @multi_sync
 async def test_lru_cache_concurrent(size):
     current = 0
