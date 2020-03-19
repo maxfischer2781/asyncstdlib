@@ -31,6 +31,25 @@ async def test_accumulate():
 
 
 @sync
+async def test_accumulate_default():
+    for itertype in (asyncify, list):
+        assert await a.list(a.accumulate(itertype([0, 1]))) == list(
+            itertools.accumulate([0, 1])
+        )
+        assert await a.list(a.accumulate(itertype([0, 1, 2, 3, 4, 0, -5]))) == list(
+            itertools.accumulate([0, 1, 2, 3, 4, 0, -5])
+        )
+        assert await a.list(a.accumulate(itertype([12]))) == list(
+            itertools.accumulate([12])
+        )
+        assert await a.list(a.accumulate(itertype([1]), initial=23)) == [
+            23,
+            24,
+        ]
+        assert await a.list(a.accumulate(itertype([]), initial=42)) == [42]
+
+
+@sync
 async def test_accumulate_misuse():
     with pytest.raises(TypeError):
         assert await a.list(a.accumulate([]))

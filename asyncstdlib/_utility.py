@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeVar, Any
 
 T = TypeVar("T")
 
@@ -16,12 +16,19 @@ def public_module(module_name: str, qual_name: str = None):
     return decorator
 
 
-def slot_get(instance, name: str):
+def slot_get(instance: object, name: str) -> Any:
+    """
+    Emulate ``instance.name`` using slot lookup as used for special methods
+
+    This invokes the descriptor protocol, i.e. it calls the attribute's
+    ``__get__`` if available.
+    """
+
     owner = type(instance)
-    descriptor = getattr(owner, name)
+    attribute = getattr(owner, name)
     try:
-        get = descriptor.__get__
+        descriptor_get = attribute.__get__
     except AttributeError:
-        return descriptor
+        return attribute
     else:
-        return get(instance, owner)
+        return descriptor_get(instance, owner)
