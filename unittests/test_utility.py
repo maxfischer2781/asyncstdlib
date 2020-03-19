@@ -6,7 +6,7 @@ def test_slot_get():
         data = 3
 
         def __neg__(self):
-            return - type(self).data
+            return -type(self).data
 
     instance = Slotted()
     assert _utility.slot_get(instance, "data") is instance.data
