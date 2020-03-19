@@ -1,4 +1,3 @@
-from builtins import zip as _zip
 from typing import (
     Iterable,
     AsyncIterable,
@@ -153,14 +152,15 @@ async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
     if not iterables:
         return
     aiters = (*(aiter(it) for it in iterables),)
+    del iterables
     try:
         while True:
             yield (*[await anext(it) for it in aiters],)
     except StopAsyncIteration:
         return
     finally:
-        for iterable, iterator in _zip(iterables, aiters):
-            await _close_temporary(iterator, iterable)
+        for iterator in aiters:
+            await _close_temporary(iterator)
 
 
 class SyncVariadic(Protocol[T, R]):

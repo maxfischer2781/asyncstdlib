@@ -40,5 +40,5 @@ async def test_close_temporary_graceful():
     # test that no error from calling the missing `aclose` is thrown
     assert async_iterator is not async_iterable
     assert (await async_iterator.__anext__()) == 1
-    await _core.close_temporary(async_iterator, async_iterable)
+    await _core.close_temporary(async_iterator)
     assert (await async_iterator.__anext__()) == 1

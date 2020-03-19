@@ -1,4 +1,3 @@
-from builtins import zip as _zip
 from typing import (
     Any,
     TypeVar,
@@ -390,6 +389,7 @@ async def zip_longest(
         return
     fill_iter = aiter(_repeat(fillvalue))
     async_iters = list(aiter(it) for it in iterables)
+    del iterables
     try:
         remaining = len(async_iters)
         while True:
@@ -409,8 +409,8 @@ async def zip_longest(
             yield tuple(values)
     finally:
         await fill_iter.aclose()
-        for iterable, iterator in _zip(iterables, async_iters):
-            await _close_temporary(iterator, iterable)
+        for iterator in async_iters:
+            await _close_temporary(iterator)
 
 
 async def identity(x: T) -> T:
