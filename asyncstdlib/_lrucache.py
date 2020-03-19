@@ -206,7 +206,11 @@ def _unbound_lru(
             result = cache[key]
         except KeyError:
             misses += 1
-            cache[key] = result = await function(*args, **kwargs)
+            result = await function(*args, **kwargs)
+            # function finished early for another call with the same arguments
+            # the cache has been updated already, do nothing to it
+            if key not in cache:
+                cache[key] = result
             return result
         else:
             hits += 1

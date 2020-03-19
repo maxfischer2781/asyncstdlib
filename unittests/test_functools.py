@@ -4,7 +4,7 @@ import pytest
 
 import asyncstdlib as a
 
-from .utility import sync, asyncify
+from .utility import sync, asyncify, multi_sync, Switch, Schedule
 
 
 @sync
@@ -41,6 +41,28 @@ async def test_cache_property_nodict():
             @a.cached_property
             async def total(self):
                 return self.a + self.b
+
+
+@multi_sync
+async def test_cache_property_order():
+    class Value:
+        def __init__(self, value):
+            self.value = value
+
+        @a.cached_property
+        async def cached(self):
+            value = self.value
+            await Switch()
+            return value
+
+    async def check_increment(to):
+        val.value = to
+        assert (await val.cached) == to
+
+    val = Value(0)
+    await Schedule(check_increment(5), check_increment(12), check_increment(1337))
+    assert (await val.cached) != 0
+    assert (await val.cached) == 5  # first value fetched
 
 
 @sync
@@ -200,3 +222,24 @@ async def test_lru_cache_misuse():
         @a.lru_cache(maxsize=1.5)
         async def pingpong(arg):
             return arg
+
+
+@pytest.mark.parametrize("size", [16, None])
+@multi_sync
+async def test_lru_cache_concurrent(size):
+    current = 0
+
+    @a.lru_cache(maxsize=size)
+    async def count():
+        nonlocal current
+        value = current = current + 1
+        await Switch()
+        return value
+
+    async def verify(expected):
+        assert (await count()) == expected
+
+    await Schedule(*(verify(n + 1) for n in range(5)))
+    await verify(6)
+    await Switch()
+    await verify(1)
