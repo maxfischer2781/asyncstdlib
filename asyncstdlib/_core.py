@@ -61,13 +61,12 @@ async def close_temporary(
     source: Union[AsyncIterator, AsyncIterable, Iterator, Iterable],
 ):
     """Close an ``iterator`` created from ``source`` if it is a separate object"""
-    if iterator is not source:
-        try:
-            aclose = iterator.aclose()
-        except AttributeError:
-            pass
-        else:
-            await aclose
+    try:
+        aclose = iterator.aclose()
+    except AttributeError:
+        pass
+    else:
+        await aclose
 
 
 class ScopedIter(Generic[T]):
@@ -85,6 +84,12 @@ class ScopedIter(Generic[T]):
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await close_temporary(self._iterator, self._iterable)
         return False
+
+
+async def borrow(iterator: AsyncIterator):
+    """Borrow an async iterator for iteration, preventing it from being closed"""
+    async for item in iterator:
+        yield item
 
 
 def awaitify(

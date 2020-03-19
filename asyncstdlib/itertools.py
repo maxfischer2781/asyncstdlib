@@ -24,6 +24,7 @@ from ._core import (
     awaitify as _awaitify,
     Sentinel,
     close_temporary as _close_temporary,
+    borrow as _borrow,
 )
 from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
 
@@ -202,7 +203,7 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
     async with ScopedIter(iterable) as async_iter:
         # always consume the first ``start - 1`` items, even if the slice is empty
         if start > 0:
-            async for _count, element in aenumerate(async_iter, start=1):
+            async for _count, element in aenumerate(_borrow(async_iter), start=1):
                 if _count == start:
                     break
         if stop is None:
