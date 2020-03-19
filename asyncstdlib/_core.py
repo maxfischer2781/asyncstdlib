@@ -7,7 +7,6 @@ from typing import (
     Union,
     Generic,
     Optional,
-    Iterator,
     Awaitable,
     Callable,
 )
