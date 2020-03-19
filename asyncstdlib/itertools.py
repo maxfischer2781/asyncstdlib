@@ -280,7 +280,7 @@ async def tee_peer(
                         peer.append(item)
             yield buffer.popleft()
     finally:
-        for idx, item in enumerate(peers):
+        for idx, item in enumerate(peers):  # pragma: no branch
             if item is buffer:
                 peers.pop(idx)
                 break
