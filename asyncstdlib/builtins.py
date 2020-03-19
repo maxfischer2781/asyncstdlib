@@ -21,7 +21,6 @@ from ._core import (
     aiter,
     AnyIterable,
     ScopedIter,
-    close_temporary as _close_temporary,
     awaitify as _awaitify,
     Sentinel,
 )
@@ -160,7 +159,12 @@ async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
         return
     finally:
         for iterator in aiters:
-            await _close_temporary(iterator)
+            try:
+                aclose = iterator.aclose()
+            except AttributeError:
+                pass
+            else:
+                await aclose
 
 
 class SyncVariadic(Protocol[T, R]):

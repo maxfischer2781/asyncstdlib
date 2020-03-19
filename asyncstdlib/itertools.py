@@ -22,7 +22,6 @@ from ._core import (
     AnyIterable,
     awaitify as _awaitify,
     Sentinel,
-    close_temporary as _close_temporary,
     borrow as _borrow,
 )
 from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
@@ -410,7 +409,12 @@ async def zip_longest(
     finally:
         await fill_iter.aclose()
         for iterator in async_iters:
-            await _close_temporary(iterator)
+            try:
+                aclose = iterator.aclose()
+            except AttributeError:
+                pass
+            else:
+                await aclose
 
 
 async def identity(x: T) -> T:

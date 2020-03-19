@@ -56,18 +56,6 @@ async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
         yield item
 
 
-async def close_temporary(
-    iterator: AsyncIterator,
-):
-    """Close an ``iterator`` created from ``source`` if it is a separate object"""
-    try:
-        aclose = iterator.aclose()
-    except AttributeError:
-        pass
-    else:
-        await aclose
-
-
 class ScopedIter(Generic[T]):
     """Context manager that provides and cleans up an iterator for an iterable"""
 
@@ -82,7 +70,12 @@ class ScopedIter(Generic[T]):
         return self._iterator
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await close_temporary(self._iterator)
+        try:
+            aclose = self._iterator.aclose()
+        except AttributeError:
+            pass
+        else:
+            await aclose
         return False
 
 
