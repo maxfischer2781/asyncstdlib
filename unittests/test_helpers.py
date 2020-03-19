@@ -1,4 +1,7 @@
 from asyncstdlib import _utility
+from asyncstdlib import _core
+
+from .utility import sync
 
 
 def test_slot_get():
@@ -17,3 +20,25 @@ def test_slot_get():
     instance.__neg__ = lambda self: 12
     assert _utility.slot_get(instance, "data") is data
     assert _utility.slot_get(instance, "__neg__")() == neg
+
+
+@sync
+async def test_close_temporary_graceful():
+    class AIterator:
+        async def __anext__(self):
+            return 1
+
+        def __aiter__(self):
+            return self
+
+    class AIterable:
+        def __aiter__(self):
+            return AIterator()
+
+    async_iterable = AIterable()
+    async_iterator = _core.aiter(async_iterable)
+    # test that no error from calling the missing `aclose` is thrown
+    assert async_iterator is not async_iterable
+    assert (await async_iterator.__anext__()) == 1
+    await _core.close_temporary(async_iterator, async_iterable)
+    assert (await async_iterator.__anext__()) == 1
