@@ -73,6 +73,18 @@ functions and classes directly.
 For example, :py:mod:`asyncstdlib.builtins.enumerate` is also available
 as ``asyncstdlib.enumerate``.
 
+The Async Library Module
+========================
+
+The core toolset used by :py:mod:`asyncstdlib` itself is available
+as a separate submodule.
+
+:py:mod:`asyncstdlib.asynctools`
+    Replicates any :py:mod:`itertools` that benefit from being asynchronous,
+    such as :py:func:`~asyncstdlib.itertools.cycle`,
+    :py:func:`~asyncstdlib.itertools.chain`,
+    or :py:func:`~asyncstdlib.itertools.accumulate`.
+
 Async Neutral Arguments
 =======================
 
