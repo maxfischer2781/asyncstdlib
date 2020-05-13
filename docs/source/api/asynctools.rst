@@ -5,6 +5,8 @@ The asynctools library
 .. py:module:: asyncstdlib.asynctools
     :synopsis: generic asynctools
 
+.. versionadded:: 1.1.0
+
 Iterator lifetime
 =================
 

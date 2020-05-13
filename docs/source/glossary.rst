@@ -17,9 +17,9 @@ Glossary of Terms
    borrowing
    borrowed object
       Many ``async`` object need to be cleaned up explicitly – for example,
-      an :term:`asynchronous iterator` should generally be ``aclose``d after use
-      (see `PEP 533`_ for details). When *borrowing* such an object, the original
-      owner assures that it will clean up the object. As such, a *borrowed object*
-      can only be cleaned up by the original owner.
+      an :term:`asynchronous iterator` should generally be ``aclose``\ d after use
+      (see `PEP 533`_ for details). When *borrowing* such an object to a temporary
+      owner, the original owner guarantees to clean up the object but prevents the
+      temporary owner from doing.
 
 .. _PEP 533: https://www.python.org/dev/peps/pep-0533/

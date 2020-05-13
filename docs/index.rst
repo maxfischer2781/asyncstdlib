@@ -30,6 +30,7 @@ The missing ``async`` toolbox
    source/api/functools
    source/api/contextlib
    source/api/itertools
+   source/api/asynctools
    source/glossary
 
 The ``asyncstdlib`` library re-implements functions and classes of the Python

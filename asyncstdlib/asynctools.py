@@ -52,13 +52,20 @@ class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
 
 def borrow(iterator: AsyncIterator[T]) -> AsyncIteratorBorrow[T, None]:
     """
-    :term:`Borrow <borrowing>` an async iterator, preventing to ``aclose`` it
+    Borrow an async iterator, preventing to ``aclose`` it
 
-    The resulting iterator supports :py:meth:`~agen.asend` and
-    :py:meth:`~agen.athrow` if the initial iterator supports them as well;
-    this allows borrowing either a :py:class:`~collections.abc.AsyncIterator`
-    or :py:class:`~collections.abc.AsyncGenerator`. Regardless of input,
+    When :term:`borrowing` an async iterator, the original owner assures
+    to close the iterator as needed. In turn, the borrowed iterator does
+    not allow closing the underlying iterator.
+
+    The borrowed iterator supports :py:meth:`~agen.asend` and
+    :py:meth:`~agen.athrow` if the underlying iterator supports them as well;
+    this allows borrowing either an :py:class:`~collections.abc.AsyncIterator`
+    or :py:class:`~collections.abc.AsyncGenerator`. Regardless of iterator,
     :py:meth:`~agen.aclose` is always provided and does nothing.
+
+    .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
+                 is eventually closed and only borrowed until then.
     """
     if isinstance(iterator, AsyncIteratorBorrow):
         return iterator
@@ -69,11 +76,10 @@ def scoped_iter(iterable: AnyIterable[T]):
     """
     Context manager that provides an async iterator for an (async) ``iterable``
 
-    Roughly equivalent to combining :py:func:`~.iter` with
-    :py:class:`~.contextlib.closing`. Inside the context, the resulting
-    :term:`asynchronous iterator` is :term:`borrowed <borrowing>` to prevent
-    premature closing when passing the iterator around. Nested scoping is safe,
-    in that inner scopes automatically forfeit closing the iterator.
+    Roughly equivalent to combining :py:func:`~asyncstdlib.builtins.iter` with
+    :py:class:`~asyncstdlib.contextlib.closing`. The resulting
+    :term:`asynchronous iterator` is automatically :term:`borrowed <borrowing>`
+    to prevent premature closing when passing the iterator around.
 
     .. code-block:: python3
 
@@ -93,6 +99,9 @@ def scoped_iter(iterable: AnyIterable[T]):
                     tail.append(item)
             for item in tail:
                 yield item
+
+    Nested scoping of the same iterator is safe: inner scopes automatically
+    forfeit closing the iterator in favour of the outermost scope.
     """
     # The iterable has already been borrowed.
     # Someone else takes care of it.

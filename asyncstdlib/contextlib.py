@@ -122,6 +122,9 @@ class Closing(Generic[AC]):
         async with a.closing(a.iter(something)) as async_iter:
             async for element in async_iter:
                 ...
+
+    .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
+                 is eventually closed and only borrowed until then.
     """
 
     def __init__(self, thing: AC):
