@@ -3,7 +3,12 @@ The asynctools library
 ======================
 
 .. py:module:: asyncstdlib.asynctools
-    :synopsis: generic asynctools
+    :synopsis: core asynctools variants
+
+The :py:mod:`asyncstdlib.asynctools` library implements the core toolset used by
+:py:mod:`asyncstdlib` itself.
+All documented members of this module are separate from internal implementation
+and stable regardless of :py:mod:`asyncstdlib` internals.
 
 .. versionadded:: 1.1.0
 

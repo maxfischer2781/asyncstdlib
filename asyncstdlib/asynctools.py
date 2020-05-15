@@ -61,7 +61,7 @@ def borrow(iterator: AsyncIterator[T]) -> AsyncIteratorBorrow[T, None]:
     The borrowed iterator supports :py:meth:`~agen.asend` and
     :py:meth:`~agen.athrow` if the underlying iterator supports them as well;
     this allows borrowing either an :py:class:`~collections.abc.AsyncIterator`
-    or :py:class:`~collections.abc.AsyncGenerator`. Regardless of iterator,
+    or :py:class:`~collections.abc.AsyncGenerator`. Regardless of iterator type,
     :py:meth:`~agen.aclose` is always provided and does nothing.
 
     .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
@@ -101,7 +101,8 @@ def scoped_iter(iterable: AnyIterable[T]):
                 yield item
 
     Nested scoping of the same iterator is safe: inner scopes automatically
-    forfeit closing the iterator in favour of the outermost scope.
+    forfeit closing the iterator in favour of the outermost scope. This allows
+    passing the borrowed iterator to other functions that use :py:func:`scoped_iter`.
     """
     # The iterable has already been borrowed.
     # Someone else takes care of it.

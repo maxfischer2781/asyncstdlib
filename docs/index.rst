@@ -121,8 +121,8 @@ All async iterators of :py:mod:`asyncstdlib` that work on other iterators
 assume sole ownership of the iterators passed to them.
 Passed in async iterators are guaranteed to :py:meth:`~agen.aclose` as soon as
 the :py:mod:`asyncstdlib` async iterator itself is cleaned up.
-Use :py:func:`asyncstdlib.asynctools.borrow` to prevent automatic cleanup,
-and :py:func:`asyncstdlib.asynctools.scoped_iter` to safely guarantee cleanup yourself.
+Use :py:func:`~asyncstdlib.asynctools.borrow` to prevent automatic cleanup,
+and :py:func:`~asyncstdlib.asynctools.scoped_iter` to guarantee cleanup in custom code.
 
 .. _PEP 533: https://www.python.org/dev/peps/pep-0533/
 
