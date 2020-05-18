@@ -79,9 +79,9 @@ def iter(
     :raises TypeError: if ``subject`` does not support any iteration protocol
 
     If ``sentinel`` is not given, the ``subject`` must support
-    the async iteration protocol (the :py:meth:`object.__aiter__` method),
-    the regular iteration protocol (the :py:meth:`object.__iter__` method),
-    or it must support the sequence protocol (the :py:meth:`object.__getitem__`
+    the async iteration protocol (the :py:meth:`~object.__aiter__` method),
+    the regular iteration protocol (the :py:meth:`~object.__iter__` method),
+    or it must support the sequence protocol (the :py:meth:`~object.__getitem__`
     method with integer arguments starting at 0).
     In either case, an async iterator is returned.
 
@@ -89,6 +89,9 @@ def iter(
     :py:func:`~.iter` provides an async iterator that uses ``await subject()``
     to produce new values. Once a value equals ``sentinel``, the value is discarded
     and iteration stops.
+
+    .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
+                 is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
     if sentinel is __ITER_DEFAULT:
         return aiter(subject)

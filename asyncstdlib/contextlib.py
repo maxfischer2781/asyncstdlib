@@ -124,7 +124,7 @@ class Closing(Generic[AC]):
                 ...
 
     .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
-                 is eventually closed and only borrowed until then.
+                 is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
 
     def __init__(self, thing: AC):
@@ -204,7 +204,7 @@ class ExitStack:
 
     .. note::
 
-        Unlike :py:class:`contextlib.AsyncExitStack`, this is class provides
+        Unlike :py:class:`contextlib.AsyncExitStack`, this class provides
         an :term:`async neutral` version of the :py:class:`contextlib.ExitStack`.
         There are no separate methods to distinguish async and regular arguments.
     """

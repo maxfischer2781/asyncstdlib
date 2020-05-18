@@ -65,7 +65,7 @@ def borrow(iterator: AsyncIterator[T]) -> AsyncIteratorBorrow[T, None]:
     :py:meth:`~agen.aclose` is always provided and does nothing.
 
     .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
-                 is eventually closed and only borrowed until then.
+                 is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
     if isinstance(iterator, AsyncIteratorBorrow):
         return iterator

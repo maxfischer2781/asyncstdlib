@@ -27,9 +27,10 @@ Both :py:func:`~asyncstdlib.functools.lru_cache`
 and :py:func:`~asyncstdlib.functools.cached_property`
 of :py:mod:`asyncstdlib` work only with async callables
 (they are not :term:`async neutral`).
-Notably, this includes regular callables that return an :term:`awaitable`.
+Notably, this includes regular callables that return an :term:`awaitable`,
+such as an ``async def`` function wrapped by :py:func:`~functools.partial`.
 
-.. autofunction:: cached_property
+.. autofunction:: cached_property(getter: (Self) → await T)
     :decorator:
 
     .. versionadded:: 1.1.0
@@ -45,11 +46,17 @@ can be applied as a decorator, both with and without arguments:
         request = await asynclib.get(url)
         return request.body()
 
-.. autofunction:: lru_cache(maxsize: int = 128, typed: bool = False)
+    @a.lru_cache(maxsize=32)
+    async def get_pep(num):
+        url = f'http://www.python.org/dev/peps/pep-{num:04}/'
+        request = await asynclib.get(url)
+        return request.body()
+
+.. autofunction:: lru_cache(maxsize: ?int = 128, typed: bool = False)
     :decorator:
 
 The cache tracks *call argument patterns* and maps them to observed return values.
-A pattern is an *ordered* representation of positional and keyword arguments;
+A pattern is an *ordered* representation of provided positional and keyword arguments;
 notably, this disregards default arguments, as well as any overlap between
 positional and keyword arguments.
 This means that for a function ``f(a, b)``, the calls ``f(1, 2)``, ``f(a=1, b=2)``

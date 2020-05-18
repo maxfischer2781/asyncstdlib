@@ -16,7 +16,7 @@ Glossary of Terms
 
    borrowing
    borrowed object
-      Many ``async`` object need to be cleaned up explicitly – for example,
+      Many ``async`` objects need to be cleaned up explicitly – for example,
       an :term:`asynchronous iterator` should generally be ``aclose``\ d after use
       (see `PEP 533`_ for details). When *borrowing* such an object to a temporary
       owner, the original owner guarantees to clean up the object but prevents the
