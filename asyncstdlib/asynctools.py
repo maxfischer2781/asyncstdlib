@@ -38,6 +38,11 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
         if hasattr(iterator, "athrow"):
             self.athrow = iterator.athrow
 
+    def __repr__(self):
+        return (
+            f"<{self.__class__.__name__} of {self.__wrapped__!r} at 0x{(id(self)):x}>"
+        )
+
     async def aclose(self):
         pass
 
