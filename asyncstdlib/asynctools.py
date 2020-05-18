@@ -24,19 +24,34 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
 
     def __init__(self, iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]):
         self.__wrapped__ = iterator
+        # iterator.__aiter__ is likely to return iterator (e.g. for async def: yield)
+        # We wrap it in a separate async iterator/generator to hide its __aiter__.
         try:
-            wrapped_iterator: AsyncGenerator[T, S] = (item async for item in iterator)
-            self.__anext__ = iterator.__anext__  # argument may not be an iterable!
+            wrapped_iterator: AsyncIterator[T, S] = self._wrapped_iterator(iterator)
+            self.__anext__ = iterator.__anext__  # argument must be an async iterable!
         except (AttributeError, TypeError):
             raise TypeError(
                 "borrowing requires an async iterator "
                 + f"with __aiter__ and __anext__ method, got {type(iterator).__name__}"
             ) from None
         self.__aiter__ = wrapped_iterator.__aiter__
+        # Our wrapper cannot pass on asend/athrow without getting much heavier.
+        # Since interleaving anext/asend/athrow is not allowed, and the wrapper holds
+        # no internal state other than the iterator, circumventing it should be fine.
         if hasattr(iterator, "asend"):
             self.asend = iterator.asend
         if hasattr(iterator, "athrow"):
             self.athrow = iterator.athrow
+
+    # Py3.6 compatibility
+    # Use ``(item async for item in iterator)`` inside
+    # ``__init__`` when no longer needed.
+    @staticmethod
+    async def _wrapped_iterator(
+        iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]
+    ) -> AsyncIterator[T]:
+        async for item in iterator:
+            yield item
 
     def __repr__(self):
         return (
