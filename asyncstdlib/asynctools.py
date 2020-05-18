@@ -2,10 +2,10 @@ from typing import (
     Union,
     AsyncIterator,
     TypeVar,
-    AsyncContextManager,
     Optional,
     AsyncGenerator,
 )
+from typing_extensions import AsyncContextManager
 
 from ._core import AnyIterable, aiter
 from .contextlib import nullcontext
