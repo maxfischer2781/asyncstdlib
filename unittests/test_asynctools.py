@@ -17,3 +17,20 @@ async def test_nested_lifetime():
         async for value in a1:
             values.append(value)
     assert values == list(range(10))
+
+
+@sync
+async def test_borrow_explicitly():
+    async_iterable = asyncify(range(10))
+    values = []
+    borrowed_aiterable = a.borrow(async_iterable)
+    values.append(await a.anext(async_iterable))
+    values.append(await a.anext(borrowed_aiterable))
+    await a.borrow(borrowed_aiterable).aclose()
+    values.append(await a.anext(borrowed_aiterable))
+    await borrowed_aiterable.aclose()
+    values.append(await a.anext(async_iterable))
+    assert values == list(range(4))
+    async for value in async_iterable:
+        values.append(value)
+    assert values == list(range(10))
