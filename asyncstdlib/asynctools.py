@@ -1,11 +1,18 @@
-from typing import Union, AsyncIterator, TypeVar, AsyncContextManager, Optional, AsyncGenerator
+from typing import (
+    Union,
+    AsyncIterator,
+    TypeVar,
+    AsyncContextManager,
+    Optional,
+    AsyncGenerator,
+)
 
 from ._core import AnyIterable, aiter
 from .contextlib import nullcontext
 
 
-T = TypeVar('T')
-S = TypeVar('S')
+T = TypeVar("T")
+S = TypeVar("S")
 
 
 class AsyncIteratorBorrow(AsyncGenerator[T, S]):
@@ -13,7 +20,7 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
     Borrowed async iterator/generator, preventing to ``aclose`` the ``iterable``
     """
 
-    __slots__ = '__wrapped__', '__aiter__', '__anext__', 'asend', 'athrow'
+    __slots__ = "__wrapped__", "__aiter__", "__anext__", "asend", "athrow"
 
     def __init__(self, iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]):
         self.__wrapped__ = iterator
@@ -22,13 +29,13 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
             self.__anext__ = iterator.__anext__  # argument may not be an iterable!
         except (AttributeError, TypeError):
             raise TypeError(
-                'borrowing requires an async iterator ' +
-                f'with __aiter__ and __anext__ method, got {type(iterator).__name__}'
+                "borrowing requires an async iterator "
+                + f"with __aiter__ and __anext__ method, got {type(iterator).__name__}"
             ) from None
         self.__aiter__ = wrapped_iterator.__aiter__
-        if hasattr(iterator, 'asend'):
+        if hasattr(iterator, "asend"):
             self.asend = iterator.asend
-        if hasattr(iterator, 'athrow'):
+        if hasattr(iterator, "athrow"):
             self.athrow = iterator.athrow
 
     async def aclose(self):
@@ -37,7 +44,7 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
 
 class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
 
-    __slots__ = '__wrapped__', '_iterator'
+    __slots__ = "__wrapped__", "_iterator"
 
     def __init__(self, iterable: AnyIterable[T]):
         self._iterator: Optional[AsyncIterator[T]] = aiter(iterable)
@@ -111,7 +118,6 @@ def scoped_iter(iterable: AnyIterable[T]):
     iterator = aiter(iterable)
     # The iterable cannot be closed.
     # We do not need to take care of it.
-    if not hasattr(iterator, 'aclose'):
+    if not hasattr(iterator, "aclose"):
         return nullcontext(iterator)
     return AsyncIteratorContext(iterator)
-
