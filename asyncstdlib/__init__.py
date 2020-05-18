@@ -31,6 +31,7 @@ from .itertools import (
     zip_longest,
     groupby,
 )
+from .asynctools import borrow, scoped_iter
 
 __version__ = "1.0.0"
 
@@ -71,4 +72,7 @@ __all__ = [
     "tee",
     "zip_longest",
     "groupby",
+    # asynctools
+    "borrow",
+    "scoped_iter",
 ]
