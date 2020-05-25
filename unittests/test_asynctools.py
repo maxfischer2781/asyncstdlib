@@ -58,6 +58,7 @@ async def test_borrow_iterable():
     values.append(await a.anext(a.borrow(async_iterable)))
     assert values == [0, 1]
 
+
 @sync
 async def test_borrow_misuse():
     with pytest.raises(TypeError):
