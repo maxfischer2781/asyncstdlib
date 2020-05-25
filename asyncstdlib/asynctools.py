@@ -67,7 +67,7 @@ class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
     __slots__ = "__wrapped__", "_iterator"
 
     def __init__(self, iterable: AnyIterable[T]):
-        self._iterator: Optional[AsyncIterator[T]] = aiter(iterable)
+        self._iterator: AsyncIterator[T] = aiter(iterable)
 
     async def __aenter__(self) -> AsyncIterator[T]:
         return AsyncIteratorBorrow(self._iterator)
@@ -75,6 +75,9 @@ class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self._iterator.aclose()
         return False
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} of {self._iterator!r} at 0x{(id(self)):x}>"
 
 
 def borrow(iterator: AsyncIterator[T]) -> AsyncIteratorBorrow[T, None]:
