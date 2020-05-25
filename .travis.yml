@@ -20,7 +20,7 @@ script:
   - python -m flake8
   - |
     if [[ $TRAVIS_PYTHON_VERSION != 'pypy3'* ]]; then
-      python -m black  --target-version py36 --check asyncstdlib unittests
+      python -m black --target-version py36 --diff --check asyncstdlib unittests
     fi
   - python -m coverage run -m pytest
 after_success:
