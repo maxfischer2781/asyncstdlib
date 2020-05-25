@@ -1,4 +1,3 @@
-from builtins import zip as _zip
 from typing import (
     Iterable,
     AsyncIterable,
@@ -22,7 +21,6 @@ from ._core import (
     aiter,
     AnyIterable,
     ScopedIter,
-    close_temporary as _close_temporary,
     awaitify as _awaitify,
     Sentinel,
 )
@@ -81,9 +79,9 @@ def iter(
     :raises TypeError: if ``subject`` does not support any iteration protocol
 
     If ``sentinel`` is not given, the ``subject`` must support
-    the async iteration protocol (the :py:meth:`object.__aiter__` method),
-    the regular iteration protocol (the :py:meth:`object.__iter__` method),
-    or it must support the sequence protocol (the :py:meth:`object.__getitem__`
+    the async iteration protocol (the :py:meth:`~object.__aiter__` method),
+    the regular iteration protocol (the :py:meth:`~object.__iter__` method),
+    or it must support the sequence protocol (the :py:meth:`~object.__getitem__`
     method with integer arguments starting at 0).
     In either case, an async iterator is returned.
 
@@ -91,6 +89,9 @@ def iter(
     :py:func:`~.iter` provides an async iterator that uses ``await subject()``
     to produce new values. Once a value equals ``sentinel``, the value is discarded
     and iteration stops.
+
+    .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
+                 is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
     if sentinel is __ITER_DEFAULT:
         return aiter(subject)
@@ -153,14 +154,20 @@ async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
     if not iterables:
         return
     aiters = (*(aiter(it) for it in iterables),)
+    del iterables
     try:
         while True:
             yield (*[await anext(it) for it in aiters],)
     except StopAsyncIteration:
         return
     finally:
-        for iterable, iterator in _zip(iterables, aiters):
-            await _close_temporary(iterator, iterable)
+        for iterator in aiters:
+            try:
+                aclose = iterator.aclose()
+            except AttributeError:
+                pass
+            else:
+                await aclose
 
 
 class SyncVariadic(Protocol[T, R]):

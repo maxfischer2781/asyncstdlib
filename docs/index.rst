@@ -30,6 +30,7 @@ The missing ``async`` toolbox
    source/api/functools
    source/api/contextlib
    source/api/itertools
+   source/api/asynctools
    source/glossary
 
 The ``asyncstdlib`` library re-implements functions and classes of the Python
@@ -73,6 +74,18 @@ functions and classes directly.
 For example, :py:mod:`asyncstdlib.builtins.enumerate` is also available
 as ``asyncstdlib.enumerate``.
 
+The Async Library Module
+========================
+
+The core toolset used by :py:mod:`asyncstdlib` itself is available
+as a separate submodule.
+
+:py:mod:`asyncstdlib.asynctools`
+    Replicates any :py:mod:`itertools` that benefit from being asynchronous,
+    such as :py:func:`~asyncstdlib.itertools.cycle`,
+    :py:func:`~asyncstdlib.itertools.chain`,
+    or :py:func:`~asyncstdlib.itertools.accumulate`.
+
 Async Neutral Arguments
 =======================
 
@@ -104,13 +117,12 @@ an active event loop. This is not given when garbage collection finalizes an
 async iterable via its :py:meth:`~object.__del__` method. Thus, async iterators
 should be cleaned up deterministically whenever possible (see `PEP 533`_ for details).
 
-Whenever an async iterator of :py:mod:`asyncstdlib` creates a temporary
-async iterator [#tempiter]_ during iteration, it assumes sole ownership of this iterator.
-It guarantees to clean up such temporary async iterators as soon as
+All async iterators of :py:mod:`asyncstdlib` that work on other iterators
+assume sole ownership of the iterators passed to them.
+Passed in async iterators are guaranteed to :py:meth:`~agen.aclose` as soon as
 the :py:mod:`asyncstdlib` async iterator itself is cleaned up.
-
-.. [#tempiter] An iterator ``aiter = a.iter(source)`` is assumed to be temporary if
-         it is a new object, that is ``aiter is not source`` holds true.
+Use :py:func:`~asyncstdlib.asynctools.borrow` to prevent automatic cleanup,
+and :py:func:`~asyncstdlib.asynctools.scoped_iter` to guarantee cleanup in custom code.
 
 .. _PEP 533: https://www.python.org/dev/peps/pep-0533/
 

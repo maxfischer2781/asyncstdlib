@@ -7,7 +7,6 @@ from typing import (
     Union,
     Generic,
     Optional,
-    Iterator,
     Awaitable,
     Callable,
 )
@@ -56,20 +55,6 @@ async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
         yield item
 
 
-async def close_temporary(
-    iterator: AsyncIterator,
-    source: Union[AsyncIterator, AsyncIterable, Iterator, Iterable],
-):
-    """Close an ``iterator`` created from ``source`` if it is a separate object"""
-    if iterator is not source:
-        try:
-            aclose = iterator.aclose()
-        except AttributeError:
-            pass
-        else:
-            await aclose
-
-
 class ScopedIter(Generic[T]):
     """Context manager that provides and cleans up an iterator for an iterable"""
 
@@ -80,11 +65,23 @@ class ScopedIter(Generic[T]):
     async def __aenter__(self) -> AsyncIterator[T]:
         assert self._iterator is None, f"{self.__class__.__name__} is not re-entrant"
         self._iterator = aiter(self._iterable)
+        self._iterable = None
         return self._iterator
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await close_temporary(self._iterator, self._iterable)
+        try:
+            aclose = self._iterator.aclose()
+        except AttributeError:
+            pass
+        else:
+            await aclose
         return False
+
+
+async def borrow(iterator: AsyncIterator):
+    """Borrow an async iterator for iteration, preventing it from being closed"""
+    async for item in iterator:
+        yield item
 
 
 def awaitify(

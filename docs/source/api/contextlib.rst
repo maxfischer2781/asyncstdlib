@@ -23,7 +23,7 @@ Context Managers
 
     .. versionadded:: 1.1.0
 
-.. py:function:: contextmanager(func: (...) → async iter T)(...)
+.. py:function:: contextmanager(func: (...) → async iter T) (...)
     :async-with: :T
     :noindex:
 

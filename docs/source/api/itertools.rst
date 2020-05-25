@@ -42,7 +42,7 @@ Iterator filtering
     :async-for: :T
     :noindex:
 
-.. autofunction:: islice(iterable: (async) iter T, start: int, stop: int [, step: int])
+.. autofunction:: islice(iterable: (async) iter T, start: int, stop: int , step: int =m1)
     :async-for: :T
 
 Iterator transforming
