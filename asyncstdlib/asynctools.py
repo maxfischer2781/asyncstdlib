@@ -2,7 +2,6 @@ from typing import (
     Union,
     AsyncIterator,
     TypeVar,
-    Optional,
     AsyncGenerator,
 )
 from typing_extensions import AsyncContextManager
