@@ -1,4 +1,4 @@
-"""The missing ``async`` toolbox"""
+"""The missing async toolbox"""
 from .builtins import (
     anext,
     zip,
@@ -33,7 +33,7 @@ from .itertools import (
 )
 from .asynctools import borrow, scoped_iter
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = [
     "anext",
