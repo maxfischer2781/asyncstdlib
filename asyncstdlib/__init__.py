@@ -33,7 +33,7 @@ from .itertools import (
 )
 from .asynctools import borrow, scoped_iter
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 __all__ = [
     "anext",
