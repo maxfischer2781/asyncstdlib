@@ -150,6 +150,28 @@ async def test_islice(iterable, slicing):
     assert await a.list(a.islice(asyncify(iterable), *slicing)) == expected
 
 
+async def ayield_exactly(count: int):
+    for item in range(count):
+        yield item
+    assert False, "Too many `anext` items requested"
+
+
+@sync
+@pytest.mark.parametrize(
+    "slicing", ((0,), (5,), (0, 20, 3), (5, 0, 1), (3, 50, 4)),
+)
+async def test_islice_exact(slicing):
+    """`isclice` consumes exactly as many items as needed"""
+    boundary = slice(*slicing) if len(slicing) > 1 else slice(0, slicing[0])
+    expected = list(range(boundary.stop)[boundary])
+    assert (
+        await a.list(
+            a.islice(ayield_exactly(max(boundary.start, boundary.stop)), *slicing)
+        )
+        == expected
+    )
+
+
 starmap_cases = [
     (lambda x, y: x + y, [(1, 2), (3, 4)]),
     (lambda *args: sum(args), [range(i) for i in range(1, 10)]),
