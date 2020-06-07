@@ -199,14 +199,14 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
     s = slice(*args)
     start, stop, step = s.start or 0, s.stop, s.step or 1
     async with ScopedIter(iterable) as async_iter:
-        # always consume the first ``start - 1`` items, even if the slice is empty
+        # always consume the first ``start`` items, even if the slice is empty
         if start > 0:
             async for _count, element in aenumerate(_borrow(async_iter), start=1):
                 if _count == start:
                     break
         if stop is None:
             async for idx, element in aenumerate(async_iter, start=0):
-                if idx % step == 0:
+                if not idx % step:
                     yield element
         elif stop <= start:
             return
