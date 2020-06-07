@@ -162,9 +162,14 @@ async def ayield_exactly(count: int):
 )
 async def test_islice_exact(slicing):
     """`isclice` consumes exactly as many items as needed"""
-    boundary = slice(*slicing)
+    boundary = slice(*slicing) if len(slicing) > 1 else slice(0, slicing[0])
     expected = list(range(boundary.stop)[boundary])
-    assert await a.list(a.islice(ayield_exactly(boundary.stop), *slicing)) == expected
+    assert (
+        await a.list(
+            a.islice(ayield_exactly(max(boundary.start, boundary.stop)), *slicing)
+        )
+        == expected
+    )
 
 
 starmap_cases = [

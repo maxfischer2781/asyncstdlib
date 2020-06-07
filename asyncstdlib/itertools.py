@@ -198,6 +198,8 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
     """
     s = slice(*args)
     start, stop, step = s.start or 0, s.stop, s.step or 1
+    if stop is not None and stop <= start:
+        return
     async with ScopedIter(iterable) as async_iter:
         # always consume the first ``start - 1`` items, even if the slice is empty
         if start > 0:
