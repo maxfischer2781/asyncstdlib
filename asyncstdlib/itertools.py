@@ -198,8 +198,6 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
     """
     s = slice(*args)
     start, stop, step = s.start or 0, s.stop, s.step or 1
-    if stop is not None and stop <= start:
-        return
     async with ScopedIter(iterable) as async_iter:
         # always consume the first ``start - 1`` items, even if the slice is empty
         if start > 0:
@@ -210,13 +208,17 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
             async for idx, element in aenumerate(async_iter, start=0):
                 if idx % step == 0:
                     yield element
+        elif stop <= start:
+            return
         else:
-            stop -= start
+            # We would actually check ``idx >= stop -1`` later on.
+            # Since we do that for every ``idx``, we subtract ``1`` once here.
+            stop -= start + 1
             async for idx, element in aenumerate(async_iter, start=0):
-                if idx >= stop:
-                    return
                 if not idx % step:
                     yield element
+                if idx >= stop:
+                    return
 
 
 async def starmap(
