@@ -79,6 +79,8 @@ class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         self._borrowed_iter = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
+        if self._borrowed_iter is not None:
+            raise RuntimeError(f'scoped_iter is not re-entrant')
         borrowed_iter = self._borrowed_iter = AsyncIteratorBorrow(self._iterator)
         return borrowed_iter
 

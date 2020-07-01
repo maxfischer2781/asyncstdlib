@@ -91,6 +91,15 @@ async def test_borrow_methods(async_iterable_t):
 
 
 @sync
+async def test_scoped_iter_misuse():
+    scoped_iter = a.scoped_iter(asyncify(range(5)))
+    async with scoped_iter:
+        with pytest.raises(RuntimeError):
+            async with scoped_iter:
+                pytest.fail("may not enter scoped_iter twice")
+
+
+@sync
 async def test_borrow_misuse():
     with pytest.raises(TypeError):
         a.borrow([1, 2, 3])
