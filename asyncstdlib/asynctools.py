@@ -72,7 +72,7 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
 
 class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
 
-    __slots__ = "__wrapped__", "_iterator"
+    __slots__ = "_borrowed_iter", "_iterator"
 
     def __init__(self, iterable: AnyIterable[T]):
         self._iterator: AsyncIterator[T] = aiter(iterable)
@@ -80,7 +80,7 @@ class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
 
     async def __aenter__(self) -> AsyncIterator[T]:
         if self._borrowed_iter is not None:
-            raise RuntimeError(f"scoped_iter is not re-entrant")
+            raise RuntimeError("scoped_iter is not re-entrant")
         borrowed_iter = self._borrowed_iter = AsyncIteratorBorrow(self._iterator)
         return borrowed_iter
 
