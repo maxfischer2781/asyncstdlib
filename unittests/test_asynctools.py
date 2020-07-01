@@ -57,6 +57,39 @@ async def test_borrow_iterable():
     assert values == [0, 1]
 
 
+class Closeable:
+    def __init__(self, iterator):
+        self.iterator = iterator
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        return await a.anext(self.iterator)
+
+    async def aclose(self):
+        await self.iterator.aclose()
+
+
+@pytest.mark.parametrize(
+    "async_iterable_t",
+    [
+        lambda: asyncify(range(10)),
+        lambda: Closeable(asyncify(range(10))),
+        lambda: Uncloseable(asyncify(range(10))),
+    ],
+)
+@sync
+async def test_borrow_methods(async_iterable_t):
+    async_iterable = async_iterable_t()
+    values = []
+    async with a.scoped_iter(async_iterable) as a1:
+        values.append(await a.anext(a1))
+        assert hasattr(a1, "athrow") == hasattr(async_iterable, "athrow")
+        assert hasattr(a1, "asend") == hasattr(async_iterable, "asend")
+    assert values == [0]
+
+
 @sync
 async def test_borrow_misuse():
     with pytest.raises(TypeError):
