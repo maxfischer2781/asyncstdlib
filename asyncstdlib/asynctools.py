@@ -26,7 +26,7 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
         # iterator.__aiter__ is likely to return iterator (e.g. for async def: yield)
         # We wrap it in a separate async iterator/generator to hide its __aiter__.
         try:
-            wrapped_iterator: AsyncIterator[T, S] = self._wrapped_iterator(iterator)
+            wrapped_iterator: AsyncGenerator[T, S] = self._wrapped_iterator(iterator)
             self.__anext__ = iterator.__anext__  # argument must be an async iterable!
         except (AttributeError, TypeError):
             raise TypeError(
@@ -48,7 +48,7 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
     @staticmethod
     async def _wrapped_iterator(
         iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]
-    ) -> AsyncIterator[T]:
+    ) -> AsyncGenerator[T, S]:
         async for item in iterator:
             yield item
 
