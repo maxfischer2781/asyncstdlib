@@ -58,10 +58,16 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
         )
 
     async def aclose(self):
+        wrapper_iterator = self.__aiter__()
         # allow closing the intermediate wrapper
         # this prevents a resource warning if the wrapper is GC'd
         # the underlying iterator is NOT affected by this
-        await self.__aiter__().aclose()
+        await wrapper_iterator.aclose()
+        # disable direct asend/athrow to the underlying iterator
+        if hasattr(self, "asend"):
+            self.asend = wrapper_iterator.asend
+        if hasattr(self, "athrow"):
+            self.athrow = wrapper_iterator.athrow
 
 
 class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
