@@ -76,11 +76,14 @@ class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
 
     def __init__(self, iterable: AnyIterable[T]):
         self._iterator: AsyncIterator[T] = aiter(iterable)
+        self._borrowed_iter = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
-        return AsyncIteratorBorrow(self._iterator)
+        borrowed_iter = self._borrowed_iter = AsyncIteratorBorrow(self._iterator)
+        return borrowed_iter
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self._borrowed_iter.aclose()
         await self._iterator.aclose()
         return False
 
