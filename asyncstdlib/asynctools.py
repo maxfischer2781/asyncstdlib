@@ -91,7 +91,8 @@ def borrow(iterator: AsyncIterator[T]) -> AsyncIteratorBorrow[T, None]:
     :py:meth:`~agen.athrow` if the underlying iterator supports them as well;
     this allows borrowing either an :py:class:`~collections.abc.AsyncIterator`
     or :py:class:`~collections.abc.AsyncGenerator`. Regardless of iterator type,
-    :py:meth:`~agen.aclose` is always provided and does nothing.
+    :py:meth:`~agen.aclose` is always provided; it closes only the borrowed
+    iterator, not the underlying iterator.
 
     .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
                  is eventually closed and only :term:`borrowed <borrowing>` until then.
