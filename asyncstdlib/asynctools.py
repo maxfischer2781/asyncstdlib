@@ -26,7 +26,7 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
         # iterator.__aiter__ is likely to return iterator (e.g. for async def: yield)
         # We wrap it in a separate async iterator/generator to hide its __aiter__.
         try:
-            wrapped_iterator: AsyncIterator[T, S] = self._wrapped_iterator(iterator)
+            wrapped_iterator: AsyncGenerator[T, S] = self._wrapped_iterator(iterator)
             self.__anext__ = iterator.__anext__  # argument must be an async iterable!
         except (AttributeError, TypeError):
             raise TypeError(
@@ -48,7 +48,7 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
     @staticmethod
     async def _wrapped_iterator(
         iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]
-    ) -> AsyncIterator[T]:
+    ) -> AsyncGenerator[T, S]:
         async for item in iterator:
             yield item
 
@@ -58,20 +58,34 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
         )
 
     async def aclose(self):
-        pass
+        wrapper_iterator = self.__aiter__()
+        # allow closing the intermediate wrapper
+        # this prevents a resource warning if the wrapper is GC'd
+        # the underlying iterator is NOT affected by this
+        await wrapper_iterator.aclose()
+        # disable direct asend/athrow to the underlying iterator
+        if hasattr(self, "asend"):
+            self.asend = wrapper_iterator.asend
+        if hasattr(self, "athrow"):
+            self.athrow = wrapper_iterator.athrow
 
 
 class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
 
-    __slots__ = "__wrapped__", "_iterator"
+    __slots__ = "_borrowed_iter", "_iterator"
 
     def __init__(self, iterable: AnyIterable[T]):
         self._iterator: AsyncIterator[T] = aiter(iterable)
+        self._borrowed_iter = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
-        return AsyncIteratorBorrow(self._iterator)
+        if self._borrowed_iter is not None:
+            raise RuntimeError("scoped_iter is not re-entrant")
+        borrowed_iter = self._borrowed_iter = AsyncIteratorBorrow(self._iterator)
+        return borrowed_iter
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self._borrowed_iter.aclose()
         await self._iterator.aclose()
         return False
 
@@ -91,7 +105,8 @@ def borrow(iterator: AsyncIterator[T]) -> AsyncIteratorBorrow[T, None]:
     :py:meth:`~agen.athrow` if the underlying iterator supports them as well;
     this allows borrowing either an :py:class:`~collections.abc.AsyncIterator`
     or :py:class:`~collections.abc.AsyncGenerator`. Regardless of iterator type,
-    :py:meth:`~agen.aclose` is always provided and does nothing.
+    :py:meth:`~agen.aclose` is always provided; it closes only the borrowed
+    iterator, not the underlying iterator.
 
     .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
                  is eventually closed and only :term:`borrowed <borrowing>` until then.
