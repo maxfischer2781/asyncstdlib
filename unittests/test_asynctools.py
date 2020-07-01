@@ -13,8 +13,6 @@ async def test_nested_lifetime():
         values.append(await a.anext(a1))
         async with a.scoped_iter(a1) as a2:
             values.append(await a.anext(a2))
-            print(a2)
-        print(a1)
         # original iterator is not closed by inner scope
         async for value in a1:
             values.append(value)
