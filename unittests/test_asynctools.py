@@ -5,50 +5,61 @@ import asyncstdlib as a
 from .utility import sync, asyncify
 
 
+CLOSED = 'closed'
+
+
 @sync
 async def test_nested_lifetime():
-    async_iterable = asyncify(range(10))
-    values = []
+    async_iterable, iterable = asyncify(range(10)), iter(range(10))
     async with a.scoped_iter(async_iterable) as a1:
-        values.append(await a.anext(a1))
+        assert await a.anext(a1) == next(iterable)
         async with a.scoped_iter(a1) as a2:
-            values.append(await a.anext(a2))
+            assert await a.anext(a2) == next(iterable)
+            assert await a.anext(a1) == next(iterable)
         # original iterator is not implicitly closed by inner scope
-        async for value in a1:
-            values.append(value)
-    assert values == list(range(10))
+        assert await a.anext(a1) == next(iterable)
+        assert await a.anext(async_iterable) == next(iterable)
+    assert await a.anext(a2, CLOSED) == CLOSED
+    assert await a.anext(a1, CLOSED) == CLOSED
+    assert await a.anext(async_iterable, CLOSED) == CLOSED
 
 
 @sync
 async def test_nested_lifetime_closed():
     """inner scope does not restrict outer scope"""
-    async_iterable = asyncify(range(10))
-    values = []
+    async_iterable, iterable = asyncify(range(10)), iter(range(10))
     async with a.scoped_iter(async_iterable) as a1:
-        values.append(await a.anext(a1))
+        assert await a.anext(a1) == next(iterable)
         async with a.scoped_iter(a1) as a2:
-            values.append(await a.anext(a2))
+            assert await a.anext(a2) == next(iterable)
             await a2.aclose()
+            assert await a.anext(a2, CLOSED) == CLOSED
+            assert await a.anext(a1, CLOSED) == next(iterable)
         # still provides values
-        async for value in a1:
-            values.append(value)
-    assert values == list(range(10))
+        assert await a.anext(a1, CLOSED) == next(iterable)
+        assert await a.anext(async_iterable) == next(iterable)
+    assert await a.anext(a2, CLOSED) == CLOSED
+    assert await a.anext(a1, CLOSED) == CLOSED
+    assert await a.anext(async_iterable, CLOSED) == CLOSED
 
 
 @sync
 async def test_nested_lifetime_closed_outer():
     """outer scope restricts inner scope"""
-    async_iterable = asyncify(range(10))
-    values = []
+    async_iterable, iterable = asyncify(range(10)), iter(range(10))
     async with a.scoped_iter(async_iterable) as a1:
-        values.append(await a.anext(a1))
+        assert await a.anext(a1) == next(iterable)
         async with a.scoped_iter(a1) as a2:
-            values.append(await a.anext(a2))
+            assert await a.anext(a2) == next(iterable)
             await a1.aclose()
             # does not provide any more values
-            async for value in a2:
-                values.append(value)
-    assert values == list(range(2))
+            assert await a.anext(a2, CLOSED) == CLOSED
+            assert await a.anext(a1, CLOSED) == CLOSED
+        assert await a.anext(a1, CLOSED) == CLOSED
+        assert await a.anext(async_iterable) == next(iterable)
+    assert await a.anext(a2, CLOSED) == CLOSED
+    assert await a.anext(a1, CLOSED) == CLOSED
+    assert await a.anext(async_iterable, CLOSED) == CLOSED
 
 
 @sync
