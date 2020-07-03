@@ -74,8 +74,8 @@ class _AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
 
     __slots__ = "_borrowed_iter", "_iterator"
 
-    def __init__(self, iterable: AnyIterable[T]):
-        self._iterator: AsyncIterator[T] = aiter(iterable)
+    def __init__(self, iterable: AsyncIterator[T]):
+        self._iterator: AsyncIterator[T] = iterable
         self._borrowed_iter = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
