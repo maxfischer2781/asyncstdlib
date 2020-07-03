@@ -13,10 +13,42 @@ async def test_nested_lifetime():
         values.append(await a.anext(a1))
         async with a.scoped_iter(a1) as a2:
             values.append(await a.anext(a2))
-        # original iterator is not closed by inner scope
+        # original iterator is not implicitly closed by inner scope
         async for value in a1:
             values.append(value)
     assert values == list(range(10))
+
+
+@sync
+async def test_nested_lifetime_closed():
+    """inner scope does not restrict outer scope"""
+    async_iterable = asyncify(range(10))
+    values = []
+    async with a.scoped_iter(async_iterable) as a1:
+        values.append(await a.anext(a1))
+        async with a.scoped_iter(a1) as a2:
+            values.append(await a.anext(a2))
+            await a2.aclose()
+        # still provides values
+        async for value in a1:
+            values.append(value)
+    assert values == list(range(10))
+
+
+@sync
+async def test_nested_lifetime_closed_outer():
+    """outer scope restricts inner scope"""
+    async_iterable = asyncify(range(10))
+    values = []
+    async with a.scoped_iter(async_iterable) as a1:
+        values.append(await a.anext(a1))
+        async with a.scoped_iter(a1) as a2:
+            values.append(await a.anext(a2))
+            await a1.aclose()
+            # does not provide any more values
+            async for value in a2:
+                values.append(value)
+    assert values == list(range(2))
 
 
 @sync
