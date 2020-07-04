@@ -14,7 +14,7 @@ T = TypeVar("T")
 S = TypeVar("S")
 
 
-class _AsyncIteratorBorrow(AsyncGenerator[T, S]):
+class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
     """
     Borrowed async iterator/generator, preventing to ``aclose`` the ``iterable``
     """
@@ -70,18 +70,24 @@ class _AsyncIteratorBorrow(AsyncGenerator[T, S]):
             self.athrow = wrapper_iterator.athrow
 
 
-class _AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
+class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
+    """
+    Context restricting the lifetime of ``iterator`` to the context scope
+
+    This is an internal helper that relies ``iterator`` belonging to the scope
+    and having an ``aclose`` method.
+    """
 
     __slots__ = "_borrowed_iter", "_iterator"
 
-    def __init__(self, iterable: AsyncIterator[T]):
-        self._iterator: AsyncIterator[T] = iterable
+    def __init__(self, iterator: AsyncIterator[T]):
+        self._iterator: AsyncIterator[T] = iterator
         self._borrowed_iter = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
         if self._borrowed_iter is not None:
             raise RuntimeError("scoped_iter is not re-entrant")
-        borrowed_iter = self._borrowed_iter = _AsyncIteratorBorrow(self._iterator)
+        borrowed_iter = self._borrowed_iter = _BorrowedAsyncIterator(self._iterator)
         return borrowed_iter
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -93,7 +99,7 @@ class _AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         return f"<{self.__class__.__name__} of {self._iterator!r} at 0x{(id(self)):x}>"
 
 
-def borrow(iterator: AsyncIterator[T]) -> _AsyncIteratorBorrow[T, None]:
+def borrow(iterator: AsyncIterator[T]) -> _BorrowedAsyncIterator[T, None]:
     """
     Borrow an async iterator, preventing to ``aclose`` it
 
@@ -111,9 +117,9 @@ def borrow(iterator: AsyncIterator[T]) -> _AsyncIteratorBorrow[T, None]:
     .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
                  is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
-    if isinstance(iterator, _AsyncIteratorBorrow):
+    if isinstance(iterator, _BorrowedAsyncIterator):
         return iterator
-    return _AsyncIteratorBorrow(iterator)
+    return _BorrowedAsyncIterator(iterator)
 
 
 def scoped_iter(iterable: AnyIterable[T]):
@@ -157,4 +163,4 @@ def scoped_iter(iterable: AnyIterable[T]):
     # We do not need to take care of it.
     if not hasattr(iterator, "aclose"):
         return nullcontext(iterator)
-    return _AsyncIteratorContext(iterator)
+    return _ScopedAsyncIteratorContext(iterator)
