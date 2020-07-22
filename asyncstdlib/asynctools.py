@@ -73,6 +73,8 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
 
 
 class _ScopedAsyncIterator(_BorrowedAsyncIterator[T, S]):
+    __slots__ = ()
+
     def __repr__(self):
         return f"<asyncstdlib.scoped_iter of {self.__wrapped__!r} at 0x{(id(self)):x}>"
 
