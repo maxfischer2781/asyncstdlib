@@ -5,18 +5,51 @@ import asyncstdlib as a
 from .utility import sync, asyncify
 
 
+CLOSED = "closed"
+
+
 @sync
 async def test_nested_lifetime():
-    async_iterable = asyncify(range(10))
-    values = []
+    async_iterable, iterable = asyncify(range(10)), iter(range(10))
     async with a.scoped_iter(async_iterable) as a1:
-        values.append(await a.anext(a1))
+        assert await a.anext(a1) == next(iterable)
         async with a.scoped_iter(a1) as a2:
-            values.append(await a.anext(a2))
-        # original iterator is not closed by inner scope
-        async for value in a1:
-            values.append(value)
-    assert values == list(range(10))
+            assert await a.anext(a2) == next(iterable)
+            assert await a.anext(a1) == next(iterable)
+            # scoped iter can only be closed by scope
+            await a2.aclose()
+            assert await a.anext(a2) == next(iterable)
+        # scoped iterator is closed by its own scope
+        assert await a.anext(a2, CLOSED) == CLOSED
+        # scoped iterator is not implicitly closed by inner scope
+        assert await a.anext(a1) == next(iterable)
+        assert await a.anext(async_iterable) == next(iterable)
+    assert await a.anext(a2, CLOSED) == CLOSED
+    assert await a.anext(a1, CLOSED) == CLOSED
+    assert await a.anext(async_iterable, CLOSED) == CLOSED
+
+
+@sync
+async def test_nested_lifetime_closed_outer():
+    """outer lifetime restricts inner lifetime"""
+    async_iterable, iterable = asyncify(range(10)), iter(range(10))
+    async with a.scoped_iter(async_iterable) as a1:
+        assert await a.anext(a1) == next(iterable)
+        b1 = a.borrow(a1)
+        async with a.scoped_iter(b1) as a2:
+            assert await a.anext(a2) == next(iterable)
+            await b1.aclose()
+            # scope iterator is closed alongside parent
+            assert await a.anext(a2, CLOSED) == CLOSED
+            assert await a.anext(b1, CLOSED) == CLOSED
+        assert await a.anext(a2, CLOSED) == CLOSED
+        assert await a.anext(b1, CLOSED) == CLOSED
+        # scoped iterator is not implicitly closed by inner scope/borrow
+        assert await a.anext(a1) == next(iterable)
+        assert await a.anext(async_iterable) == next(iterable)
+    assert await a.anext(a2, CLOSED) == CLOSED
+    assert await a.anext(a1, CLOSED) == CLOSED
+    assert await a.anext(async_iterable, CLOSED) == CLOSED
 
 
 @sync

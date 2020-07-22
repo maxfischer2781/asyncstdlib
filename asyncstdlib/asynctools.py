@@ -14,7 +14,7 @@ T = TypeVar("T")
 S = TypeVar("S")
 
 
-class AsyncIteratorBorrow(AsyncGenerator[T, S]):
+class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
     """
     Borrowed async iterator/generator, preventing to ``aclose`` the ``iterable``
     """
@@ -34,6 +34,7 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
                 + f"with __aiter__ and __anext__ method, got {type(iterator).__name__}"
             ) from None
         self.__aiter__ = wrapped_iterator.__aiter__
+        self.__anext__ = wrapped_iterator.__anext__
         # Our wrapper cannot pass on asend/athrow without getting much heavier.
         # Since interleaving anext/asend/athrow is not allowed, and the wrapper holds
         # no internal state other than the iterator, circumventing it should be fine.
@@ -53,11 +54,9 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
             yield item
 
     def __repr__(self):
-        return (
-            f"<{self.__class__.__name__} of {self.__wrapped__!r} at 0x{(id(self)):x}>"
-        )
+        return f"<asyncstdlib.borrow of {self.__wrapped__!r} at 0x{(id(self)):x}>"
 
-    async def aclose(self):
+    async def _aclose_wrapper(self):
         wrapper_iterator = self.__aiter__()
         # allow closing the intermediate wrapper
         # this prevents a resource warning if the wrapper is GC'd
@@ -69,23 +68,42 @@ class AsyncIteratorBorrow(AsyncGenerator[T, S]):
         if hasattr(self, "athrow"):
             self.athrow = wrapper_iterator.athrow
 
+    def aclose(self):
+        return self._aclose_wrapper()
 
-class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
+
+class _ScopedAsyncIterator(_BorrowedAsyncIterator[T, S]):
+    __slots__ = ()
+
+    def __repr__(self):
+        return f"<asyncstdlib.scoped_iter of {self.__wrapped__!r} at 0x{(id(self)):x}>"
+
+    async def aclose(self):
+        pass
+
+
+class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
+    """
+    Context restricting the lifetime of ``iterator`` to the context scope
+
+    This is an internal helper that relies on ``iterator`` belonging to the scope
+    and having an ``aclose`` method.
+    """
 
     __slots__ = "_borrowed_iter", "_iterator"
 
-    def __init__(self, iterable: AnyIterable[T]):
-        self._iterator: AsyncIterator[T] = aiter(iterable)
+    def __init__(self, iterator: AsyncIterator[T]):
+        self._iterator: AsyncIterator[T] = iterator
         self._borrowed_iter = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
         if self._borrowed_iter is not None:
             raise RuntimeError("scoped_iter is not re-entrant")
-        borrowed_iter = self._borrowed_iter = AsyncIteratorBorrow(self._iterator)
+        borrowed_iter = self._borrowed_iter = _ScopedAsyncIterator(self._iterator)
         return borrowed_iter
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self._borrowed_iter.aclose()
+        await self._borrowed_iter._aclose_wrapper()
         await self._iterator.aclose()
         return False
 
@@ -93,7 +111,7 @@ class AsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         return f"<{self.__class__.__name__} of {self._iterator!r} at 0x{(id(self)):x}>"
 
 
-def borrow(iterator: AsyncIterator[T]) -> AsyncIteratorBorrow[T, None]:
+def borrow(iterator: AsyncIterator[T]) -> _BorrowedAsyncIterator[T, None]:
     """
     Borrow an async iterator, preventing to ``aclose`` it
 
@@ -111,9 +129,7 @@ def borrow(iterator: AsyncIterator[T]) -> AsyncIteratorBorrow[T, None]:
     .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
                  is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
-    if isinstance(iterator, AsyncIteratorBorrow):
-        return iterator
-    return AsyncIteratorBorrow(iterator)
+    return _BorrowedAsyncIterator(iterator)
 
 
 def scoped_iter(iterable: AnyIterable[T]):
@@ -144,17 +160,17 @@ def scoped_iter(iterable: AnyIterable[T]):
             for item in tail:
                 yield item
 
-    Nested scoping of the same iterator is safe: inner scopes automatically
-    forfeit closing the iterator in favour of the outermost scope. This allows
-    passing the borrowed iterator to other functions that use :py:func:`scoped_iter`.
+    Nested scoping of the same iterator is safe: inner scopes automatically forfeit
+    closing the underlying iterator in favour of the outermost scope. This allows
+    passing the scoped iterator to other functions that use :py:func:`scoped_iter`.
     """
     # The iterable has already been borrowed.
-    # Someone else takes care of it.
-    if isinstance(iterable, AsyncIteratorBorrow):
-        return nullcontext(iterable)
+    # Do not unwrap it to preserve method forwarding.
+    if isinstance(iterable, (_BorrowedAsyncIterator, _ScopedAsyncIterator)):
+        return _ScopedAsyncIteratorContext(iterable)
     iterator = aiter(iterable)
     # The iterable cannot be closed.
     # We do not need to take care of it.
     if not hasattr(iterator, "aclose"):
         return nullcontext(iterator)
-    return AsyncIteratorContext(iterator)
+    return _ScopedAsyncIteratorContext(iterator)

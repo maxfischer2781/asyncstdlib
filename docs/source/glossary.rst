@@ -20,6 +20,6 @@ Glossary of Terms
       an :term:`asynchronous iterator` should generally be ``aclose``\ d after use
       (see `PEP 533`_ for details). When *borrowing* such an object to a temporary
       owner, the original owner guarantees to clean up the object but prevents the
-      temporary owner from doing.
+      temporary owner from doing so.
 
 .. _PEP 533: https://www.python.org/dev/peps/pep-0533/
