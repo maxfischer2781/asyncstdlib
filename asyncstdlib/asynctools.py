@@ -158,9 +158,9 @@ def scoped_iter(iterable: AnyIterable[T]):
             for item in tail:
                 yield item
 
-    Nested scoping of the same iterator is safe: inner scopes automatically
-    forfeit closing the iterator in favour of the outermost scope. This allows
-    passing the borrowed iterator to other functions that use :py:func:`scoped_iter`.
+    Nested scoping of the same iterator is safe: inner scopes automatically forfeit
+    closing the underlying iterator in favour of the outermost scope. This allows
+    passing the scoped iterator to other functions that use :py:func:`scoped_iter`.
     """
     # The iterable has already been borrowed.
     # Do not unwrap it to preserve method forwarding.
