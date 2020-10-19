@@ -65,7 +65,7 @@ class LRUAsyncCallable(Protocol[R]):
 
 
 @public_module("asyncstdlib.functools")
-def lru_cache(maxsize: int = 128, typed: bool = False):
+def lru_cache(maxsize: Optional[int] = 128, typed: bool = False):
     """
     Least Recently Used cache for async functions
 
