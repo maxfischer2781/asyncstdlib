@@ -264,7 +264,7 @@ async def takewhile(
 
 
 async def tee_peer(
-    iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]], cleanup: bool,
+    iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]], cleanup: bool
 ) -> AsyncGenerator[T, None]:
     try:
         while True:
@@ -327,9 +327,7 @@ class Tee(Generic[T]):
     the iterators are safe if there is only ever one single "most advanced" iterator.
     """
 
-    def __init__(
-        self, iterable: AnyIterable[T], n: int = 2,
-    ):
+    def __init__(self, iterable: AnyIterable[T], n: int = 2):
         self._iterator = aiter(iterable)
         _cleanup = self._iterator is iterable
         self._buffers = [deque() for _ in range(n)]
@@ -474,9 +472,9 @@ async def groupby(  # noqa: F811
     exhausted = False
     # `current_*`: buffer for key/value the current group peeked beyond its end
     current_key = current_value = nothing = object()  # type: Any
-    make_key: Callable[[T], Awaitable[R]] = _awaitify(
-        key
-    ) if key is not None else identity
+    make_key: Callable[[T], Awaitable[R]] = (
+        _awaitify(key) if key is not None else identity
+    )
     async with ScopedIter(iterable) as async_iter:
         # fast-forward mode: advance to the next group
         async def seek_group() -> AsyncIterator[T]:

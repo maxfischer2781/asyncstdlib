@@ -78,7 +78,7 @@ async def test_reduce():
             assert await a.reduce(
                 reducer, itertype([0, 1, 2, 3, 4, 0, -5])
             ) == functools.reduce(lambda x, y: x + y, [0, 1, 2, 3, 4, 0, -5])
-            assert await a.reduce(reducer, itertype([1]), 23,) == functools.reduce(
+            assert await a.reduce(reducer, itertype([1]), 23) == functools.reduce(
                 lambda x, y: x + y, [1], 23
             )
             assert await a.reduce(reducer, itertype([12])) == functools.reduce(

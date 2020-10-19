@@ -6,7 +6,14 @@ from ._utility import public_module
 
 from ._lrucache import lru_cache, CacheInfo, LRUAsyncCallable
 
-__all__ = ["cache", "lru_cache", "CacheInfo", "LRUAsyncCallable", "reduce", "cached_property"]
+__all__ = [
+    "cache",
+    "lru_cache",
+    "CacheInfo",
+    "LRUAsyncCallable",
+    "reduce",
+    "cached_property",
+]
 
 
 T = TypeVar("T")

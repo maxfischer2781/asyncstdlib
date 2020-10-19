@@ -231,7 +231,7 @@ def _unbound_lru(
 
 
 def _bounded_lru(
-    function: Callable[..., Awaitable[R]], typed: bool, maxsize: int,
+    function: Callable[..., Awaitable[R]], typed: bool, maxsize: int
 ) -> LRUAsyncCallable[R]:
     """Wrap the async ``function`` in an async LRU cache with fixed capacity"""
     # local lookup
