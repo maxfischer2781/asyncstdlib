@@ -52,6 +52,11 @@ can be applied as a decorator, both with and without arguments:
         request = await asynclib.get(url)
         return request.body()
 
+.. autofunction:: cache
+    :decorator:
+
+    .. versionadded:: 1.1.0
+
 .. autofunction:: lru_cache(maxsize: ?int = 128, typed: bool = False)
     :decorator:
 
