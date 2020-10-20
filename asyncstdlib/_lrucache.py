@@ -76,7 +76,10 @@ class LRUAsyncCallable(Protocol[R]):
         """Get the parameters of the cache"""
 
     def cache_info(self) -> CacheInfo:
-        """Get the current performance and boundary of the cache"""
+        """
+        Get the current performance and boundary of the cache
+        as a :py:class:`~typing.NamedTuple`
+        """
 
     def cache_clear(self) -> None:
         """Evict all call argument patterns and their results from the cache"""

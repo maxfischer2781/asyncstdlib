@@ -86,42 +86,10 @@ the ``__wrapped__`` callable may be wrapped with a new cache of different size.
 
     .. automethod:: cache_clear()
 
-    .. automethod:: cache_info() -> CacheInfo
+    .. automethod:: cache_info() -> (hits=..., misses=..., maxsize=..., currsize=...)
 
-    .. automethod:: cache_parameters() -> CacheParameters
+    .. automethod:: cache_parameters() -> {"maxsize": ..., "typed": ...}
 
     .. versionadded:: 1.2.0
 
         The :py:meth:`~.cache_parameters` method.
-
-
-.. autoclass:: CacheInfo
-
-    .. py:attribute:: hits
-
-        Number of hits so far, i.e. results read from the cache
-
-    .. py:attribute:: misses
-
-        Number of misses, i.e. freshly computed results
-
-    .. py:attribute:: maxsize
-
-        The maximum number of cache entries or :py:data:`None` for an unbounded cache
-
-    .. py:attribute:: currsize
-
-        The current number of cache entries
-
-
-.. autoclass:: CacheParameters(*, maxsize, typed)
-
-    .. py:attribute:: ["maxsize"]
-
-        The maximum number of cache entries or :py:data:`None` for an unbounded cache
-
-    .. py:attribute:: ["typed"]
-
-        Whether values of different type are always treated as distinct
-
-    .. versionadded:: 1.2.0
