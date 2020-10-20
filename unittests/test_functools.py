@@ -277,3 +277,26 @@ async def test_cache():
         pingpong.cache_clear()
         assert pingpong.cache_info().hits == 0
         assert pingpong.cache_info().misses == 0
+
+
+metadata_cases = [
+    (a.cache, None),
+    (lambda func: a.lru_cache(None)(func), None),
+    (lambda func: a.lru_cache(0)(func), 0),
+    (lambda func: a.lru_cache(1)(func), 1),
+    (lambda func: a.lru_cache(256)(func), 256),
+]
+
+
+@pytest.mark.parametrize("cache, maxsize", metadata_cases)
+def test_caches_metadata(cache, maxsize):
+    @cache
+    async def pingpong(*args, **kwargs):
+        return args, kwargs
+
+    assert pingpong.cache_info().maxsize == pingpong.cache_parameters()["maxsize"]
+    assert not pingpong.cache_parameters()["typed"]
+    # state for unfilled cache should always be the same
+    assert pingpong.cache_info().hits == 0
+    assert pingpong.cache_info().misses == 0
+    assert pingpong.cache_info().currsize == 0
