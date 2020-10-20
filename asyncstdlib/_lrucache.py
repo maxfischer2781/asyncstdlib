@@ -54,7 +54,9 @@ class CacheParameters(TypedDict):
     meaning it cannot be unpacked in assignments.
     """
 
+    #: The maximum number of cache entries or :py:data:`None` for an unbounded cache
     maxsize: Optional[int]
+    #: Whether values of different type are always treated as distinct
     typed: bool
 
 
