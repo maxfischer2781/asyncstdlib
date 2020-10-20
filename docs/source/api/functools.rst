@@ -52,12 +52,12 @@ can be applied as a decorator, both with and without arguments:
         request = await asynclib.get(url)
         return request.body()
 
-.. autofunction:: cache
+.. autofunction:: cache((...) -> await R)
     :decorator:
 
     .. versionadded:: 1.2.0
 
-.. autofunction:: lru_cache(maxsize: ?int = 128, typed: bool = False)
+.. autofunction:: lru_cache(maxsize: ?int = 128, typed: bool = False)((...) -> await R)
     :decorator:
 
 The cache tracks *call argument patterns* and maps them to observed return values.
@@ -82,7 +82,7 @@ the ``__wrapped__`` callable may be wrapped with a new cache of different size.
 
         The callable wrapped by this cache
 
-    .. automethod:: __call__(...) -> R
+    .. automethod:: __call__(...) -> await R
 
     .. automethod:: cache_clear()
 
