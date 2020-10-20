@@ -4,12 +4,31 @@ from ._core import ScopedIter, awaitify as _awaitify, Sentinel
 from .builtins import anext, AnyIterable
 from ._utility import public_module
 
-from ._lrucache import lru_cache, CacheInfo, LRUAsyncCallable
+from ._lrucache import lru_cache, CacheInfo, CacheParameters, LRUAsyncCallable
 
-__all__ = ["lru_cache", "CacheInfo", "LRUAsyncCallable", "reduce", "cached_property"]
+__all__ = [
+    "cache",
+    "lru_cache",
+    "CacheInfo",
+    "CacheParameters",
+    "LRUAsyncCallable",
+    "reduce",
+    "cached_property",
+]
 
 
 T = TypeVar("T")
+R = TypeVar("R")
+
+
+def cache(user_function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
+    """
+    Simple unbounded cache, aka memoization,  for async functions
+
+    This is a convenience function, equivalent to :py:func:`~.lru_cache`
+    with a ``maxsize`` of :py:data:`None`.
+    """
+    return lru_cache(maxsize=None)(user_function)
 
 
 __REDUCE_SENTINEL = Sentinel("<no default>")

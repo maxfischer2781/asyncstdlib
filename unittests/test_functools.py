@@ -78,7 +78,7 @@ async def test_reduce():
             assert await a.reduce(
                 reducer, itertype([0, 1, 2, 3, 4, 0, -5])
             ) == functools.reduce(lambda x, y: x + y, [0, 1, 2, 3, 4, 0, -5])
-            assert await a.reduce(reducer, itertype([1]), 23,) == functools.reduce(
+            assert await a.reduce(reducer, itertype([1]), 23) == functools.reduce(
                 lambda x, y: x + y, [1], 23
             )
             assert await a.reduce(reducer, itertype([12])) == functools.reduce(
@@ -243,3 +243,60 @@ async def test_lru_cache_concurrent(size):
     await verify(6)
     await Switch()
     await verify(1)
+
+
+@sync
+async def test_cache():
+    calls = []
+
+    @a.cache
+    async def pingpong(*args, **kwargs):
+        calls.append(args[0])
+        return args, kwargs
+
+    for kwargs in ({}, {"one": 1}, {"one": 1, "two": 2}):
+        # fill with initial argument patterns
+        for val in range(4):
+            assert await pingpong(val, **kwargs) == ((val,), kwargs)
+            assert len(calls) == val + 1
+            assert pingpong.cache_info().hits == 0
+            assert pingpong.cache_info().misses == val + 1
+        # repeat argument patterns several times
+        for idx in range(5):
+            for val in range(4):
+                assert await pingpong(val, **kwargs) == ((val,), kwargs)
+            assert len(calls) == 4
+            assert pingpong.cache_info().hits == (idx + 1) * 4
+        # fill with new argument patterns
+        for _ in range(5):
+            for val in range(4, 9):
+                assert await pingpong(val, val, **kwargs) == ((val, val), kwargs)
+            assert len(calls) == 9
+
+        calls.clear()
+        pingpong.cache_clear()
+        assert pingpong.cache_info().hits == 0
+        assert pingpong.cache_info().misses == 0
+
+
+metadata_cases = [
+    (a.cache, None),
+    (lambda func: a.lru_cache(None)(func), None),
+    (lambda func: a.lru_cache(0)(func), 0),
+    (lambda func: a.lru_cache(1)(func), 1),
+    (lambda func: a.lru_cache(256)(func), 256),
+]
+
+
+@pytest.mark.parametrize("cache, maxsize", metadata_cases)
+def test_caches_metadata(cache, maxsize):
+    @cache
+    async def pingpong(*args, **kwargs):
+        return args, kwargs
+
+    assert pingpong.cache_info().maxsize == pingpong.cache_parameters()["maxsize"]
+    assert not pingpong.cache_parameters()["typed"]
+    # state for unfilled cache should always be the same
+    assert pingpong.cache_info().hits == 0
+    assert pingpong.cache_info().misses == 0
+    assert pingpong.cache_info().currsize == 0

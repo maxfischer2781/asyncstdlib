@@ -52,7 +52,12 @@ can be applied as a decorator, both with and without arguments:
         request = await asynclib.get(url)
         return request.body()
 
-.. autofunction:: lru_cache(maxsize: ?int = 128, typed: bool = False)
+.. autofunction:: cache((...) -> await R)
+    :decorator:
+
+    .. versionadded:: 1.2.0
+
+.. autofunction:: lru_cache(maxsize: ?int = 128, typed: bool = False)((...) -> await R)
     :decorator:
 
 The cache tracks *call argument patterns* and maps them to observed return values.
@@ -77,27 +82,14 @@ the ``__wrapped__`` callable may be wrapped with a new cache of different size.
 
         The callable wrapped by this cache
 
-    .. automethod:: __call__(...) -> R
+    .. automethod:: __call__(...) -> await R
 
     .. automethod:: cache_clear()
 
-    .. automethod:: cache_info() -> CacheInfo
+    .. automethod:: cache_info() -> (hits=..., misses=..., maxsize=..., currsize=...)
 
+    .. automethod:: cache_parameters() -> {"maxsize": ..., "typed": ...}
 
-.. autoclass:: CacheInfo
+    .. versionadded:: 1.2.0
 
-    .. py:attribute:: hits
-
-        Number of hits so far, i.e. results read from the cache
-
-    .. py:attribute:: misses
-
-        Number of misses, i.e. freshly computed results
-
-    .. py:attribute:: maxsize
-
-        The maximum number of cache entries or :py:data:`None` for an unbounded cache
-
-    .. py:attribute:: currsize
-
-        The current number of cache entries
+        The :py:meth:`~.cache_parameters` method.

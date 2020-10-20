@@ -185,7 +185,7 @@ class AsyncVariadic(Protocol[T, R]):
 
 
 async def map(
-    function: Union[SyncVariadic, AsyncVariadic], *iterable: AnyIterable[T],
+    function: Union[SyncVariadic, AsyncVariadic], *iterable: AnyIterable[T]
 ) -> AsyncIterator[R]:
     r"""
     An async iterator mapping an (async) function to items from (async) iterables

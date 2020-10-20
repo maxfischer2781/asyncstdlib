@@ -18,7 +18,7 @@ from typing import (
 from functools import update_wrapper
 from collections import OrderedDict
 
-from typing_extensions import Protocol
+from typing_extensions import Protocol, TypedDict
 
 from ._utility import public_module
 
@@ -46,6 +46,21 @@ class CacheInfo(NamedTuple):
 
 
 @public_module("asyncstdlib.functools")
+class CacheParameters(TypedDict):
+    """
+    Metadata on the parameters of a cache
+
+    This is a :py:class:`~typing.TypedDict`,
+    meaning it cannot be unpacked in assignments.
+    """
+
+    #: The maximum number of cache entries or :py:data:`None` for an unbounded cache
+    maxsize: Optional[int]
+    #: Whether values of different type are always treated as distinct
+    typed: bool
+
+
+@public_module("asyncstdlib.functools")
 class LRUAsyncCallable(Protocol[R]):
     """
     :py:class:`~typing.Protocol` of a LRU cache wrapping a callable to an awaitable
@@ -57,15 +72,21 @@ class LRUAsyncCallable(Protocol[R]):
     async def __call__(self, *args, **kwargs) -> R:
         """Get the result of ``await __wrapped__(...)`` from the cache or evaluation"""
 
+    def cache_parameters(self) -> CacheParameters:
+        """Get the parameters of the cache"""
+
     def cache_info(self) -> CacheInfo:
-        """Get the current performance and boundary of the cache"""
+        """
+        Get the current performance and boundary of the cache
+        as a :py:class:`~typing.NamedTuple`
+        """
 
     def cache_clear(self) -> None:
         """Evict all call argument patterns and their results from the cache"""
 
 
 @public_module("asyncstdlib.functools")
-def lru_cache(maxsize: int = 128, typed: bool = False):
+def lru_cache(maxsize: Optional[int] = 128, typed: bool = False):
     """
     Least Recently Used cache for async functions
 
@@ -122,7 +143,7 @@ def lru_cache(maxsize: int = 128, typed: bool = False):
         if maxsize is None:
             wrapper = _unbound_lru(function=function, typed=typed)
         elif maxsize == 0:
-            wrapper = _empty_lru(function=function)
+            wrapper = _empty_lru(function=function, typed=typed)
         else:
             wrapper = _bounded_lru(function=function, maxsize=maxsize, typed=typed)
         return update_wrapper(wrapper, function)
@@ -165,7 +186,9 @@ class CallKey:
         return cls(key)
 
 
-def _empty_lru(function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
+def _empty_lru(
+    function: Callable[..., Awaitable[R]], typed: bool
+) -> LRUAsyncCallable[R]:
     """Wrap the async ``function`` in an async LRU cache without any capacity"""
     # cache statistics
     misses = 0
@@ -175,6 +198,9 @@ def _empty_lru(function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
         misses += 1
         return await function(*args, **kwargs)
 
+    def cache_parameters() -> CacheParameters:
+        return CacheParameters(maxsize=0, typed=typed)
+
     def cache_info() -> CacheInfo:
         return CacheInfo(0, misses, 0, 0)
 
@@ -182,6 +208,7 @@ def _empty_lru(function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
         nonlocal misses
         misses = 0
 
+    wrapper.cache_parameters = cache_parameters
     wrapper.cache_info = cache_info
     wrapper.cache_clear = cache_clear
     return wrapper
@@ -216,6 +243,9 @@ def _unbound_lru(
             hits += 1
             return result
 
+    def cache_parameters() -> CacheParameters:
+        return CacheParameters(maxsize=None, typed=typed)
+
     def cache_info() -> CacheInfo:
         return CacheInfo(hits, misses, None, len(cache))
 
@@ -225,13 +255,14 @@ def _unbound_lru(
         hits = 0
         cache.clear()
 
+    wrapper.cache_parameters = cache_parameters
     wrapper.cache_info = cache_info
     wrapper.cache_clear = cache_clear
     return wrapper
 
 
 def _bounded_lru(
-    function: Callable[..., Awaitable[R]], typed: bool, maxsize: int,
+    function: Callable[..., Awaitable[R]], typed: bool, maxsize: int
 ) -> LRUAsyncCallable[R]:
     """Wrap the async ``function`` in an async LRU cache with fixed capacity"""
     # local lookup
@@ -271,6 +302,9 @@ def _bounded_lru(
             hits += 1
             return result
 
+    def cache_parameters() -> CacheParameters:
+        return CacheParameters(maxsize=maxsize, typed=typed)
+
     def cache_info() -> CacheInfo:
         return CacheInfo(hits, misses, maxsize, len(cache))
 
@@ -281,6 +315,7 @@ def _bounded_lru(
         filled = False
         cache.clear()
 
+    wrapper.cache_parameters = cache_parameters
     wrapper.cache_info = cache_info
     wrapper.cache_clear = cache_clear
     return wrapper

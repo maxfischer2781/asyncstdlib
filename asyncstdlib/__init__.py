@@ -16,7 +16,7 @@ from .builtins import (
     set,
     tuple,
 )
-from .functools import reduce, lru_cache, cached_property
+from .functools import reduce, lru_cache, cache, cached_property
 from .contextlib import closing, contextmanager, nullcontext, ExitStack
 from .itertools import (
     accumulate,
@@ -54,6 +54,7 @@ __all__ = [
     # functools
     "reduce",
     "lru_cache",
+    "cache",
     "cached_property",
     # contextlib
     "closing",
