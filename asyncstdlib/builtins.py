@@ -14,6 +14,7 @@ from typing import (
     Any,
     overload,
 )
+import builtins as _sync_builtins
 
 from typing_extensions import Protocol
 
@@ -410,3 +411,33 @@ async def set(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Set[T]:
     This is equivalent to ``{element async for element in iterable}``.
     """
     return {element async for element in aiter(iterable)}
+
+
+async def _identity(x: T) -> T:
+    """Asynchronous identity function, returns its argument unchanged"""
+    return x
+
+
+async def sorted(
+    iterable: AnyIterable[T],
+    *,
+    key: Optional[Callable[[T], Any]] = None,
+    reverse: bool = False,
+) -> List[T]:
+    """
+    Sort items from an (async) iterable into a new list by an (async) callable
+
+    The optional ``key`` argument specifies a one-argument function, which
+    provides a substitute for determining the sort order of each item.
+    The special value and default :py:data:`None` represents the identity functions,
+    i.e. compares items directly.
+    """
+    if key is None:
+        try:
+            return _sync_builtins.sorted(iterable, reverse=reverse)
+        except TypeError:
+            pass
+    key = _awaitify(key) if key is not None else _identity
+    keyed_items = [(await key(item), item) async for item in aiter(iterable)]
+    keyed_items.sort(key=lambda ki: ki[0], reverse=reverse)
+    return [item for key, item in keyed_items]

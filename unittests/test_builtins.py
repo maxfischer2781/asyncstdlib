@@ -1,3 +1,5 @@
+import random
+
 import pytest
 
 import asyncstdlib as a
@@ -253,3 +255,23 @@ async def test_types():
         zip((str(i) for i in range(5)), range(5)), b=3
     )
     assert await a.dict() == dict()
+
+
+sortables = [
+    [],
+    [0],
+    [1, 4, 17, -12, 3, 47, -98, 72, -1138],
+    list(range(20)),
+    list(range(2000)),
+    [random.random() for _ in range(2000)],
+]
+
+
+@pytest.mark.parametrize('sortable', sortables)
+@pytest.mark.parametrize('reverse', [True, False])
+@sync
+async def test_sorted_direct(sortable, reverse):
+    assert await a.sorted(sortable, reverse=reverse) == sorted(sortable, reverse=reverse)
+    assert await a.sorted(asyncify(sortable), reverse=reverse) == sorted(sortable, reverse=reverse)
+    assert await a.sorted(sortable, key=lambda x: x, reverse=reverse) == sorted(sortable, key=lambda x: x, reverse=reverse)
+    assert await a.sorted(sortable, key=awaitify(lambda x: x), reverse=reverse) == sorted(sortable, key=lambda x: x, reverse=reverse)
