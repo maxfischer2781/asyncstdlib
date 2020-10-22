@@ -15,6 +15,7 @@ from .builtins import (
     dict,
     set,
     tuple,
+    sorted,
 )
 from .functools import reduce, lru_cache, cache, cached_property
 from .contextlib import closing, contextmanager, nullcontext, ExitStack
@@ -51,6 +52,7 @@ __all__ = [
     "dict",
     "set",
     "tuple",
+    "sorted",
     # functools
     "reduce",
     "lru_cache",
