@@ -267,11 +267,19 @@ sortables = [
 ]
 
 
-@pytest.mark.parametrize('sortable', sortables)
-@pytest.mark.parametrize('reverse', [True, False])
+@pytest.mark.parametrize("sortable", sortables)
+@pytest.mark.parametrize("reverse", [True, False])
 @sync
 async def test_sorted_direct(sortable, reverse):
-    assert await a.sorted(sortable, reverse=reverse) == sorted(sortable, reverse=reverse)
-    assert await a.sorted(asyncify(sortable), reverse=reverse) == sorted(sortable, reverse=reverse)
-    assert await a.sorted(sortable, key=lambda x: x, reverse=reverse) == sorted(sortable, key=lambda x: x, reverse=reverse)
-    assert await a.sorted(sortable, key=awaitify(lambda x: x), reverse=reverse) == sorted(sortable, key=lambda x: x, reverse=reverse)
+    assert await a.sorted(sortable, reverse=reverse) == sorted(
+        sortable, reverse=reverse
+    )
+    assert await a.sorted(asyncify(sortable), reverse=reverse) == sorted(
+        sortable, reverse=reverse
+    )
+    assert await a.sorted(sortable, key=lambda x: x, reverse=reverse) == sorted(
+        sortable, key=lambda x: x, reverse=reverse
+    )
+    assert await a.sorted(
+        sortable, key=awaitify(lambda x: x), reverse=reverse
+    ) == sorted(sortable, key=lambda x: x, reverse=reverse)
