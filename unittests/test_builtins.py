@@ -283,3 +283,20 @@ async def test_sorted_direct(sortable, reverse):
     assert await a.sorted(
         sortable, key=awaitify(lambda x: x), reverse=reverse
     ) == sorted(sortable, key=lambda x: x, reverse=reverse)
+
+
+@sync
+async def test_sorted_stable():
+    values = [-i for i in range(20)]
+
+    def collision_key(x):
+        return x // 2
+
+    # test the test...
+    assert sorted(values, key=collision_key) != [
+        item for key, item in sorted([(collision_key(i), i) for i in values])
+    ]
+    # test the implementation
+    assert await a.sorted(values, key=awaitify(collision_key)) == sorted(
+        values, key=collision_key
+    )
