@@ -61,3 +61,8 @@ Standard types
 
 .. autofunction:: tuple(iterable: (async) iter T = ()) -> (T, ...)
     :async:
+
+.. autofunction:: sorted(iterable: (async) iter T, *, key: (T) → (await) Any, reverse: bool) -> [T, ...]
+    :async:
+
+    .. versionadded:: 1.2.0

@@ -425,12 +425,23 @@ async def sorted(
     reverse: bool = False,
 ) -> List[T]:
     """
-    Sort items from an (async) iterable into a new list by an (async) callable
+    Sort items from an (async) iterable into a new list
 
-    The optional ``key`` argument specifies a one-argument function, which
+    The optional ``key`` argument specifies a one-argument (async) callable, which
     provides a substitute for determining the sort order of each item.
     The special value and default :py:data:`None` represents the identity functions,
     i.e. compares items directly.
+
+    The default sort order is ascending, that is items with ``a < b``
+    imply ``result.index(a) < result.index(b)``. Use ``reverse=True``
+    for descending sort order.
+
+    .. note::
+
+        The actual sorting is synchronous,
+        so a very large ``iterable`` or very slow comparison
+        may block the event loop notably.
+        It is guaranteed to be worst-case O(n log n) runtime.
     """
     if key is None:
         try:
