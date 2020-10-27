@@ -65,4 +65,4 @@ Standard types
 .. autofunction:: sorted(iterable: (async) iter T, *, key: (T) → (await) Any, reverse: bool) -> [T, ...]
     :async:
 
-    .. versionadded:: 1.2.0
+    .. versionadded:: 3.9.0

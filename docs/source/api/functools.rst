@@ -55,7 +55,7 @@ can be applied as a decorator, both with and without arguments:
 .. autofunction:: cache((...) -> await R)
     :decorator:
 
-    .. versionadded:: 1.2.0
+    .. versionadded:: 3.9.0
 
 .. autofunction:: lru_cache(maxsize: ?int = 128, typed: bool = False)((...) -> await R)
     :decorator:
@@ -90,6 +90,6 @@ the ``__wrapped__`` callable may be wrapped with a new cache of different size.
 
     .. automethod:: cache_parameters() -> {"maxsize": ..., "typed": ...}
 
-    .. versionadded:: 1.2.0
+    .. versionadded:: 3.9.0
 
         The :py:meth:`~.cache_parameters` method.
