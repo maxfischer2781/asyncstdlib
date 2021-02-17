@@ -68,7 +68,7 @@ async def test_zip_strict():
         async for _ in a.zip(asyncify(range(6)), range(5), strict=True):
             pass
     with pytest.raises(ValueError):
-        async for _ in a.zip(*[range(5)]*6, range(6), strict=True):
+        async for _ in a.zip(*[range(5)] * 6, range(6), strict=True):
             pass
 
 
