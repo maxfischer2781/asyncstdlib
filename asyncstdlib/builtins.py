@@ -163,10 +163,9 @@ async def zip(*iterables: AnyIterable[T], strict=False) -> AsyncIterator[Tuple[T
     aiters = (*(aiter(it) for it in iterables),)
     del iterables
     try:
-        while True:
-            yield (*[await anext(it) for it in aiters],)
-    except StopAsyncIteration:
-        return
+        inner = _zip_inner(aiters) if not strict else _zip_inner_strict(aiters)
+        async for items in inner:
+            yield items
     finally:
         for iterator in aiters:
             try:
@@ -175,6 +174,40 @@ async def zip(*iterables: AnyIterable[T], strict=False) -> AsyncIterator[Tuple[T
                 pass
             else:
                 await aclose
+
+
+async def _zip_inner(aiters):
+    try:
+        while True:
+            yield *[await anext(it) for it in aiters],
+    except StopAsyncIteration:
+        return
+
+
+async def _zip_inner_strict(aiters):
+    tried = 0
+    try:
+        while True:
+            items = []
+            for tried, aiter in _sync_builtins.enumerate(aiters):
+                items.append(await anext(aiter))
+            yield *items,
+    except StopAsyncIteration:
+        # after the first iterable provided an item, some later iterable failed to do so
+        if tried > 0:
+            plural = " " if tried == 1 else "s 1-"
+            raise ValueError(
+                f"zip() argument {tried+1} is shorter than argument{plural}{tried}"
+            )
+        # after the first iterable failed to provide an item, some later iterable did
+        sentinel = object()
+        for tried, aiter in _sync_builtins.enumerate(aiters):
+            if await anext(aiter, sentinel) is not sentinel:
+                plural = " " if tried == 1 else "s 1-"
+                raise ValueError(
+                    f"zip() argument {tried+1} is longer than argument{plural}{tried}"
+                )
+        return
 
 
 class SyncVariadic(Protocol[T, R]):
