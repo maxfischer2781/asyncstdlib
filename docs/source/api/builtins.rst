@@ -41,6 +41,10 @@ Iterator transforming
 .. autofunction:: zip(*iterables: (async) iter T)
     :async-for: :(T, ...)
 
+    .. versionadded:: 3.10.0
+
+        The ``strict`` parameter.
+
 .. autofunction:: map(function: (T, ...) → (await) R, iterable: (async) iter T, ...)
     :async-for: :R
 

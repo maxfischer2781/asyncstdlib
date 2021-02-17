@@ -134,9 +134,11 @@ async def any(iterable: AnyIterable[T]) -> bool:
         return False
 
 
-async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
+async def zip(*iterables: AnyIterable[T], strict=False) -> AsyncIterator[Tuple[T, ...]]:
     """
     Create an async iterator that aggregates elements from each of the (async) iterables
+
+    :raises ValueError: if the ``iterables`` are not equal length and ``strict`` is set
 
     The next element of ``zip`` is a :py:class:`tuple` of the next element of
     each of its ``iterables``. As soon as any of its ``iterables`` is exhausted,
@@ -151,6 +153,10 @@ async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
 
     If ``iterables`` is empty, the ``zip`` iterator is empty as well.
     Multiple ``iterables`` may be mixed regular and async iterables.
+
+    When called with ``strict=True``, all ``iterables`` must be of same length;
+    in this mode ``zip`` raises :py:exc:`ValueError` if any ``iterables`` are not
+    exhausted with the others.
     """
     if not iterables:
         return
