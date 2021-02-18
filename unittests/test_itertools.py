@@ -201,6 +201,16 @@ async def test_tee():
 
 
 @sync
+async def test_pairwise():
+    assert await a.list(a.pairwise(range(5))) == [(0, 1), (1, 2), (2, 3), (3, 4)]
+    assert await a.list(a.pairwise(range(2))) == [(0, 1)]
+    assert await a.list(a.pairwise(range(1))) == []
+    assert await a.list(a.pairwise(range(0))) == []
+    for count in range(5):
+        assert await a.list(a.pairwise([0] * count)) == [(0, 0)] * (count - 1)
+
+
+@sync
 async def test_zip_longest():
     async for va, vb in a.zip_longest(asyncify(range(5)), range(5)):
         assert va == vb
