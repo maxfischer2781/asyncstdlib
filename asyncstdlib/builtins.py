@@ -179,7 +179,7 @@ async def zip(*iterables: AnyIterable[T], strict=False) -> AsyncIterator[Tuple[T
 async def _zip_inner(aiters):
     try:
         while True:
-            yield *[await anext(it) for it in aiters],
+            yield (*[await anext(it) for it in aiters],)
     except StopAsyncIteration:
         return
 
