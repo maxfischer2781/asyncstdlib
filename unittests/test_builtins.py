@@ -58,6 +58,21 @@ async def test_zip():
 
 
 @sync
+async def test_zip_strict():
+    async for va, vb in a.zip(asyncify(range(5)), range(5), strict=True):
+        assert va == vb
+    with pytest.raises(ValueError):
+        async for _ in a.zip(asyncify(range(5)), range(6), strict=True):
+            pass
+    with pytest.raises(ValueError):
+        async for _ in a.zip(asyncify(range(6)), range(5), strict=True):
+            pass
+    with pytest.raises(ValueError):
+        async for _ in a.zip(*[range(5)] * 6, range(6), strict=True):
+            pass
+
+
+@sync
 async def test_zip_close_immediately():
     closed = False
 

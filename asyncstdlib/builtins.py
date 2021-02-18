@@ -134,9 +134,11 @@ async def any(iterable: AnyIterable[T]) -> bool:
         return False
 
 
-async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
+async def zip(*iterables: AnyIterable[T], strict=False) -> AsyncIterator[Tuple[T, ...]]:
     """
     Create an async iterator that aggregates elements from each of the (async) iterables
+
+    :raises ValueError: if the ``iterables`` are not equal length and ``strict`` is set
 
     The next element of ``zip`` is a :py:class:`tuple` of the next element of
     each of its ``iterables``. As soon as any of its ``iterables`` is exhausted,
@@ -151,16 +153,19 @@ async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
 
     If ``iterables`` is empty, the ``zip`` iterator is empty as well.
     Multiple ``iterables`` may be mixed regular and async iterables.
+
+    When called with ``strict=True``, all ``iterables`` must be of same length;
+    in this mode ``zip`` raises :py:exc:`ValueError` if any ``iterables`` are not
+    exhausted with the others.
     """
     if not iterables:
         return
     aiters = (*(aiter(it) for it in iterables),)
     del iterables
     try:
-        while True:
-            yield (*[await anext(it) for it in aiters],)
-    except StopAsyncIteration:
-        return
+        inner = _zip_inner(aiters) if not strict else _zip_inner_strict(aiters)
+        async for items in inner:
+            yield items
     finally:
         for iterator in aiters:
             try:
@@ -169,6 +174,40 @@ async def zip(*iterables: AnyIterable[T]) -> AsyncIterator[Tuple[T, ...]]:
                 pass
             else:
                 await aclose
+
+
+async def _zip_inner(aiters):
+    try:
+        while True:
+            yield (*[await anext(it) for it in aiters],)
+    except StopAsyncIteration:
+        return
+
+
+async def _zip_inner_strict(aiters):
+    tried = 0
+    try:
+        while True:
+            items = []
+            for tried, _aiter in _sync_builtins.enumerate(aiters):  # noqa: B007
+                items.append(await anext(_aiter))
+            yield (*items,)
+    except StopAsyncIteration:
+        # after the first iterable provided an item, some later iterable was empty
+        if tried > 0:
+            plural = " " if tried == 1 else "s 1-"
+            raise ValueError(
+                f"zip() argument {tried+1} is shorter than argument{plural}{tried}"
+            )
+        # after the first iterable was empty, some later iterable may be not
+        sentinel = object()
+        for tried, _aiter in _sync_builtins.enumerate(aiters):
+            if await anext(_aiter, sentinel) is not sentinel:
+                plural = " " if tried == 1 else "s 1-"
+                raise ValueError(
+                    f"zip() argument {tried+1} is longer than argument{plural}{tried}"
+                )
+        return
 
 
 class SyncVariadic(Protocol[T, R]):

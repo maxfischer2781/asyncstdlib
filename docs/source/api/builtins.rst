@@ -38,8 +38,12 @@ Iterator transforming
 .. autofunction:: filter(function: (T) → (await) bool, iterable: (async) iter T)
     :async-for: :T
 
-.. autofunction:: zip(*iterables: (async) iter T)
+.. autofunction:: zip(*iterables: (async) iter T, strict: bool = True)
     :async-for: :(T, ...)
+
+    .. versionadded:: 3.10.0
+
+        The ``strict`` parameter.
 
 .. autofunction:: map(function: (T, ...) → (await) R, iterable: (async) iter T, ...)
     :async-for: :R
