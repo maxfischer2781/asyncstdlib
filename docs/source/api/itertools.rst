@@ -60,6 +60,11 @@ Iterator splitting
 .. autofunction:: tee(iterable: (async) iter T, n: int = 2)
     :for: :(async iter T, ...)
 
+.. autofunction:: pairwise(iterable: (async) iter T)
+    :for: :(T, T)
+
+    .. versionadded:: 3.10.0
+
 .. py:function:: groupby(iterable: (async) iter T)
     :async-for: :(T, async iter T)
     :noindex:
