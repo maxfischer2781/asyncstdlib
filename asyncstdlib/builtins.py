@@ -189,7 +189,7 @@ async def _zip_inner_strict(aiters):
     try:
         while True:
             items = []
-            for tried, _aiter in _sync_builtins.enumerate(aiters):
+            for tried, _aiter in _sync_builtins.enumerate(aiters):  # noqa: B007
                 items.append(await anext(_aiter))
             yield (*items,)
     except StopAsyncIteration:
