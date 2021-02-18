@@ -189,9 +189,9 @@ async def _zip_inner_strict(aiters):
     try:
         while True:
             items = []
-            for tried, aiter in _sync_builtins.enumerate(aiters):
-                items.append(await anext(aiter))
-            yield *items,
+            for tried, _aiter in _sync_builtins.enumerate(aiters):
+                items.append(await anext(_aiter))
+            yield (*items,)
     except StopAsyncIteration:
         # after the first iterable provided an item, some later iterable was empty
         if tried > 0:
@@ -201,8 +201,8 @@ async def _zip_inner_strict(aiters):
             )
         # after the first iterable was empty, some later iterable may be not
         sentinel = object()
-        for tried, aiter in _sync_builtins.enumerate(aiters):
-            if await anext(aiter, sentinel) is not sentinel:
+        for tried, _aiter in _sync_builtins.enumerate(aiters):
+            if await anext(_aiter, sentinel) is not sentinel:
                 plural = " " if tried == 1 else "s 1-"
                 raise ValueError(
                     f"zip() argument {tried+1} is longer than argument{plural}{tried}"
