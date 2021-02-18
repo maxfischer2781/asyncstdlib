@@ -29,6 +29,7 @@ from .itertools import (
     takewhile,
     starmap,
     tee,
+    pairwise,
     zip_longest,
     groupby,
 )
@@ -73,6 +74,7 @@ __all__ = [
     "islice",
     "starmap",
     "tee",
+    "pairwise",
     "zip_longest",
     "groupby",
     # asynctools

@@ -365,6 +365,21 @@ class Tee(Generic[T]):
 tee = Tee
 
 
+async def pairwise(iterable: AnyIterable[T]) -> AsyncIterator[Tuple[T, T]]:
+    """
+    Yield successive, overlapping pairs of items from ``iterable``
+
+    Pairs are yielded as the newest item is available from ``iterable``. No pair
+    is emitted if ``iterable`` has one or zero items; however, if there is one item
+    ``pairwise`` will wait for and consume it before finishing.
+    """
+    async with ScopedIter(iterable) as async_iter:
+        prev = await anext(async_iter, None)  # any default is fine – we never yield it
+        async for current in async_iter:
+            yield prev, current
+            prev = current
+
+
 async def _repeat(value):
     while True:
         yield value
