@@ -3,6 +3,9 @@ from typing import (
     AsyncIterator,
     TypeVar,
     AsyncGenerator,
+    Iterable,
+    Awaitable,
+    AsyncIterable,
 )
 from typing_extensions import AsyncContextManager
 
@@ -174,3 +177,31 @@ def scoped_iter(iterable: AnyIterable[T]):
     if not hasattr(iterator, "aclose"):
         return nullcontext(iterator)
     return _ScopedAsyncIteratorContext(iterator)
+
+
+async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
+    """
+    Iterate through ``awaitables`` and await each item
+
+    This converts an *iterable of async* into an *async iterator* of awaited values.
+    Consequently, we can apply various functions made for ``AsyncIterable[T]`` to
+    ``Iterable[Awaitable[T]]`` as well.
+
+    This is particularly practical when you need to make up for the lack of async
+    lambdas in Python, where your lambda needs to return a single coroutine.
+
+    For example:
+
+    .. code-block:: python3
+
+        import asyncstdlib as a
+
+         async def async_is_non_negative(x: int) -> bool:
+              return x > 0
+
+         all_non_negative = await a.all(
+             a.await_each(
+                 async_is_non_negative(x) for x in [1, 2, 3]))
+    """
+    for awaitable in awaitables:
+        yield await awaitable
