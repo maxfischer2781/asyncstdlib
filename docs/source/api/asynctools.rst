@@ -19,3 +19,6 @@ Iterator lifetime
 
 .. autofunction:: scoped_iter(iterable: (async) iter T)
     :async-with: :async iter T
+
+.. autofunction:: await_each(awaitables: iter await T)
+    :async-for: :T

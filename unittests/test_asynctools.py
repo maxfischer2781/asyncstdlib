@@ -136,3 +136,19 @@ async def test_scoped_iter_misuse():
 async def test_borrow_misuse():
     with pytest.raises(TypeError):
         a.borrow([1, 2, 3])
+
+
+@sync
+async def test_await_each():
+    async def check1() -> bool:
+        return True
+
+    async def check2() -> bool:
+        return True
+
+    async def check3() -> bool:
+        return True
+
+    all_non_negative = await a.all(a.await_each([check1(), check2(), check3()]))
+
+    assert all_non_negative

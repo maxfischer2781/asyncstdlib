@@ -3,6 +3,9 @@ from typing import (
     AsyncIterator,
     TypeVar,
     AsyncGenerator,
+    Iterable,
+    Awaitable,
+    AsyncIterable,
 )
 from typing_extensions import AsyncContextManager
 
@@ -174,3 +177,34 @@ def scoped_iter(iterable: AnyIterable[T]):
     if not hasattr(iterator, "aclose"):
         return nullcontext(iterator)
     return _ScopedAsyncIteratorContext(iterator)
+
+
+async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
+    """
+    Iterate through ``awaitables`` and await each item
+
+    This converts an *iterable of async* into an *async iterator* of awaited values.
+    Consequently, we can apply various functions made for ``AsyncIterable[T]`` to
+    ``Iterable[Awaitable[T]]`` as well.
+
+    Example:
+
+    .. code-block:: python3
+
+        import asyncstdlib as a
+
+         async def check1() -> bool:
+              ...
+
+        async def check2() -> bool:
+              ...
+
+        async def check3() -> bool:
+              ...
+
+         okay = await a.all(
+             a.await_each(
+                 [check1(), check2(), check3()]))
+    """
+    for awaitable in awaitables:
+        yield await awaitable
