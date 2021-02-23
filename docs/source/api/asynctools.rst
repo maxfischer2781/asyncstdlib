@@ -22,3 +22,6 @@ Iterator lifetime
 
 .. autofunction:: await_each(awaitables: iter await T)
     :async-for: :T
+
+.. autofunction:: apply(func: (*T, **T) -> R, *args: await T, **kwargs: await T) -> R
+    :async:
