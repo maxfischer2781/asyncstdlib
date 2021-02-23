@@ -187,21 +187,24 @@ async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
     Consequently, we can apply various functions made for ``AsyncIterable[T]`` to
     ``Iterable[Awaitable[T]]`` as well.
 
-    This is particularly practical when you need to make up for the lack of async
-    lambdas in Python, where your lambda needs to return a single coroutine.
-
-    For example:
+    Example:
 
     .. code-block:: python3
 
         import asyncstdlib as a
 
-         async def async_is_non_negative(x: int) -> bool:
-              return x > 0
+         async def check1() -> bool:
+              ...
 
-         all_non_negative = await a.all(
+        async def check2() -> bool:
+              ...
+
+        async def check3() -> bool:
+              ...
+
+         okay = await a.all(
              a.await_each(
-                 async_is_non_negative(x) for x in [1, 2, 3]))
+                 [check1(), check2(), check3()]))
     """
     for awaitable in awaitables:
         yield await awaitable

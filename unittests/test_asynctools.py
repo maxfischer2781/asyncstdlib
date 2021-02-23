@@ -140,11 +140,15 @@ async def test_borrow_misuse():
 
 @sync
 async def test_await_each():
-    async def async_is_non_negative(x: int) -> bool:
-        return x > 0
+    async def check1() -> bool:
+        return True
 
-    all_non_negative = await a.all(
-        a.await_each(async_is_non_negative(x) for x in [1, 2, 3])
-    )
+    async def check2() -> bool:
+        return True
+
+    async def check3() -> bool:
+        return True
+
+    all_non_negative = await a.all(a.await_each([check1(), check2(), check3()]))
 
     assert all_non_negative
