@@ -137,3 +137,9 @@ intersphinx_mapping = {
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# -- Sphinx Patches/Fixes ----------------------------------------------------
+
+# disable overload detection – conflicts with manual/steno signatures
+from sphinx.pycode.parser import VariableCommentPicker
+VariableCommentPicker.add_overload_entry = lambda self, *args, **kwargs: ()
