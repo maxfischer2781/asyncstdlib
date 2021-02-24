@@ -152,3 +152,52 @@ async def test_await_each():
     all_non_negative = await a.all(a.await_each([check1(), check2(), check3()]))
 
     assert all_non_negative
+
+
+@sync
+async def test_apply_with_no_arguments():
+    # This is probably a meaningless use case, but we want to make sure that
+    # ``apply`` is still robust.
+    result = await a.apply(lambda: 42)
+
+    assert result == 42
+
+
+@sync
+async def test_apply_with_an_argument():
+    async def compute_something() -> int:
+        return 42
+
+    result = await a.apply(lambda x: 2 * x, compute_something())
+
+    assert result == 84
+
+
+@sync
+async def test_apply_with_keyword_arguments():
+    async def compute_something() -> int:
+        return 42
+
+    async def compute_something_else() -> int:
+        return 1984
+
+    result = await a.apply(
+        lambda x, y: x - y, x=compute_something(), y=compute_something_else()
+    )
+
+    assert result == 42 - 1984
+
+
+@sync
+async def test_apply_with_an_argument_and_a_keyword_argument():
+    async def compute_something() -> int:
+        return 42
+
+    async def compute_something_else() -> int:
+        return 1984
+
+    result = await a.apply(
+        lambda x, y: x - y, compute_something(), y=compute_something_else()
+    )
+
+    assert result == 42 - 1984

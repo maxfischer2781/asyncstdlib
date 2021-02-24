@@ -33,7 +33,7 @@ from .itertools import (
     zip_longest,
     groupby,
 )
-from .asynctools import borrow, scoped_iter, await_each
+from .asynctools import borrow, scoped_iter, await_each, apply
 
 __version__ = "3.9.0"
 
@@ -81,4 +81,5 @@ __all__ = [
     "borrow",
     "scoped_iter",
     "await_each",
+    "apply",
 ]

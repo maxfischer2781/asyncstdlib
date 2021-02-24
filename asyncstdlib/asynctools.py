@@ -6,6 +6,8 @@ from typing import (
     Iterable,
     Awaitable,
     AsyncIterable,
+    Callable,
+    Any,
 )
 from typing_extensions import AsyncContextManager
 
@@ -208,3 +210,33 @@ async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
     """
     for awaitable in awaitables:
         yield await awaitable
+
+
+async def apply(
+    __func: Callable[..., T], *args: Awaitable[Any], **kwargs: Awaitable[Any]
+) -> T:
+    """
+    Await the arguments and keyword arguments and then apply ``func`` on them
+
+    Example:
+
+    .. code-block:: python3
+
+        async def compute_something() -> float:
+            ...
+
+        async def compute_something_else() -> float:
+            ...
+
+        result = await apply(
+            lambda x, y: x ** y,
+            compute_something(),
+            compute_something_else())
+
+    The function ``apply`` serves, for example, a practical use case when you want to
+    chain operations on awaitables and need to pass around the final awaitable
+    for further operations.
+    """
+    return __func(
+        *[await arg for arg in args], **{k: await arg for k, arg in kwargs.items()}
+    )
