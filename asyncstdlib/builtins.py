@@ -16,8 +16,6 @@ from typing import (
 )
 import builtins as _sync_builtins
 
-from typing_extensions import Protocol
-
 from ._core import (
     aiter,
     AnyIterable,
