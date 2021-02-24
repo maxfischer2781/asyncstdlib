@@ -141,19 +141,19 @@ async def any(iterable: AnyIterable[T]) -> bool:
 
 
 @overload
-async def zip(__it1: AnyIterable[T1], *, strict=False) -> AsyncIterator[Tuple[T1]]:
+def zip(__it1: AnyIterable[T1], *, strict=False) -> AsyncIterator[Tuple[T1]]:
     ...
 
 
 @overload
-async def zip(
+def zip(
     __it1: AnyIterable[T1], __it2: AnyIterable[T2], *, strict=False
 ) -> AsyncIterator[Tuple[T1, T2]]:
     ...
 
 
 @overload
-async def zip(
+def zip(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
@@ -164,7 +164,7 @@ async def zip(
 
 
 @overload
-async def zip(
+def zip(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
@@ -176,7 +176,7 @@ async def zip(
 
 
 @overload
-async def zip(
+def zip(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
@@ -189,7 +189,7 @@ async def zip(
 
 
 @overload
-async def zip(
+def zip(
     __it1: AnyIterable[Any],
     __it2: AnyIterable[Any],
     __it3: AnyIterable[Any],
@@ -294,19 +294,19 @@ class AsyncVariadic(Protocol[T, R]):
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1], Awaitable[R]], __it1: AnyIterable[T1]
 ) -> AsyncIterator[R]:
     ...
 
 
 @overload
-async def map(function: Callable[[T1], R], __it1: AnyIterable[T1]) -> AsyncIterator[R]:
+def map(function: Callable[[T1], R], __it1: AnyIterable[T1]) -> AsyncIterator[R]:
     ...
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1, T2], Awaitable[R]],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
@@ -315,14 +315,14 @@ async def map(
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1, T2], R], __it1: AnyIterable[T1], __it2: AnyIterable[T2]
 ) -> AsyncIterator[R]:
     ...
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1, T2, T3], Awaitable[R]],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
@@ -332,7 +332,7 @@ async def map(
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1, T2, T3], R],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
@@ -342,7 +342,7 @@ async def map(
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1, T2, T3, T4], Awaitable[R]],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
@@ -353,7 +353,7 @@ async def map(
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1, T2, T3, T4], R],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
@@ -364,7 +364,7 @@ async def map(
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1, T2, T3, T4, T5], Awaitable[R]],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
@@ -376,7 +376,7 @@ async def map(
 
 
 @overload
-async def map(
+def map(
     function: Callable[[T1, T2, T3, T4, T5], R],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
@@ -388,7 +388,7 @@ async def map(
 
 
 @overload
-async def map(
+def map(
     function: Callable[..., Awaitable[R]],
     __it1: AnyIterable[Any],
     __it2: AnyIterable[Any],
@@ -401,7 +401,7 @@ async def map(
 
 
 @overload
-async def map(
+def map(
     function: Callable[..., R],
     __it1: AnyIterable[Any],
     __it2: AnyIterable[Any],
@@ -414,7 +414,7 @@ async def map(
 
 
 async def map(
-    function: Union[SyncVariadic, AsyncVariadic], *iterable: AnyIterable[T]
+    function: Union[SyncVariadic, AsyncVariadic], *iterable: AnyIterable[Any]
 ) -> AsyncIterator[R]:
     r"""
     An async iterator mapping an (async) function to items from (async) iterables
