@@ -293,6 +293,126 @@ class AsyncVariadic(Protocol[T, R]):
         raise NotImplementedError
 
 
+@overload
+async def map(
+    function: Callable[[T1], Awaitable[R]], __it1: AnyIterable[T1]
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(function: Callable[[T1], R], __it1: AnyIterable[T1]) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[[T1, T2], Awaitable[R]],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[[T1, T2], R], __it1: AnyIterable[T1], __it2: AnyIterable[T2]
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[[T1, T2, T3], Awaitable[R]],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[[T1, T2, T3], R],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[[T1, T2, T3, T4], Awaitable[R]],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[[T1, T2, T3, T4], R],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[[T1, T2, T3, T4, T5], Awaitable[R]],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+    __it5: AnyIterable[T5],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[[T1, T2, T3, T4, T5], R],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+    __it5: AnyIterable[T5],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[..., Awaitable[R]],
+    __it1: AnyIterable[Any],
+    __it2: AnyIterable[Any],
+    __it3: AnyIterable[Any],
+    __it4: AnyIterable[Any],
+    __it5: AnyIterable[Any],
+    *iterable: AnyIterable[Any],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+async def map(
+    function: Callable[..., R],
+    __it1: AnyIterable[Any],
+    __it2: AnyIterable[Any],
+    __it3: AnyIterable[Any],
+    __it4: AnyIterable[Any],
+    __it5: AnyIterable[Any],
+    *iterable: AnyIterable[Any],
+) -> AsyncIterator[R]:
+    ...
+
+
 async def map(
     function: Union[SyncVariadic, AsyncVariadic], *iterable: AnyIterable[T]
 ) -> AsyncIterator[R]:
