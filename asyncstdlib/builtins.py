@@ -279,20 +279,6 @@ async def _zip_inner_strict(aiters):
         return
 
 
-class SyncVariadic(Protocol[T, R]):
-    """Type of a ``def`` function taking any number of arguments"""
-
-    def __call__(self, *args: T) -> R:
-        raise NotImplementedError
-
-
-class AsyncVariadic(Protocol[T, R]):
-    """Type of an ``async def`` function taking any number of arguments"""
-
-    def __call__(self, *args: T) -> Awaitable[R]:
-        raise NotImplementedError
-
-
 @overload
 def map(
     function: Callable[[T1], Awaitable[R]], __it1: AnyIterable[T1]
@@ -414,7 +400,8 @@ def map(
 
 
 async def map(
-    function: Union[SyncVariadic, AsyncVariadic], *iterable: AnyIterable[Any]
+    function: Union[Callable[..., R], Callable[..., Awaitable[R]]],
+    *iterable: AnyIterable[Any],
 ) -> AsyncIterator[R]:
     r"""
     An async iterator mapping an (async) function to items from (async) iterables
