@@ -24,6 +24,7 @@ test = [
     "flake8",
     "flake8-bugbear",
     "black; implementation_name=='cpython'",
+    "coverage"
 ]
 doc = ["sphinx", "sphinxcontrib-contentui", "sphinxcontrib-trio"]
 

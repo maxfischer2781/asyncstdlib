@@ -32,6 +32,7 @@ The missing ``async`` toolbox
    source/api/itertools
    source/api/asynctools
    source/glossary
+   source/contributing
 
 The ``asyncstdlib`` library re-implements functions and classes of the Python
 standard library to make them compatible with ``async`` callables, iterables
