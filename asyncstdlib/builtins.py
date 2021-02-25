@@ -139,13 +139,20 @@ async def any(iterable: AnyIterable[T]) -> bool:
 
 
 @overload
-def zip(__it1: AnyIterable[T1], *, strict=False) -> AsyncIterator[Tuple[T1]]:
+def zip(
+    __it1: AnyIterable[T1],
+    *,
+    strict=False,
+) -> AsyncIterator[Tuple[T1]]:
     ...
 
 
 @overload
 def zip(
-    __it1: AnyIterable[T1], __it2: AnyIterable[T2], *, strict=False
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    *,
+    strict=False,
 ) -> AsyncIterator[Tuple[T1, T2]]:
     ...
 
@@ -279,13 +286,17 @@ async def _zip_inner_strict(aiters):
 
 @overload
 def map(
-    function: Callable[[T1], Awaitable[R]], __it1: AnyIterable[T1]
+    function: Callable[[T1], Awaitable[R]],
+    __it1: AnyIterable[T1],
 ) -> AsyncIterator[R]:
     ...
 
 
 @overload
-def map(function: Callable[[T1], R], __it1: AnyIterable[T1]) -> AsyncIterator[R]:
+def map(
+    function: Callable[[T1], R],
+    __it1: AnyIterable[T1],
+) -> AsyncIterator[R]:
     ...
 
 

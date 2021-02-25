@@ -393,14 +393,19 @@ async def _repeat(value):
 
 @overload
 def zip_longest(
-    __it1: AnyIterable[T1], *, fillvalue: S = None
+    __it1: AnyIterable[T1],
+    *,
+    fillvalue: S = None,
 ) -> AsyncIterator[Tuple[T1]]:
     ...
 
 
 @overload
 def zip_longest(
-    __it1: AnyIterable[T1], __it2: AnyIterable[T2], *, fillvalue: S = None
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    *,
+    fillvalue: S = None,
 ) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S]]]:
     ...
 
