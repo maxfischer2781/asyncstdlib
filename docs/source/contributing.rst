@@ -139,30 +139,37 @@ The documentation is available in ``docs/_build/html``.
 
 Commit your Changes
 ===================
-Make a single commit of your changes.
+Make a single commit for each self-contained change.
 
-Write the subject of the commit message in `imperative mood`_.
-The subject should not exceed 50 characters.
-
-The body of the commit message should be a bullet list of changes and additions,
-usually in `past tense`_.
+Write the the commit messages in `past tense`_ and starting with a lower case.
 Please observe the maximum line length of 72 characters for the body.
 
-Here is an example of a commit message:
+Here are a couple of examples of commit messages:
 
 .. code-block::
 
-    Add itertools.pairwise
+    added itertools.pairwise
 
-    * added itertools.pairwise
+.. code-block::
 
-    * documented itertools.pairwise
+    documented itertools.pairwise
 
-.. _imperative mood: https://en.wikipedia.org/wiki/Imperative_mood
+
 .. _past tense: https://en.wikipedia.org/wiki/Past_tense
 
 Push the commit to your remote fork and create the pull request (see
 the documentation on `Github's forks`_ for more details).
+
+Please put the title of your pull request in `imperative mood`_ and first upper
+case.
+
+.. _imperative mood: https://en.wikipedia.org/wiki/Imperative_mood
+
+Here is an example of a title of the pull request:
+
+.. code-block::
+
+    Add itertools.pairwise
 
 We will review your pull request as soon as possible.
 If changes are requested, please create new commits to address the review
