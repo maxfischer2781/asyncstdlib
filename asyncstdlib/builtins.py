@@ -16,8 +16,6 @@ from typing import (
 )
 import builtins as _sync_builtins
 
-from typing_extensions import Protocol
-
 from ._core import (
     aiter,
     AnyIterable,
@@ -30,6 +28,12 @@ from ._core import (
 T = TypeVar("T", contravariant=True)
 K = TypeVar("K")
 R = TypeVar("R", covariant=True)
+# Variadic overloads
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
+T3 = TypeVar("T3")
+T4 = TypeVar("T4")
+T5 = TypeVar("T5")
 
 __ANEXT_DEFAULT = Sentinel("<no default>")
 
@@ -134,7 +138,77 @@ async def any(iterable: AnyIterable[T]) -> bool:
         return False
 
 
-async def zip(*iterables: AnyIterable[T], strict=False) -> AsyncIterator[Tuple[T, ...]]:
+@overload
+def zip(
+    __it1: AnyIterable[T1],
+    *,
+    strict=False,
+) -> AsyncIterator[Tuple[T1]]:
+    ...
+
+
+@overload
+def zip(
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    *,
+    strict=False,
+) -> AsyncIterator[Tuple[T1, T2]]:
+    ...
+
+
+@overload
+def zip(
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    *,
+    strict=False,
+) -> AsyncIterator[Tuple[T1, T2, T3]]:
+    ...
+
+
+@overload
+def zip(
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+    *,
+    strict=False,
+) -> AsyncIterator[Tuple[T1, T2, T3, T4]]:
+    ...
+
+
+@overload
+def zip(
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+    __it5: AnyIterable[T5],
+    *,
+    strict=False,
+) -> AsyncIterator[Tuple[T1, T2, T3, T4, T5]]:
+    ...
+
+
+@overload
+def zip(
+    __it1: AnyIterable[Any],
+    __it2: AnyIterable[Any],
+    __it3: AnyIterable[Any],
+    __it4: AnyIterable[Any],
+    __it5: AnyIterable[Any],
+    *iterables: AnyIterable[Any],
+    strict=False,
+) -> AsyncIterator[Tuple[Any, ...]]:
+    ...
+
+
+async def zip(
+    *iterables: AnyIterable[Any], strict=False
+) -> AsyncIterator[Tuple[Any, ...]]:
     """
     Create an async iterator that aggregates elements from each of the (async) iterables
 
@@ -210,22 +284,133 @@ async def _zip_inner_strict(aiters):
         return
 
 
-class SyncVariadic(Protocol[T, R]):
-    """Type of a ``def`` function taking any number of arguments"""
+@overload
+def map(
+    function: Callable[[T1], Awaitable[R]],
+    __it1: AnyIterable[T1],
+) -> AsyncIterator[R]:
+    ...
 
-    def __call__(self, *args: T) -> R:
-        raise NotImplementedError
+
+@overload
+def map(
+    function: Callable[[T1], R],
+    __it1: AnyIterable[T1],
+) -> AsyncIterator[R]:
+    ...
 
 
-class AsyncVariadic(Protocol[T, R]):
-    """Type of an ``async def`` function taking any number of arguments"""
+@overload
+def map(
+    function: Callable[[T1, T2], Awaitable[R]],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+) -> AsyncIterator[R]:
+    ...
 
-    def __call__(self, *args: T) -> Awaitable[R]:
-        raise NotImplementedError
+
+@overload
+def map(
+    function: Callable[[T1, T2], R], __it1: AnyIterable[T1], __it2: AnyIterable[T2]
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+def map(
+    function: Callable[[T1, T2, T3], Awaitable[R]],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+def map(
+    function: Callable[[T1, T2, T3], R],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+def map(
+    function: Callable[[T1, T2, T3, T4], Awaitable[R]],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+def map(
+    function: Callable[[T1, T2, T3, T4], R],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+def map(
+    function: Callable[[T1, T2, T3, T4, T5], Awaitable[R]],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+    __it5: AnyIterable[T5],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+def map(
+    function: Callable[[T1, T2, T3, T4, T5], R],
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+    __it5: AnyIterable[T5],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+def map(
+    function: Callable[..., Awaitable[R]],
+    __it1: AnyIterable[Any],
+    __it2: AnyIterable[Any],
+    __it3: AnyIterable[Any],
+    __it4: AnyIterable[Any],
+    __it5: AnyIterable[Any],
+    *iterable: AnyIterable[Any],
+) -> AsyncIterator[R]:
+    ...
+
+
+@overload
+def map(
+    function: Callable[..., R],
+    __it1: AnyIterable[Any],
+    __it2: AnyIterable[Any],
+    __it3: AnyIterable[Any],
+    __it4: AnyIterable[Any],
+    __it5: AnyIterable[Any],
+    *iterable: AnyIterable[Any],
+) -> AsyncIterator[R]:
+    ...
 
 
 async def map(
-    function: Union[SyncVariadic, AsyncVariadic], *iterable: AnyIterable[T]
+    function: Union[Callable[..., R], Callable[..., Awaitable[R]]],
+    *iterable: AnyIterable[Any],
 ) -> AsyncIterator[R]:
     r"""
     An async iterator mapping an (async) function to items from (async) iterables

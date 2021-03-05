@@ -8,6 +8,7 @@ from typing import (
     AsyncIterable,
     Callable,
     Any,
+    overload,
 )
 from typing_extensions import AsyncContextManager
 
@@ -17,6 +18,12 @@ from .contextlib import nullcontext
 
 T = TypeVar("T")
 S = TypeVar("S")
+# Variadic overloads
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
+T3 = TypeVar("T3")
+T4 = TypeVar("T4")
+T5 = TypeVar("T5")
 
 
 class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
@@ -210,6 +217,78 @@ async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
     """
     for awaitable in awaitables:
         yield await awaitable
+
+
+@overload
+async def apply(
+    __func: Callable[[T1], T],
+    __arg1: Awaitable[T1],
+) -> T:
+    ...
+
+
+@overload
+async def apply(
+    __func: Callable[[T1, T2], T],
+    __arg1: Awaitable[T1],
+    __arg2: Awaitable[T2],
+) -> T:
+    ...
+
+
+@overload
+async def apply(
+    __func: Callable[[T1, T2, T3], T],
+    __arg1: Awaitable[T1],
+    __arg2: Awaitable[T2],
+    __arg3: Awaitable[T3],
+) -> T:
+    ...
+
+
+@overload
+async def apply(
+    __func: Callable[[T1, T2, T3, T4], T],
+    __arg1: Awaitable[T1],
+    __arg2: Awaitable[T2],
+    __arg3: Awaitable[T3],
+    __arg4: Awaitable[T4],
+) -> T:
+    ...
+
+
+@overload
+async def apply(
+    __func: Callable[[T1, T2, T3, T4, T5], T],
+    __arg1: Awaitable[T1],
+    __arg2: Awaitable[T2],
+    __arg3: Awaitable[T3],
+    __arg4: Awaitable[T4],
+    __arg5: Awaitable[T5],
+) -> T:
+    ...
+
+
+@overload
+async def apply(
+    __func: Callable[..., T],
+    __arg1: Awaitable[Any],
+    __arg2: Awaitable[Any],
+    __arg3: Awaitable[Any],
+    __arg4: Awaitable[Any],
+    __arg5: Awaitable[Any],
+    *args: Awaitable[Any],
+    **kwargs: Awaitable[Any],
+) -> T:
+    ...
+
+
+@overload
+async def apply(
+    __func: Callable[..., T],
+    **kwargs: Awaitable[Any],
+) -> T:
+    ...
 
 
 async def apply(

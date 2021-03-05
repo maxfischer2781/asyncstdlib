@@ -29,6 +29,12 @@ from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
 T = TypeVar("T")
 S = TypeVar("S")
 R = TypeVar("R")
+# Variadic overloads
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
+T3 = TypeVar("T3")
+T4 = TypeVar("T4")
+T5 = TypeVar("T5")
 
 
 async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
@@ -385,9 +391,79 @@ async def _repeat(value):
         yield value
 
 
+@overload
+def zip_longest(
+    __it1: AnyIterable[T1],
+    *,
+    fillvalue: S = None,
+) -> AsyncIterator[Tuple[T1]]:
+    ...
+
+
+@overload
+def zip_longest(
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    *,
+    fillvalue: S = None,
+) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S]]]:
+    ...
+
+
+@overload
+def zip_longest(
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    *,
+    fillvalue: S = None,
+) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S]]]:
+    ...
+
+
+@overload
+def zip_longest(
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+    *,
+    fillvalue: S = None,
+) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S]]]:
+    ...
+
+
+@overload
+def zip_longest(
+    __it1: AnyIterable[T1],
+    __it2: AnyIterable[T2],
+    __it3: AnyIterable[T3],
+    __it4: AnyIterable[T4],
+    __it5: AnyIterable[T5],
+    *,
+    fillvalue: S = None,
+) -> AsyncIterator[
+    Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S], Union[T5, S]]
+]:
+    ...
+
+
+@overload
+def zip_longest(
+    __it1: AnyIterable[Any],
+    __it2: AnyIterable[Any],
+    __it3: AnyIterable[Any],
+    __it4: AnyIterable[Any],
+    __it5: AnyIterable[Any],
+    *iterables: AnyIterable[Any],
+    fillvalue: S = None,
+) -> AsyncIterator[Tuple[Any, ...]]:
+    ...
+
+
 async def zip_longest(
-    *iterables: AnyIterable[T], fillvalue: S = None
-) -> AsyncIterator[Tuple[Union[T, S], ...]]:
+    *iterables: AnyIterable[Any], fillvalue: S = None
+) -> AsyncIterator[Tuple[Any, ...]]:
     """
     Create an async iterator that aggregates elements from each of the (async) iterables
 
