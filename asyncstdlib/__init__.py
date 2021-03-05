@@ -35,7 +35,7 @@ from .itertools import (
 )
 from .asynctools import borrow, scoped_iter, await_each, apply
 
-__version__ = "3.9.0"
+__version__ = "3.9.1"
 
 __all__ = [
     "anext",
