@@ -6,7 +6,7 @@ The asynctools library
     :synopsis: core asynctools variants
 
 The :py:mod:`asyncstdlib.asynctools` library implements the core toolset used by
-:py:mod:`asyncstdlib` itself.
+:py:mod:`asyncstdlib` itself and similar utilities.
 All documented members of this module are separate from internal implementation
 and stable regardless of :py:mod:`asyncstdlib` internals.
 
@@ -20,8 +20,15 @@ Iterator lifetime
 .. autofunction:: scoped_iter(iterable: (async) iter T)
     :async-with: :async iter T
 
+Async transforming
+==================
+
 .. autofunction:: await_each(awaitables: iter await T)
     :async-for: :T
 
+    .. versionadded:: 3.9.1
+
 .. autofunction:: apply(func: (*T, **T) -> R, *args: await T, **kwargs: await T) -> R
     :async:
+
+    .. versionadded:: 3.9.1
