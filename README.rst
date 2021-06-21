@@ -14,14 +14,13 @@
     :alt: License
     :target: https://github.com/maxfischer2781/asyncstdlib/blob/master/LICENSE
 
+.. image:: https://badges.gitter.im/maxfischer2781/asyncstdlib.svg
+    :target: https://gitter.im/maxfischer2781/asyncstdlib?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+    :alt: Development Chat
+
 The ``asyncstdlib`` library re-implements functions and classes of the Python
 standard library to make them compatible with ``async`` callables, iterables
 and context managers.
 It is fully agnostic to ``async`` event loops and seamlessly works with
 ``asyncio``, third-party libraries such as ``trio``, as well as
 any custom ``async`` event loop.
-
-
-.. image:: https://badges.gitter.im/maxfischer2781/asyncstdlib.svg
-   :alt: Join the chat at https://gitter.im/maxfischer2781/asyncstdlib
-   :target: https://gitter.im/maxfischer2781/asyncstdlib?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge

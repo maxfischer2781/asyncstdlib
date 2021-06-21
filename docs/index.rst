@@ -19,6 +19,10 @@ The missing ``async`` toolbox
     :alt: License
     :target: https://github.com/maxfischer2781/asyncstdlib/blob/master/LICENSE
 
+.. image:: https://badges.gitter.im/maxfischer2781/asyncstdlib.svg
+    :target: https://gitter.im/maxfischer2781/asyncstdlib?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+    :alt: Development Chat
+
 .. py:module:: asyncstdlib
     :synopsis: The async standard library
 
