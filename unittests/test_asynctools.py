@@ -224,6 +224,9 @@ async def test_make_awaitable():
     t3 = await a.make_awaitable(check_3)(x=100)
     t4 = await a.make_awaitable(check_4)(x=5, y=5, z=10)
 
+    with pytest.raises(TypeError):
+        a.make_awaitable("string")(10)
+
     assert t1 == 10
     assert t2 == 30
     assert t3 == 110
