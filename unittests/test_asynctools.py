@@ -204,30 +204,20 @@ async def test_apply_with_an_argument_and_a_keyword_argument():
 
 
 @sync
-async def test_make_awaitable():
-    @a.make_awaitable
-    def check_1() -> int:
-        return 10
-
-    @a.make_awaitable
-    async def check_2(x: int, y: int) -> int:
-        return x + y
-
+async def test_sync():
     def check_3(x: int) -> int:
         return x + 10
 
     async def check_4(x: int, y: int, z: int) -> int:
         return x + y + z + 100
 
-    t1 = await check_1()
-    t2 = await check_2(x=10, y=20)
-    t3 = await a.make_awaitable(check_3)(x=100)
-    t4 = await a.make_awaitable(check_4)(x=5, y=5, z=10)
+    t1 = await a.sync(check_3)(x=100)
+    t2 = await a.sync(check_4)(x=5, y=5, z=10)
+    t3 = await a.sync(lambda x: x ** 3)(x=5)
 
     with pytest.raises(TypeError):
-        a.make_awaitable("string")(10)
+        a.sync("string")(10)
 
-    assert t1 == 10
-    assert t2 == 30
-    assert t3 == 110
-    assert t4 == 120
+    assert t1 == 110
+    assert t2 == 120
+    assert t3 == 125

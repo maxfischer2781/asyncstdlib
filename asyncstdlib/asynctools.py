@@ -1,3 +1,4 @@
+from asyncio import iscoroutinefunction
 from functools import wraps
 from typing import (
     Union,
@@ -327,7 +328,7 @@ async def apply(
     )
 
 
-def make_awaitable(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
     """
     Wraps any Callable, which allows to use it as Awaitable object
 
@@ -347,19 +348,10 @@ def make_awaitable(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
         async def test1_async(x):
             ...
 
-        @a.make_awaitable
-        def test2_sync(x, y):
-            ...
-
-        @a.make_awaitable
-        async def test2_async(x):
-            ...
-
         async def main():
-            await a.make_awaitable(test1_sync)(x=1, y=2)
-            await a.make_awaitable(test1_async)(x=8)
-            await test2_sync(x=3, y=2)
-            await test2_async(x=7)
+            await a.sync(test1_sync)(x=1, y=2)
+            await a.sync(test1_async)(x=8)
+            await a.sync(lambda x: x ** 3)(x=5)
 
         if __name__ == "__main__":
             asyncio.run(main())
@@ -367,13 +359,13 @@ def make_awaitable(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
     if not isinstance(function, Callable):
         raise TypeError("function argument should be Callable")
 
+    if iscoroutinefunction(function):
+        return function
+
     @wraps(function)
     async def async_wrapped(*args, **kwargs):
-        res = function(*args, **kwargs)
+        result = function(*args, **kwargs)
 
-        if isinstance(res, Awaitable):
-            return await res
-
-        return res
+        return result
 
     return async_wrapped
