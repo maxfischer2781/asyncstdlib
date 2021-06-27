@@ -20,11 +20,12 @@ requires = ["typing_extensions; python_version<'3.8'"]
 
 [tool.flit.metadata.requires-extra]
 test = [
-    "pytest >=4.3.0",
+    "pytest",
     "flake8",
     "flake8-bugbear",
     "black; implementation_name=='cpython'",
-    "coverage"
+    "coverage",
+    "pytest-cov",
 ]
 doc = ["sphinx", "sphinxcontrib-contentui", "sphinxcontrib-trio"]
 
