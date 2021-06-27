@@ -119,8 +119,7 @@ class CachedProperty:
         attributes = instance.__dict__
         assert self._name not in attributes
         value = await self.__wrapped__(instance)
-        if self._name not in attributes:
-            attributes[self._name] = AwaitableValue(value)
+        attributes[self._name] = AwaitableValue(value)
         return value
 
 

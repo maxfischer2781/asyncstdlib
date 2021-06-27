@@ -62,7 +62,7 @@ async def test_cache_property_order():
     val = Value(0)
     await Schedule(check_increment(5), check_increment(12), check_increment(1337))
     assert (await val.cached) != 0
-    assert (await val.cached) == 5  # first value fetched
+    assert (await val.cached) == 1337  # last value fetched
 
 
 @sync
