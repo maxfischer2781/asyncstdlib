@@ -35,12 +35,11 @@ async def test_cache_property_nodict():
             __slots__ = "a", "b"
 
             def __init__(self, a, b):
-                self.a = a
-                self.b = b
+                pass
 
             @a.cached_property
             async def total(self):
-                return self.a + self.b
+                pass
 
 
 @multi_sync
