@@ -332,9 +332,9 @@ def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
     """
     Wraps any Callable, which allows to use it as Awaitable object
 
-    :param function - can be any Callable
+    :param function: can be any Callable
 
-    :raise TypeError if function argument is not Callable
+    :raise TypeError: if function argument is not Callable
 
     Example:
 
