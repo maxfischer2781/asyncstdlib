@@ -116,10 +116,8 @@ class CachedProperty:
         return self._get_attribute(instance)
 
     async def _get_attribute(self, instance) -> T:
-        attributes = instance.__dict__
-        assert self._name not in attributes
         value = await self.__wrapped__(instance)
-        attributes[self._name] = AwaitableValue(value)
+        instance.__dict__[self._name] = AwaitableValue(value)
         return value
 
 
