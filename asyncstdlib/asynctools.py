@@ -1,3 +1,5 @@
+from asyncio import iscoroutinefunction
+from functools import wraps
 from typing import (
     Union,
     AsyncIterator,
@@ -324,3 +326,46 @@ async def apply(
     return __func(
         *[await arg for arg in args], **{k: await arg for k, arg in kwargs.items()}
     )
+
+
+def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+    """
+    Wraps any Callable, which allows to use it as Awaitable object
+
+    :param function - can be any Callable
+
+    :raise TypeError if function argument is not Callable
+
+    Example:
+
+    .. code-block:: python3
+
+        import asyncstdlib as a
+
+        def test1_sync(x, y):
+            ...
+
+        async def test1_async(x):
+            ...
+
+        async def main():
+            await a.sync(test1_sync)(x=1, y=2)
+            await a.sync(test1_async)(x=8)
+            await a.sync(lambda x: x ** 3)(x=5)
+
+        if __name__ == "__main__":
+            asyncio.run(main())
+    """
+    if not isinstance(function, Callable):
+        raise TypeError("function argument should be Callable")
+
+    if iscoroutinefunction(function):
+        return function
+
+    @wraps(function)
+    async def async_wrapped(*args, **kwargs):
+        result = function(*args, **kwargs)
+
+        return result
+
+    return async_wrapped

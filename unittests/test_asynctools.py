@@ -201,3 +201,23 @@ async def test_apply_with_an_argument_and_a_keyword_argument():
     )
 
     assert result == 42 - 1984
+
+
+@sync
+async def test_sync():
+    def check_3(x: int) -> int:
+        return x + 10
+
+    async def check_4(x: int, y: int, z: int) -> int:
+        return x + y + z + 100
+
+    t1 = await a.sync(check_3)(x=100)
+    t2 = await a.sync(check_4)(x=5, y=5, z=10)
+    t3 = await a.sync(lambda x: x ** 3)(x=5)
+
+    with pytest.raises(TypeError):
+        a.sync("string")(10)
+
+    assert t1 == 110
+    assert t2 == 120
+    assert t3 == 125

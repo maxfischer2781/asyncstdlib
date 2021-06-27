@@ -23,6 +23,8 @@ Iterator lifetime
 Async transforming
 ==================
 
+.. autofunction:: sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]
+
 .. autofunction:: await_each(awaitables: iter await T)
     :async-for: :T
 
