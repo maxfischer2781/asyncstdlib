@@ -209,18 +209,18 @@ async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
 
         import asyncstdlib as a
 
-         async def check1() -> bool:
-              ...
+        async def check1() -> bool:
+            ...
 
         async def check2() -> bool:
-              ...
+            ...
 
         async def check3() -> bool:
-              ...
+            ...
 
-         okay = await a.all(
-             a.await_each(
-                 [check1(), check2(), check3()]))
+        okay = await a.all(
+            a.await_each([check1(), check2(), check3()])
+        )
     """
     for awaitable in awaitables:
         yield await awaitable
@@ -330,11 +330,12 @@ async def apply(
 
 def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
     """
-    Wraps any Callable, which allows to use it as Awaitable object
+    Wraps a callable to ensure its result can be ``await``\ ed
 
-    :param function: can be any Callable
-
-    :raise TypeError: if function argument is not Callable
+    Useful to write :term:`async neutral` functions by wrapping callable arguments,
+    or to use synchronous functions where asynchronous ones are expected.
+    Wrapping a regular function defined using ``def`` or ``lambda`` makes it
+    behave roughly as if it were defined using ``async def`` instead.
 
     Example:
 
