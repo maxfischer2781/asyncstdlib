@@ -28,6 +28,7 @@ The missing ``async`` toolbox
 
 .. toctree::
    :maxdepth: 1
+   :caption: The Async Toolbox
    :hidden:
 
    source/api/builtins
@@ -36,6 +37,12 @@ The missing ``async`` toolbox
    source/api/itertools
    source/api/asynctools
    source/glossary
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Development & Maintenance
+   :hidden:
+
    source/contributing
 
 The ``asyncstdlib`` library re-implements functions and classes of the Python
