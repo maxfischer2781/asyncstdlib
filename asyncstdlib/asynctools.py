@@ -329,7 +329,7 @@ async def apply(
 
 
 def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
-    """
+    r"""
     Wraps a callable to ensure its result can be ``await``\ ed
 
     Useful to write :term:`async neutral` functions by wrapping callable arguments,
