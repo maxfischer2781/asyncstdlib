@@ -10,6 +10,10 @@
     :alt: Available on PyPI
     :target: https://pypi.python.org/pypi/asyncstdlib/
 
+.. image:: https://anaconda.org/conda-forge/asyncstdlib/badges/version.svg
+    :alt: Available on Conda-Forge
+    :target: https://anaconda.org/conda-forge/asyncstdlib
+
 .. image:: https://img.shields.io/github/license/maxfischer2781/asyncstdlib.svg
     :alt: License
     :target: https://github.com/maxfischer2781/asyncstdlib/blob/master/LICENSE
