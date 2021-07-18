@@ -15,6 +15,10 @@ The missing ``async`` toolbox
     :alt: Available on PyPI
     :target: https://pypi.python.org/pypi/asyncstdlib/
 
+.. image:: https://anaconda.org/conda-forge/asyncstdlib/badges/version.svg
+    :alt: Available on Conda-Forge
+    :target: https://anaconda.org/conda-forge/asyncstdlib
+
 .. image:: https://img.shields.io/github/license/maxfischer2781/asyncstdlib.svg
     :alt: License
     :target: https://github.com/maxfischer2781/asyncstdlib/blob/master/LICENSE
@@ -28,6 +32,7 @@ The missing ``async`` toolbox
 
 .. toctree::
    :maxdepth: 1
+   :caption: The Async Toolbox
    :hidden:
 
    source/api/builtins
@@ -36,7 +41,14 @@ The missing ``async`` toolbox
    source/api/itertools
    source/api/asynctools
    source/glossary
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Development & Maintenance
+   :hidden:
+
    source/contributing
+   source/publishing
 
 The ``asyncstdlib`` library re-implements functions and classes of the Python
 standard library to make them compatible with ``async`` callables, iterables
