@@ -19,6 +19,9 @@ For example, ``asyncstdlib`` version 3.9.2 provides the feature set of Python 3.
 such as :py:func:`~asyncstdlib.functools.cache` added in 3.9
 and :py:func:`~asyncstdlib.functools.cached_property` added previously.
 
+The ``asyncstdlib.asynctools`` feature set does not follow a strict version model.
+New features may be added at minor or patch releases.
+
 Release workflow
 ================
 
