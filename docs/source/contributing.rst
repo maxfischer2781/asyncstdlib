@@ -1,5 +1,5 @@
 =======================
-Contributing Guidelines
+Contribution Guidelines
 =======================
 
 Contributions in code to the ``asyncstdlib`` library are highly welcome!
