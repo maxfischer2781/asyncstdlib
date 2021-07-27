@@ -17,13 +17,8 @@ from typing import (
 )
 from functools import update_wrapper
 from collections import OrderedDict
-import sys
 
-if sys.version_info[:2] >= (3, 8):
-    from typing import Protocol, TypedDict
-else:
-    from typing_extensions import Protocol, TypedDict
-
+from ._typing import Protocol, TypedDict
 from ._utility import public_module
 
 

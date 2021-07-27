@@ -13,11 +13,7 @@ from collections import deque
 from functools import partial
 import sys
 
-if sys.version_info[:2] >= (3, 8):
-    from typing import Protocol, AsyncContextManager, ContextManager
-else:
-    from typing_extensions import Protocol, AsyncContextManager, ContextManager
-
+from ._typing import Protocol, AsyncContextManager, ContextManager
 from ._core import awaitify
 from ._utility import public_module, slot_get as _slot_get
 

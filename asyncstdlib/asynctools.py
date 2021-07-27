@@ -12,13 +12,8 @@ from typing import (
     Any,
     overload,
 )
-import sys
 
-if sys.version_info[:2] >= (3, 8):
-    from typing import AsyncContextManager
-else:
-    from typing_extensions import AsyncContextManager
-
+from ._typing import AsyncContextManager
 from ._core import AnyIterable, aiter
 from .contextlib import nullcontext
 
