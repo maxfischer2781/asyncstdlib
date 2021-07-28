@@ -31,3 +31,8 @@ doc = ["sphinx", "sphinxcontrib-contentui", "sphinxcontrib-trio"]
 
 [tool.flit.metadata.urls]
 Documentation = "https://asyncstdlib.readthedocs.io/en/latest/"
+
+[tool.mypy]
+files = ["asyncstdlib/*.py"]
+check_untyped_defs = true
+no_implicit_optional = true
