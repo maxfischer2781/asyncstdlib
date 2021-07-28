@@ -207,10 +207,10 @@ def _empty_lru(
         nonlocal misses
         misses = 0
 
-    wrapper.cache_parameters = cache_parameters
-    wrapper.cache_info = cache_info
-    wrapper.cache_clear = cache_clear
-    return wrapper
+    wrapper.cache_parameters = cache_parameters  # type: ignore
+    wrapper.cache_info = cache_info  # type: ignore
+    wrapper.cache_clear = cache_clear  # type: ignore
+    return wrapper  # type: ignore
 
 
 def _unbound_lru(
@@ -254,10 +254,10 @@ def _unbound_lru(
         hits = 0
         cache.clear()
 
-    wrapper.cache_parameters = cache_parameters
-    wrapper.cache_info = cache_info
-    wrapper.cache_clear = cache_clear
-    return wrapper
+    wrapper.cache_parameters = cache_parameters  # type: ignore
+    wrapper.cache_info = cache_info  # type: ignore
+    wrapper.cache_clear = cache_clear  # type: ignore
+    return wrapper  # type: ignore
 
 
 def _bounded_lru(
@@ -314,7 +314,7 @@ def _bounded_lru(
         filled = False
         cache.clear()
 
-    wrapper.cache_parameters = cache_parameters
-    wrapper.cache_info = cache_info
-    wrapper.cache_clear = cache_clear
-    return wrapper
+    wrapper.cache_parameters = cache_parameters  # type: ignore
+    wrapper.cache_info = cache_info  # type: ignore
+    wrapper.cache_clear = cache_clear  # type: ignore
+    return wrapper  # type: ignore
