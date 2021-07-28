@@ -20,6 +20,8 @@ AnyIterable = Union[Iterable[T], AsyncIterable[T]]
 class Sentinel:
     """Placeholder with configurable ``repr``"""
 
+    __slots__ = ("name",)
+
     def __init__(self, name):
         self.name = name
 
@@ -54,6 +56,8 @@ async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
 
 class ScopedIter(Generic[T]):
     """Context manager that provides and cleans up an iterator for an iterable"""
+
+    __slots__ = ("_iterable", "_iterator")
 
     def __init__(self, iterable: AnyIterable[T]):
         self._iterable = iterable
