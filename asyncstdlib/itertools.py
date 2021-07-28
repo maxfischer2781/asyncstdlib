@@ -75,7 +75,7 @@ async def accumulate(
     iterable: AnyIterable[T],
     function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]] = add,
     *,
-    initial: T = __ACCUMULATE_SENTINEL,
+    initial: T = __ACCUMULATE_SENTINEL,  # type: ignore
 ) -> AsyncIterator[T]:
     """
     An :term:`asynchronous iterator` on the running reduction of ``iterable``
@@ -144,7 +144,7 @@ async def chain_from_iterable(
                     yield item
 
 
-chain.from_iterable = chain_from_iterable
+chain.from_iterable = chain_from_iterable  # type: ignore
 
 
 async def compress(
@@ -289,12 +289,14 @@ async def tee_peer(
                         peer.append(item)
             yield buffer.popleft()
     finally:
-        for idx, item in enumerate(peers):  # pragma: no branch
-            if item is buffer:
+        # this peer is done – remove its buffer
+        for idx, peer_buffer in enumerate(peers):  # pragma: no branch
+            if peer_buffer is buffer:
                 peers.pop(idx)
                 break
+        # TODO: Should cleanup be unconditional?
         if cleanup and not peers and hasattr(iterator, "aclose"):
-            await iterator.aclose()
+            await iterator.aclose()  # type: ignore
 
 
 @public_module(__name__, "tee")
@@ -336,7 +338,7 @@ class Tee(Generic[T]):
     def __init__(self, iterable: AnyIterable[T], n: int = 2):
         self._iterator = aiter(iterable)
         _cleanup = self._iterator is iterable
-        self._buffers = [deque() for _ in range(n)]
+        self._buffers: List[Deque[T]] = [deque() for _ in range(n)]
         self._children = tuple(
             tee_peer(
                 iterator=self._iterator,
@@ -500,10 +502,10 @@ async def zip_longest(
                     del value
             yield tuple(values)
     finally:
-        await fill_iter.aclose()
+        await fill_iter.aclose()  # type: ignore
         for iterator in async_iters:
             try:
-                aclose = iterator.aclose()
+                aclose = iterator.aclose()  # type: ignore
             except AttributeError:
                 pass
             else:
@@ -538,7 +540,7 @@ async def groupby(  # noqa: F811
 
 async def groupby(  # noqa: F811
     iterable: AnyIterable[T],
-    key: Optional[Union[Callable[[T], R], Callable[[T], Awaitable[R]]]] = identity,
+    key: Optional[Union[Callable[[T], R], Callable[[T], Awaitable[R]]]] = identity,  # type: ignore  # noqa: B950
 ):
     """
     Create an async iterator over consecutive keys and groups from the (async) iterable
@@ -564,7 +566,7 @@ async def groupby(  # noqa: F811
     # `current_*`: buffer for key/value the current group peeked beyond its end
     current_key = current_value = nothing = object()  # type: Any
     make_key: Callable[[T], Awaitable[R]] = (
-        _awaitify(key) if key is not None else identity
+        _awaitify(key) if key is not None else identity  # type: ignore
     )
     async with ScopedIter(iterable) as async_iter:
         # fast-forward mode: advance to the next group
