@@ -60,11 +60,13 @@ class ScopedIter(Generic[T]):
     __slots__ = ("_iterable", "_iterator")
 
     def __init__(self, iterable: AnyIterable[T]):
-        self._iterable = iterable
+        self._iterable: Optional[AnyIterable[T]] = iterable
         self._iterator: Optional[AsyncIterator[T]] = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
-        assert self._iterator is None, f"{self.__class__.__name__} is not re-entrant"
+        assert (
+            self._iterable is not None
+        ), f"{self.__class__.__name__} is not re-entrant"
         self._iterator = aiter(self._iterable)
         self._iterable = None
         return self._iterator
@@ -90,7 +92,7 @@ def awaitify(
 ) -> Callable[..., Awaitable[T]]:
     """Ensure that ``function`` can be used in ``await`` expressions"""
     if iscoroutinefunction(function):
-        return function
+        return function  # type: ignore
     else:
         return Awaitify(function)
 
@@ -109,10 +111,10 @@ class Awaitify(Generic[T]):
         if async_call is None:
             value = self.__wrapped__(*args, **kwargs)
             if isinstance(value, Awaitable):
-                self._async_call = self.__wrapped__
+                self._async_call = self.__wrapped__  # type: ignore
                 return value
             else:
-                self._async_call = force_async(self.__wrapped__)
+                self._async_call = force_async(self.__wrapped__)  # type: ignore
                 return await_value(value)
         else:
             return async_call(*args, **kwargs)
