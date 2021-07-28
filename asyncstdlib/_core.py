@@ -27,9 +27,6 @@ class Sentinel:
         return self.name
 
 
-__ITER_SENTINEL = Sentinel("<no default>")
-
-
 def aiter(subject: AnyIterable[T]) -> AsyncIterator[T]:
     """
     An async iterator object yielding elements from ``subject``
