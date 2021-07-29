@@ -127,7 +127,7 @@ cached_property = CachedProperty
 async def reduce(
     function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
     iterable: AnyIterable[T],
-    initial: T = __REDUCE_SENTINEL,
+    initial: T = __REDUCE_SENTINEL,  # type: ignore
 ) -> T:
     """
     Reduce an (async) iterable by cumulative application of an (async) function
@@ -153,4 +153,4 @@ async def reduce(
         function = _awaitify(function)
         async for head in item_iter:
             value = await function(value, head)
-        return value
+    return value

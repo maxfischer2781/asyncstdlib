@@ -184,7 +184,7 @@ async def dropwhile(
     async with ScopedIter(iterable) as async_iter:
         predicate = _awaitify(predicate)
         async for item in async_iter:
-            if not await predicate(item):  # type: ignore
+            if not await predicate(item):
                 yield item
                 break
         async for item in async_iter:
@@ -397,7 +397,7 @@ async def _repeat(value):
 def zip_longest(
     __it1: AnyIterable[T1],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[T1]]:
     ...
 
@@ -407,7 +407,7 @@ def zip_longest(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S]]]:
     ...
 
@@ -418,7 +418,7 @@ def zip_longest(
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S]]]:
     ...
 
@@ -430,7 +430,7 @@ def zip_longest(
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S]]]:
     ...
 
@@ -443,7 +443,7 @@ def zip_longest(
     __it4: AnyIterable[T4],
     __it5: AnyIterable[T5],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[
     Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S], Union[T5, S]]
 ]:
@@ -458,13 +458,13 @@ def zip_longest(
     __it4: AnyIterable[Any],
     __it5: AnyIterable[Any],
     *iterables: AnyIterable[Any],
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[Any, ...]]:
     ...
 
 
 async def zip_longest(
-    *iterables: AnyIterable[Any], fillvalue: S = None
+    *iterables: AnyIterable[Any], fillvalue: Any = None
 ) -> AsyncIterator[Tuple[Any, ...]]:
     """
     Create an async iterator that aggregates elements from each of the (async) iterables

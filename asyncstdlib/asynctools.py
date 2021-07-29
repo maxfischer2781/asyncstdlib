@@ -40,8 +40,8 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
     __slots__ = "__wrapped__", "__aiter__", "__anext__", "asend", "athrow"
 
     # Type checker does not understand `__slot__` definitions
-    __aiter__: Callable[[], AsyncGenerator[T, S]]
-    __anext__: Callable[[], Awaitable[T]]
+    __aiter__: Callable[[Any], AsyncGenerator[T, S]]
+    __anext__: Callable[[Any], Awaitable[T]]
     asend: Any
     athrow: Any
 
@@ -127,8 +127,8 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         return borrowed_iter
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self._borrowed_iter._aclose_wrapper()
-        await self._iterator.aclose()
+        await self._borrowed_iter._aclose_wrapper()  # type: ignore
+        await self._iterator.aclose()  # type: ignore
         return False
 
     def __repr__(self):

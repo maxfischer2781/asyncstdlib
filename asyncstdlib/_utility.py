@@ -1,4 +1,4 @@
-from typing import TypeVar, Any
+from typing import TypeVar, Any, Optional
 
 from ._typing import Protocol
 
@@ -16,7 +16,7 @@ class Definition(Protocol):
 D = TypeVar("D", bound=Definition)
 
 
-def public_module(module_name: str, qual_name: str = None):
+def public_module(module_name: str, qual_name: Optional[str] = None):
     """Set the module name of a function or class"""
 
     def decorator(thing: D) -> D:
