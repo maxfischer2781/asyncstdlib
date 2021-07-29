@@ -270,7 +270,7 @@ async def takewhile(
 
 
 async def tee_peer(
-    iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]], cleanup: bool
+    iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]],
 ) -> AsyncGenerator[T, None]:
     try:
         while True:
@@ -294,8 +294,7 @@ async def tee_peer(
             if peer_buffer is buffer:
                 peers.pop(idx)
                 break
-        # TODO: Should cleanup be unconditional?
-        if cleanup and not peers and hasattr(iterator, "aclose"):
+        if not peers and hasattr(iterator, "aclose"):
             await iterator.aclose()  # type: ignore
 
 
@@ -337,14 +336,12 @@ class Tee(Generic[T]):
 
     def __init__(self, iterable: AnyIterable[T], n: int = 2):
         self._iterator = aiter(iterable)
-        _cleanup = True
         self._buffers: List[Deque[T]] = [deque() for _ in range(n)]
         self._children = tuple(
             tee_peer(
                 iterator=self._iterator,
                 buffer=buffer,
                 peers=self._buffers,
-                cleanup=_cleanup,
             )
             for buffer in self._buffers
         )
