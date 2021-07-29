@@ -41,7 +41,7 @@ LT = TypeVar("LT", bound="SupportsLT")
 
 class SupportsLT(Protocol):
     def __lt__(self: LT, other: LT) -> bool:
-        ...
+        raise NotImplementedError
 
 
 ADD = TypeVar("ADD", bound="SupportsAdd")
@@ -49,7 +49,7 @@ ADD = TypeVar("ADD", bound="SupportsAdd")
 
 class SupportsAdd(Protocol):
     def __add__(self: ADD, other: ADD) -> bool:
-        ...
+        raise NotImplementedError
 
 
 __ANEXT_DEFAULT = Sentinel("<no default>")
