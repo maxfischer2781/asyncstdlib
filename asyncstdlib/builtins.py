@@ -26,7 +26,7 @@ from ._core import (
 )
 
 
-T = TypeVar("T", contravariant=True)
+T = TypeVar("T")
 K = TypeVar("K")
 R = TypeVar("R", covariant=True)
 # Variadic overloads
