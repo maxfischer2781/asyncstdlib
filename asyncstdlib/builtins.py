@@ -673,12 +673,26 @@ async def _identity(x: T) -> T:
     return x
 
 
+@overload
 async def sorted(
-    iterable: AnyIterable[LT],
-    *,
-    key: Optional[Callable[[LT], Any]] = None,
-    reverse: bool = False,
+    iterable: AnyIterable[LT], *, key: None = ..., reverse: bool = ...
 ) -> List[LT]:
+    ...
+
+
+@overload
+async def sorted(
+    iterable: AnyIterable[T], *, key: Callable[[T], LT], reverse: bool = ...
+) -> List[T]:
+    ...
+
+
+async def sorted(
+    iterable: AnyIterable[T],
+    *,
+    key: Optional[Callable[[T], Any]] = None,
+    reverse: bool = False,
+) -> List[T]:
     """
     Sort items from an (async) iterable into a new list
 
