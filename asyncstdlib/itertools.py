@@ -337,7 +337,7 @@ class Tee(Generic[T]):
 
     def __init__(self, iterable: AnyIterable[T], n: int = 2):
         self._iterator = aiter(iterable)
-        _cleanup = self._iterator is iterable
+        _cleanup = True
         self._buffers: List[Deque[T]] = [deque() for _ in range(n)]
         self._children = tuple(
             tee_peer(
