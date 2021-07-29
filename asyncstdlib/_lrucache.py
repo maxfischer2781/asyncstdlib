@@ -85,7 +85,7 @@ class LRUAsyncCallable(Protocol[R]):
 
 
 @public_module("asyncstdlib.functools")
-def lru_cache(maxsize: Optional[int] = 128, typed: bool = False):
+def lru_cache(maxsize: Optional[Union[int, Callable]] = 128, typed: bool = False):
     """
     Least Recently Used cache for async functions
 
@@ -139,6 +139,7 @@ def lru_cache(maxsize: Optional[int] = 128, typed: bool = False):
         )
 
     def lru_decorator(function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
+        assert not callable(maxsize)
         if maxsize is None:
             wrapper = _unbound_lru(function=function, typed=typed)
         elif maxsize == 0:

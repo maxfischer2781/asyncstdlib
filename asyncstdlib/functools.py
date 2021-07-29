@@ -45,7 +45,7 @@ class AwaitableValue:
     # noinspection PyUnreachableCode
     def __await__(self):
         return self.value
-        yield  # pragma: no cover
+        yield  # type: ignore # pragma: no cover
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.value!r})"
