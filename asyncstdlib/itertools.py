@@ -272,6 +272,7 @@ async def takewhile(
 async def tee_peer(
     iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]],
 ) -> AsyncGenerator[T, None]:
+    """An individual iterator of a :py:func:`~.tee`"""
     try:
         while True:
             if not buffer:
@@ -285,8 +286,8 @@ async def tee_peer(
                     # This ensures the proper item ordering if any of our peers
                     # are fetching items concurrently. They may have buffered their
                     # item already.
-                    for peer in peers:
-                        peer.append(item)
+                    for peer_buffer in peers:
+                        peer_buffer.append(item)
             yield buffer.popleft()
     finally:
         # this peer is done – remove its buffer
