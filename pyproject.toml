@@ -26,6 +26,7 @@ test = [
     "black; implementation_name=='cpython'",
     "coverage",
     "pytest-cov",
+    "mypy",
 ]
 doc = ["sphinx", "sphinxcontrib-contentui", "sphinxcontrib-trio"]
 

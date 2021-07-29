@@ -21,3 +21,6 @@ jobs:
     - name: Format with black
       run: |
         black asyncstdlib unittests --diff --check
+    - name: Verify with MyPy
+      run: |
+        mypy
