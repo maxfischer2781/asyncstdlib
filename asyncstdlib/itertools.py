@@ -270,7 +270,9 @@ async def takewhile(
 
 
 async def tee_peer(
-    iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]],
+    iterator: AsyncIterator[T],
+    buffer: Deque[T],
+    peers: List[Deque[T]],
 ) -> AsyncGenerator[T, None]:
     """An individual iterator of a :py:func:`~.tee`"""
     try:

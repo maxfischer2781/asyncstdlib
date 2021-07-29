@@ -3,7 +3,6 @@ from typing import (
     AsyncIterable,
     Union,
     AsyncIterator,
-    TypeVar,
     Awaitable,
     Callable,
     Tuple,
@@ -16,7 +15,7 @@ from typing import (
 )
 import builtins as _sync_builtins
 
-from ._typing import Protocol
+from ._typing import T, T1, T2, T3, T4, T5, R, HK, LT, ADD
 from ._core import (
     aiter,
     AnyIterable,
@@ -24,32 +23,6 @@ from ._core import (
     awaitify as _awaitify,
     Sentinel,
 )
-
-
-T = TypeVar("T")
-K = TypeVar("K")
-R = TypeVar("R", covariant=True)
-# Variadic overloads
-T1 = TypeVar("T1")
-T2 = TypeVar("T2")
-T3 = TypeVar("T3")
-T4 = TypeVar("T4")
-T5 = TypeVar("T5")
-# Basic operations
-LT = TypeVar("LT", bound="SupportsLT")
-
-
-class SupportsLT(Protocol):
-    def __lt__(self: LT, other: LT) -> bool:
-        raise NotImplementedError
-
-
-ADD = TypeVar("ADD", bound="SupportsAdd")
-
-
-class SupportsAdd(Protocol):
-    def __add__(self: ADD, other: ADD) -> bool:
-        raise NotImplementedError
 
 
 __ANEXT_DEFAULT = Sentinel("<no default>")
@@ -628,21 +601,21 @@ async def tuple(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Tuple[T,
 
 @overload
 async def dict(  # noqa: F811
-    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
-) -> Dict[K, T]:
+    iterable: Union[Iterable[Tuple[HK, T]], AsyncIterable[Tuple[HK, T]]] = (),
+) -> Dict[HK, T]:
     pass
 
 
 @overload  # noqa: F811
 async def dict(  # noqa: F811
-    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
+    iterable: Union[Iterable[Tuple[HK, T]], AsyncIterable[Tuple[HK, T]]] = (),
     **kwargs: T,
-) -> Dict[Union[K, str], T]:
+) -> Dict[Union[HK, str], T]:
     pass
 
 
 async def dict(  # noqa: F811
-    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
+    iterable: Union[Iterable[Tuple[HK, T]], AsyncIterable[Tuple[HK, T]]] = (),
     **kwargs: T,
 ) -> Dict[Any, T]:
     """
