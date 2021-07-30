@@ -1,7 +1,8 @@
-from typing import Callable, TypeVar, Awaitable, Union, Any
+from typing import Callable, Awaitable, Union, Any
 
+from ._typing import T, C, AnyIterable
 from ._core import ScopedIter, awaitify as _awaitify, Sentinel
-from .builtins import anext, AnyIterable
+from .builtins import anext
 from ._utility import public_module
 
 from ._lrucache import lru_cache, CacheInfo, CacheParameters, LRUAsyncCallable
@@ -17,11 +18,7 @@ __all__ = [
 ]
 
 
-T = TypeVar("T")
-R = TypeVar("R")
-
-
-def cache(user_function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
+def cache(user_function: C) -> LRUAsyncCallable[C]:
     """
     Simple unbounded cache, aka memoization,  for async functions
 
@@ -45,7 +42,7 @@ class AwaitableValue:
     # noinspection PyUnreachableCode
     def __await__(self):
         return self.value
-        yield  # pragma: no cover
+        yield  # type: ignore # pragma: no cover
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.value!r})"
@@ -127,7 +124,7 @@ cached_property = CachedProperty
 async def reduce(
     function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
     iterable: AnyIterable[T],
-    initial: T = __REDUCE_SENTINEL,
+    initial: T = __REDUCE_SENTINEL,  # type: ignore
 ) -> T:
     """
     Reduce an (async) iterable by cumulative application of an (async) function
@@ -153,4 +150,4 @@ async def reduce(
         function = _awaitify(function)
         async for head in item_iter:
             value = await function(value, head)
-        return value
+    return value

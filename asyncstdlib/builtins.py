@@ -3,7 +3,6 @@ from typing import (
     AsyncIterable,
     Union,
     AsyncIterator,
-    TypeVar,
     Awaitable,
     Callable,
     Tuple,
@@ -16,24 +15,14 @@ from typing import (
 )
 import builtins as _sync_builtins
 
+from ._typing import T, T1, T2, T3, T4, T5, R, HK, LT, ADD, AnyIterable
 from ._core import (
     aiter,
-    AnyIterable,
     ScopedIter,
     awaitify as _awaitify,
     Sentinel,
 )
 
-
-T = TypeVar("T", contravariant=True)
-K = TypeVar("K")
-R = TypeVar("R", covariant=True)
-# Variadic overloads
-T1 = TypeVar("T1")
-T2 = TypeVar("T2")
-T3 = TypeVar("T3")
-T4 = TypeVar("T4")
-T5 = TypeVar("T5")
 
 __ANEXT_DEFAULT = Sentinel("<no default>")
 
@@ -99,10 +88,11 @@ def iter(
                  is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
     if sentinel is __ITER_DEFAULT:
-        return aiter(subject)
+        return aiter(subject)  # type: ignore
     elif not callable(subject):
         raise TypeError("iter(v, w): v must be callable")
     else:
+        assert not isinstance(sentinel, Sentinel)
         return acallable_iterator(subject, sentinel)
 
 
@@ -124,7 +114,7 @@ async def all(iterable: AnyIterable[T]) -> bool:
         async for element in item_iter:
             if not element:
                 return False
-        return True
+    return True
 
 
 async def any(iterable: AnyIterable[T]) -> bool:
@@ -135,7 +125,7 @@ async def any(iterable: AnyIterable[T]) -> bool:
         async for element in item_iter:
             if element:
                 return True
-        return False
+    return False
 
 
 @overload
@@ -243,11 +233,11 @@ async def zip(
     finally:
         for iterator in aiters:
             try:
-                aclose = iterator.aclose()
+                aclose = iterator.aclose  # type: ignore
             except AttributeError:
                 pass
             else:
-                await aclose
+                await aclose()
 
 
 async def _zip_inner(aiters):
@@ -440,11 +430,11 @@ __MAX_DEFAULT = Sentinel("<no default>")
 
 
 async def max(
-    iterable: AnyIterable[T],
+    iterable: AnyIterable[LT],
     *,
-    key: Optional[Callable[[T], Any]] = None,
-    default: T = __MAX_DEFAULT,
-) -> T:
+    key: Optional[Callable[[LT], Any]] = None,
+    default: LT = __MAX_DEFAULT,  # type: ignore
+) -> LT:
     """
     Return the largest item from an (async) iterable or from two or more values
 
@@ -480,15 +470,15 @@ async def max(
                 if item_key > best_key:
                     best = item
                     best_key = item_key
-        return best
+    return best
 
 
 async def min(
-    iterable: AnyIterable[T],
+    iterable: AnyIterable[LT],
     *,
-    key: Optional[Callable[[T], Any]] = None,
-    default: T = __MAX_DEFAULT,
-) -> T:
+    key: Optional[Callable[[LT], Any]] = None,
+    default: LT = __MAX_DEFAULT,  # type: ignore
+) -> LT:
     """
     Return the smallest item from an (async) iterable or from two or more values
 
@@ -524,7 +514,7 @@ async def min(
                 if item_key < best_key:
                     best = item
                     best_key = item_key
-        return best
+    return best
 
 
 async def filter(
@@ -548,7 +538,7 @@ async def filter(
         else:
             function = _awaitify(function)
             async for item in item_iter:
-                if await function(item):  # type: ignore
+                if await function(item):
                     yield item
 
 
@@ -567,7 +557,22 @@ async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[in
             count += 1
 
 
-async def sum(iterable: AnyIterable[T], start: T = 0) -> T:
+@overload
+async def sum(iterable: AnyIterable[int]) -> int:
+    ...
+
+
+@overload
+async def sum(iterable: AnyIterable[float]) -> float:
+    ...
+
+
+@overload
+async def sum(iterable: AnyIterable[ADD], start: ADD) -> ADD:
+    ...
+
+
+async def sum(iterable: AnyIterable[Any], start: Any = 0) -> Any:
     """
     Sum of ``start`` and all elements in the (async) iterable
     """
@@ -595,23 +600,23 @@ async def tuple(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Tuple[T,
 
 @overload
 async def dict(  # noqa: F811
-    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
-) -> Dict[K, T]:
+    iterable: Union[Iterable[Tuple[HK, T]], AsyncIterable[Tuple[HK, T]]] = (),
+) -> Dict[HK, T]:
     pass
 
 
 @overload  # noqa: F811
 async def dict(  # noqa: F811
-    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
+    iterable: Union[Iterable[Tuple[HK, T]], AsyncIterable[Tuple[HK, T]]] = (),
     **kwargs: T,
-) -> Dict[Union[K, str], T]:
+) -> Dict[Union[HK, str], T]:
     pass
 
 
 async def dict(  # noqa: F811
-    iterable: Union[Iterable[Tuple[K, T]], AsyncIterable[Tuple[K, T]]] = (),
+    iterable: Union[Iterable[Tuple[HK, T]], AsyncIterable[Tuple[HK, T]]] = (),
     **kwargs: T,
-) -> Dict[Union[K, str], T]:
+) -> Dict[Any, T]:
     """
     Create a :py:class:`dict` from an (async) iterable and keywords
 
@@ -620,9 +625,7 @@ async def dict(  # noqa: F811
     """
     if not iterable:
         return {**kwargs}
-    base_dict: Dict[Union[K, str], T] = {
-        key: value async for key, value in aiter(iterable)
-    }
+    base_dict: Dict[Any, T] = {key: value async for key, value in aiter(iterable)}
     if kwargs:
         base_dict.update(kwargs)
     return base_dict
@@ -640,6 +643,20 @@ async def set(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Set[T]:
 async def _identity(x: T) -> T:
     """Asynchronous identity function, returns its argument unchanged"""
     return x
+
+
+@overload
+async def sorted(
+    iterable: AnyIterable[LT], *, key: None = ..., reverse: bool = ...
+) -> List[LT]:
+    ...
+
+
+@overload
+async def sorted(
+    iterable: AnyIterable[T], *, key: Callable[[T], LT], reverse: bool = ...
+) -> List[T]:
+    ...
 
 
 async def sorted(
@@ -669,7 +686,7 @@ async def sorted(
     """
     if key is None:
         try:
-            return _sync_builtins.sorted(iterable, reverse=reverse)
+            return _sync_builtins.sorted(iterable, reverse=reverse)  # type: ignore
         except TypeError:
             pass
     key = _awaitify(key) if key is not None else _identity

@@ -1,12 +1,25 @@
-from typing import TypeVar, Any
+from typing import TypeVar, Any, Optional
 
-T = TypeVar("T")
+from ._typing import Protocol
 
 
-def public_module(module_name: str, qual_name: str = None):
+class Definition(Protocol):
+    """
+    Type of objects created from a class or function definition
+    """
+
+    __name__: str
+    __module__: str
+    __qualname__: str
+
+
+D = TypeVar("D", bound=Definition)
+
+
+def public_module(module_name: str, qual_name: Optional[str] = None):
     """Set the module name of a function or class"""
 
-    def decorator(thing: T) -> T:
+    def decorator(thing: D) -> D:
         thing.__module__ = module_name
         if qual_name is not None:
             thing.__qualname__ = qual_name

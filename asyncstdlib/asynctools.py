@@ -11,26 +11,15 @@ from typing import (
     Callable,
     Any,
     overload,
+    Optional,
 )
-import sys
 
-if sys.version_info[:2] >= (3, 8):
-    from typing import AsyncContextManager
-else:
-    from typing_extensions import AsyncContextManager
-
-from ._core import AnyIterable, aiter
+from ._typing import AsyncContextManager, T, T1, T2, T3, T4, T5, AnyIterable
+from ._core import aiter
 from .contextlib import nullcontext
 
 
-T = TypeVar("T")
 S = TypeVar("S")
-# Variadic overloads
-T1 = TypeVar("T1")
-T2 = TypeVar("T2")
-T3 = TypeVar("T3")
-T4 = TypeVar("T4")
-T5 = TypeVar("T5")
 
 
 class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
@@ -38,7 +27,16 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
     Borrowed async iterator/generator, preventing to ``aclose`` the ``iterable``
     """
 
+    # adding special methods such as `__aiter__` as `__slots__` allows to set them
+    # on the instance: the interpreter expects *descriptors* not methods, and
+    # `__slots__` are descriptors just like methods.
     __slots__ = "__wrapped__", "__aiter__", "__anext__", "asend", "athrow"
+
+    # Type checker does not understand `__slot__` definitions
+    __aiter__: Callable[[Any], AsyncGenerator[T, S]]
+    __anext__: Callable[[Any], Awaitable[T]]
+    asend: Any
+    athrow: Any
 
     def __init__(self, iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]):
         self.__wrapped__ = iterator
@@ -46,21 +44,21 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         # We wrap it in a separate async iterator/generator to hide its __aiter__.
         try:
             wrapped_iterator: AsyncGenerator[T, S] = self._wrapped_iterator(iterator)
-            self.__anext__ = iterator.__anext__  # argument must be an async iterable!
+            self.__anext__ = iterator.__anext__  # type: ignore
+            self.__aiter__ = wrapped_iterator.__aiter__  # type: ignore
         except (AttributeError, TypeError):
             raise TypeError(
                 "borrowing requires an async iterator "
                 + f"with __aiter__ and __anext__ method, got {type(iterator).__name__}"
             ) from None
-        self.__aiter__ = wrapped_iterator.__aiter__
-        self.__anext__ = wrapped_iterator.__anext__
+        self.__anext__ = wrapped_iterator.__anext__  # type: ignore
         # Our wrapper cannot pass on asend/athrow without getting much heavier.
         # Since interleaving anext/asend/athrow is not allowed, and the wrapper holds
         # no internal state other than the iterator, circumventing it should be fine.
         if hasattr(iterator, "asend"):
-            self.asend = iterator.asend
+            self.asend = iterator.asend  # type: ignore
         if hasattr(iterator, "athrow"):
-            self.athrow = iterator.athrow
+            self.athrow = iterator.athrow  # type: ignore
 
     # Py3.6 compatibility
     # Use ``(item async for item in iterator)`` inside
@@ -113,7 +111,7 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
 
     def __init__(self, iterator: AsyncIterator[T]):
         self._iterator: AsyncIterator[T] = iterator
-        self._borrowed_iter = None
+        self._borrowed_iter: Optional[_ScopedAsyncIterator[T, Any]] = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
         if self._borrowed_iter is not None:
@@ -122,8 +120,8 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         return borrowed_iter
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self._borrowed_iter._aclose_wrapper()
-        await self._iterator.aclose()
+        await self._borrowed_iter._aclose_wrapper()  # type: ignore
+        await self._iterator.aclose()  # type: ignore
         return False
 
     def __repr__(self):
@@ -357,11 +355,11 @@ def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
         if __name__ == "__main__":
             asyncio.run(main())
     """
-    if not isinstance(function, Callable):
+    if not callable(function):
         raise TypeError("function argument should be Callable")
 
     if iscoroutinefunction(function):
-        return function
+        return function  # type: ignore
 
     @wraps(function)
     async def async_wrapped(*args, **kwargs):

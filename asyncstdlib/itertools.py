@@ -16,25 +16,17 @@ from typing import (
 )
 from collections import deque
 
+from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable
 from ._utility import public_module
 from ._core import (
     ScopedIter,
-    AnyIterable,
     awaitify as _awaitify,
     Sentinel,
     borrow as _borrow,
 )
 from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
 
-T = TypeVar("T")
 S = TypeVar("S")
-R = TypeVar("R")
-# Variadic overloads
-T1 = TypeVar("T1")
-T2 = TypeVar("T2")
-T3 = TypeVar("T3")
-T4 = TypeVar("T4")
-T5 = TypeVar("T5")
 
 
 async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
@@ -75,7 +67,7 @@ async def accumulate(
     iterable: AnyIterable[T],
     function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]] = add,
     *,
-    initial: T = __ACCUMULATE_SENTINEL,
+    initial: T = __ACCUMULATE_SENTINEL,  # type: ignore
 ) -> AsyncIterator[T]:
     """
     An :term:`asynchronous iterator` on the running reduction of ``iterable``
@@ -144,7 +136,7 @@ async def chain_from_iterable(
                     yield item
 
 
-chain.from_iterable = chain_from_iterable
+chain.from_iterable = chain_from_iterable  # type: ignore
 
 
 async def compress(
@@ -184,7 +176,7 @@ async def dropwhile(
     async with ScopedIter(iterable) as async_iter:
         predicate = _awaitify(predicate)
         async for item in async_iter:
-            if not await predicate(item):  # type: ignore
+            if not await predicate(item):
                 yield item
                 break
         async for item in async_iter:
@@ -270,8 +262,11 @@ async def takewhile(
 
 
 async def tee_peer(
-    iterator: AsyncIterator[T], buffer: Deque[T], peers: List[Deque[T]], cleanup: bool
+    iterator: AsyncIterator[T],
+    buffer: Deque[T],
+    peers: List[Deque[T]],
 ) -> AsyncGenerator[T, None]:
+    """An individual iterator of a :py:func:`~.tee`"""
     try:
         while True:
             if not buffer:
@@ -285,16 +280,17 @@ async def tee_peer(
                     # This ensures the proper item ordering if any of our peers
                     # are fetching items concurrently. They may have buffered their
                     # item already.
-                    for peer in peers:
-                        peer.append(item)
+                    for peer_buffer in peers:
+                        peer_buffer.append(item)
             yield buffer.popleft()
     finally:
-        for idx, item in enumerate(peers):  # pragma: no branch
-            if item is buffer:
+        # this peer is done – remove its buffer
+        for idx, peer_buffer in enumerate(peers):  # pragma: no branch
+            if peer_buffer is buffer:
                 peers.pop(idx)
                 break
-        if cleanup and not peers and hasattr(iterator, "aclose"):
-            await iterator.aclose()
+        if not peers and hasattr(iterator, "aclose"):
+            await iterator.aclose()  # type: ignore
 
 
 @public_module(__name__, "tee")
@@ -335,14 +331,12 @@ class Tee(Generic[T]):
 
     def __init__(self, iterable: AnyIterable[T], n: int = 2):
         self._iterator = aiter(iterable)
-        _cleanup = self._iterator is iterable
-        self._buffers = [deque() for _ in range(n)]
+        self._buffers: List[Deque[T]] = [deque() for _ in range(n)]
         self._children = tuple(
             tee_peer(
                 iterator=self._iterator,
                 buffer=buffer,
                 peers=self._buffers,
-                cleanup=_cleanup,
             )
             for buffer in self._buffers
         )
@@ -395,7 +389,7 @@ async def _repeat(value):
 def zip_longest(
     __it1: AnyIterable[T1],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[T1]]:
     ...
 
@@ -405,7 +399,7 @@ def zip_longest(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S]]]:
     ...
 
@@ -416,7 +410,7 @@ def zip_longest(
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S]]]:
     ...
 
@@ -428,7 +422,7 @@ def zip_longest(
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S]]]:
     ...
 
@@ -441,7 +435,7 @@ def zip_longest(
     __it4: AnyIterable[T4],
     __it5: AnyIterable[T5],
     *,
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[
     Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S], Union[T5, S]]
 ]:
@@ -456,13 +450,13 @@ def zip_longest(
     __it4: AnyIterable[Any],
     __it5: AnyIterable[Any],
     *iterables: AnyIterable[Any],
-    fillvalue: S = None,
+    fillvalue: S = ...,
 ) -> AsyncIterator[Tuple[Any, ...]]:
     ...
 
 
 async def zip_longest(
-    *iterables: AnyIterable[Any], fillvalue: S = None
+    *iterables: AnyIterable[Any], fillvalue: Any = None
 ) -> AsyncIterator[Tuple[Any, ...]]:
     """
     Create an async iterator that aggregates elements from each of the (async) iterables
@@ -500,10 +494,10 @@ async def zip_longest(
                     del value
             yield tuple(values)
     finally:
-        await fill_iter.aclose()
+        await fill_iter.aclose()  # type: ignore
         for iterator in async_iters:
             try:
-                aclose = iterator.aclose()
+                aclose = iterator.aclose()  # type: ignore
             except AttributeError:
                 pass
             else:
@@ -538,7 +532,7 @@ async def groupby(  # noqa: F811
 
 async def groupby(  # noqa: F811
     iterable: AnyIterable[T],
-    key: Optional[Union[Callable[[T], R], Callable[[T], Awaitable[R]]]] = identity,
+    key: Optional[Union[Callable[[T], R], Callable[[T], Awaitable[R]]]] = identity,  # type: ignore  # noqa: B950
 ):
     """
     Create an async iterator over consecutive keys and groups from the (async) iterable
@@ -564,7 +558,7 @@ async def groupby(  # noqa: F811
     # `current_*`: buffer for key/value the current group peeked beyond its end
     current_key = current_value = nothing = object()  # type: Any
     make_key: Callable[[T], Awaitable[R]] = (
-        _awaitify(key) if key is not None else identity
+        _awaitify(key) if key is not None else identity  # type: ignore
     )
     async with ScopedIter(iterable) as async_iter:
         # fast-forward mode: advance to the next group

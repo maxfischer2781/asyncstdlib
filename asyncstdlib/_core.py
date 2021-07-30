@@ -1,6 +1,5 @@
 from inspect import iscoroutinefunction
 from typing import (
-    TypeVar,
     AsyncIterator,
     Iterable,
     AsyncIterable,
@@ -11,23 +10,19 @@ from typing import (
     Callable,
 )
 
-T = TypeVar("T")
-
-
-AnyIterable = Union[Iterable[T], AsyncIterable[T]]
+from ._typing import T, AnyIterable
 
 
 class Sentinel:
     """Placeholder with configurable ``repr``"""
+
+    __slots__ = ("name",)
 
     def __init__(self, name):
         self.name = name
 
     def __repr__(self):
         return self.name
-
-
-__ITER_SENTINEL = Sentinel("<no default>")
 
 
 def aiter(subject: AnyIterable[T]) -> AsyncIterator[T]:
@@ -58,19 +53,23 @@ async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
 class ScopedIter(Generic[T]):
     """Context manager that provides and cleans up an iterator for an iterable"""
 
+    __slots__ = ("_iterable", "_iterator")
+
     def __init__(self, iterable: AnyIterable[T]):
-        self._iterable = iterable
+        self._iterable: Optional[AnyIterable[T]] = iterable
         self._iterator: Optional[AsyncIterator[T]] = None
 
     async def __aenter__(self) -> AsyncIterator[T]:
-        assert self._iterator is None, f"{self.__class__.__name__} is not re-entrant"
+        assert (
+            self._iterable is not None
+        ), f"{self.__class__.__name__} is not re-entrant"
         self._iterator = aiter(self._iterable)
         self._iterable = None
         return self._iterator
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool:
         try:
-            aclose = self._iterator.aclose()
+            aclose = self._iterator.aclose()  # type: ignore
         except AttributeError:
             pass
         else:
@@ -89,7 +88,7 @@ def awaitify(
 ) -> Callable[..., Awaitable[T]]:
     """Ensure that ``function`` can be used in ``await`` expressions"""
     if iscoroutinefunction(function):
-        return function
+        return function  # type: ignore
     else:
         return Awaitify(function)
 
@@ -108,10 +107,10 @@ class Awaitify(Generic[T]):
         if async_call is None:
             value = self.__wrapped__(*args, **kwargs)
             if isinstance(value, Awaitable):
-                self._async_call = self.__wrapped__
+                self._async_call = self.__wrapped__  # type: ignore
                 return value
             else:
-                self._async_call = force_async(self.__wrapped__)
+                self._async_call = force_async(self.__wrapped__)  # type: ignore
                 return await_value(value)
         else:
             return async_call(*args, **kwargs)

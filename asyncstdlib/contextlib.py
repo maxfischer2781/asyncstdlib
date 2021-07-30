@@ -7,17 +7,15 @@ from typing import (
     Union,
     Any,
     Awaitable,
+    Deque,
+    overload,
 )
 from functools import wraps
 from collections import deque
 from functools import partial
 import sys
 
-if sys.version_info[:2] >= (3, 8):
-    from typing import Protocol, AsyncContextManager, ContextManager
-else:
-    from typing_extensions import Protocol, AsyncContextManager, ContextManager
-
+from ._typing import Protocol, AsyncContextManager, ContextManager, T
 from ._core import awaitify
 from ._utility import public_module, slot_get as _slot_get
 
@@ -32,7 +30,6 @@ class ACloseable(Protocol):
         """Asynchronously close this object"""
 
 
-T = TypeVar("T")
 AC = TypeVar("AC", bound=ACloseable)
 
 
@@ -168,10 +165,28 @@ class NullContext(Generic[T]):
                 ...
     """
 
-    def __init__(self, enter_result: T = None):
+    __slots__ = ("enter_result",)
+
+    @overload
+    def __init__(self: "NullContext[None]", enter_result: None = ...) -> None:
+        ...
+
+    @overload
+    def __init__(self: "NullContext[T]", enter_result: T) -> None:
+        ...
+
+    def __init__(self, enter_result=None):
         self.enter_result = enter_result
 
-    async def __aenter__(self) -> T:
+    @overload
+    def __aenter__(self: "NullContext[None]") -> None:
+        ...
+
+    @overload
+    def __aenter__(self: "NullContext[T]") -> T:
+        ...
+
+    async def __aenter__(self):
         return self.enter_result
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -214,7 +229,7 @@ class ExitStack:
     """
 
     def __init__(self):
-        self._exit_callbacks = deque()
+        self._exit_callbacks: Deque[Callable[..., Awaitable[Optional[bool]]]] = deque()
 
     @staticmethod
     async def _aexit_callback(callback, exc_type, exc_val, tb):
@@ -276,6 +291,9 @@ class ExitStack:
             try:
                 aexit = awaitify(_slot_get(exit, "__exit__"))
             except AttributeError:
+                assert callable(
+                    exit
+                ), f"Expected (async) context manager or callable, got {exit}"
                 aexit = awaitify(exit)
         self._exit_callbacks.append(aexit)
         return exit
@@ -350,7 +368,9 @@ class ExitStack:
 
     @staticmethod
     def _stitch_context(
-        exception: BaseException, context: BaseException, base_context: BaseException
+        exception: BaseException,
+        context: BaseException,
+        base_context: Optional[BaseException],
     ):
         """
         Emulate that `exception` was caused by an unhandled `context`
