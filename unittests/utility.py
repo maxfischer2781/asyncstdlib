@@ -57,7 +57,7 @@ def sync(test_case: Callable[..., Coroutine]):
             event = None
             while True:
                 event = coro.send(event)
-                if not isinstance(event, PingPong):
+                if not isinstance(event, PingPong):  # pragma: no cover
                     raise RuntimeError(
                         f"test case {test_case} yielded an unexpected event {event}"
                     )
@@ -112,7 +112,7 @@ def multi_sync(test_case: Callable[..., Coroutine]):
                     run_queue.append((coro, event))
                 elif isinstance(event, Switch):
                     run_queue.append((coro, event))
-                else:
+                else:  # pragma: no cover
                     raise RuntimeError(
                         f"test case {test_case} yielded an unexpected event {event}"
                     )
