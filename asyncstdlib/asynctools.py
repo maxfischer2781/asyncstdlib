@@ -14,19 +14,12 @@ from typing import (
     Optional,
 )
 
-from ._typing import AsyncContextManager
-from ._core import AnyIterable, aiter
+from ._typing import AsyncContextManager, T, T1, T2, T3, T4, T5, AnyIterable
+from ._core import aiter
 from .contextlib import nullcontext
 
 
-T = TypeVar("T")
 S = TypeVar("S")
-# Variadic overloads
-T1 = TypeVar("T1")
-T2 = TypeVar("T2")
-T3 = TypeVar("T3")
-T4 = TypeVar("T4")
-T5 = TypeVar("T5")
 
 
 class _BorrowedAsyncIterator(AsyncGenerator[T, S]):

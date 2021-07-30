@@ -1,7 +1,8 @@
-from typing import Callable, TypeVar, Awaitable, Union, Any
+from typing import Callable, Awaitable, Union, Any
 
+from ._typing import T, C, AnyIterable
 from ._core import ScopedIter, awaitify as _awaitify, Sentinel
-from .builtins import anext, AnyIterable
+from .builtins import anext
 from ._utility import public_module
 
 from ._lrucache import lru_cache, CacheInfo, CacheParameters, LRUAsyncCallable
@@ -17,11 +18,7 @@ __all__ = [
 ]
 
 
-T = TypeVar("T")
-R = TypeVar("R")
-
-
-def cache(user_function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
+def cache(user_function: C) -> LRUAsyncCallable[C]:
     """
     Simple unbounded cache, aka memoization,  for async functions
 

@@ -16,25 +16,17 @@ from typing import (
 )
 from collections import deque
 
+from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable
 from ._utility import public_module
 from ._core import (
     ScopedIter,
-    AnyIterable,
     awaitify as _awaitify,
     Sentinel,
     borrow as _borrow,
 )
 from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
 
-T = TypeVar("T")
 S = TypeVar("S")
-R = TypeVar("R")
-# Variadic overloads
-T1 = TypeVar("T1")
-T2 = TypeVar("T2")
-T3 = TypeVar("T3")
-T4 = TypeVar("T4")
-T5 = TypeVar("T5")
 
 
 async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:

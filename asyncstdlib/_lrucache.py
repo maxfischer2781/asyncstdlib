@@ -8,8 +8,7 @@ especially when they might not apply to PyPy.
 from typing import (
     NamedTuple,
     Callable,
-    Awaitable,
-    TypeVar,
+    Any,
     Optional,
     Tuple,
     Dict,
@@ -18,11 +17,8 @@ from typing import (
 from functools import update_wrapper
 from collections import OrderedDict
 
-from ._typing import Protocol, TypedDict
+from ._typing import Protocol, TypedDict, C
 from ._utility import public_module
-
-
-R = TypeVar("R")
 
 
 @public_module("asyncstdlib.functools")
@@ -60,16 +56,16 @@ class CacheParameters(TypedDict):
 
 
 @public_module("asyncstdlib.functools")
-class LRUAsyncCallable(Protocol[R]):
+class LRUAsyncCallable(Protocol[C]):
     """
     :py:class:`~typing.Protocol` of a LRU cache wrapping a callable to an awaitable
     """
 
     #: The callable wrapped by this cache
-    __wrapped__: Callable[..., Awaitable[R]]
+    __wrapped__: C
 
-    async def __call__(self, *args, **kwargs) -> R:
-        """Get the result of ``await __wrapped__(...)`` from the cache or evaluation"""
+    #: Get the result of ``await __wrapped__(...)`` from the cache or evaluation
+    __call__: C
 
     def cache_parameters(self) -> CacheParameters:
         """Get the parameters of the cache"""
@@ -138,7 +134,7 @@ def lru_cache(maxsize: Optional[Union[int, Callable]] = 128, typed: bool = False
             "first argument to 'lru_cache' must be an int, a callable or None"
         )
 
-    def lru_decorator(function: Callable[..., Awaitable[R]]) -> LRUAsyncCallable[R]:
+    def lru_decorator(function: C) -> LRUAsyncCallable[C]:
         assert not callable(maxsize)
         if maxsize is None:
             wrapper = _unbound_lru(function=function, typed=typed)
@@ -186,14 +182,12 @@ class CallKey:
         return cls(key)
 
 
-def _empty_lru(
-    function: Callable[..., Awaitable[R]], typed: bool
-) -> LRUAsyncCallable[R]:
+def _empty_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
     """Wrap the async ``function`` in an async LRU cache without any capacity"""
     # cache statistics
     misses = 0
 
-    async def wrapper(*args, **kwargs) -> R:
+    async def wrapper(*args, **kwargs):
         nonlocal misses
         misses += 1
         return await function(*args, **kwargs)
@@ -214,9 +208,7 @@ def _empty_lru(
     return wrapper  # type: ignore
 
 
-def _unbound_lru(
-    function: Callable[..., Awaitable[R]], typed: bool
-) -> LRUAsyncCallable[R]:
+def _unbound_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
     """Wrap the async ``function`` in an async LRU cache with infinite capacity"""
     # local lookup
     make_key = CallKey.from_call
@@ -224,9 +216,9 @@ def _unbound_lru(
     hits = 0
     misses = 0
     # cache content
-    cache: Dict[Union[CallKey, int, str], R] = {}
+    cache: Dict[Union[CallKey, int, str], Any] = {}
 
-    async def wrapper(*args, **kwargs) -> R:
+    async def wrapper(*args, **kwargs):
         nonlocal hits, misses
         key = make_key(args, kwargs, typed=typed)
         try:
@@ -261,9 +253,7 @@ def _unbound_lru(
     return wrapper  # type: ignore
 
 
-def _bounded_lru(
-    function: Callable[..., Awaitable[R]], typed: bool, maxsize: int
-) -> LRUAsyncCallable[R]:
+def _bounded_lru(function: C, typed: bool, maxsize: int) -> LRUAsyncCallable[C]:
     """Wrap the async ``function`` in an async LRU cache with fixed capacity"""
     # local lookup
     make_key = CallKey.from_call
@@ -271,10 +261,10 @@ def _bounded_lru(
     hits = 0
     misses = 0
     # cache content
-    cache: OrderedDict[Union[int, str, CallKey], R] = OrderedDict()
+    cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
     filled = False
 
-    async def wrapper(*args, **kwargs) -> R:
+    async def wrapper(*args, **kwargs):
         nonlocal hits, misses, filled
         key = make_key(args, kwargs, typed=typed)
         try:

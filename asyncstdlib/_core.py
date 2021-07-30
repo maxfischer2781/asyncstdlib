@@ -1,6 +1,5 @@
 from inspect import iscoroutinefunction
 from typing import (
-    TypeVar,
     AsyncIterator,
     Iterable,
     AsyncIterable,
@@ -11,10 +10,7 @@ from typing import (
     Callable,
 )
 
-T = TypeVar("T")
-
-
-AnyIterable = Union[Iterable[T], AsyncIterable[T]]
+from ._typing import T, AnyIterable
 
 
 class Sentinel:

@@ -15,10 +15,9 @@ from typing import (
 )
 import builtins as _sync_builtins
 
-from ._typing import T, T1, T2, T3, T4, T5, R, HK, LT, ADD
+from ._typing import T, T1, T2, T3, T4, T5, R, HK, LT, ADD, AnyIterable
 from ._core import (
     aiter,
-    AnyIterable,
     ScopedIter,
     awaitify as _awaitify,
     Sentinel,
