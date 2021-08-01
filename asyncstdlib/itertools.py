@@ -474,7 +474,7 @@ async def zip_longest(
     if not iterables:
         return
     fill_iter = aiter(_repeat(fillvalue))
-    async_iters = list(aiter(it) for it in iterables)
+    async_iters = [aiter(it) for it in iterables]
     del iterables
     try:
         remaining = len(async_iters)
