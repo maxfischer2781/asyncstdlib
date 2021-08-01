@@ -426,15 +426,39 @@ async def map(
             yield await result
 
 
-__MAX_DEFAULT = Sentinel("<no default>")
+__MIN_MAX_DEFAULT = Sentinel("<no default>")
+
+
+@overload
+async def max(iterable: AnyIterable[LT], *, key: None = ...) -> LT:
+    ...
+
+
+@overload
+async def max(
+    iterable: AnyIterable[LT], *, key: None = ..., default: T
+) -> Union[LT, T]:
+    ...
+
+
+@overload
+async def max(iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ...) -> T1:
+    ...
+
+
+@overload
+async def max(
+    iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ..., default: T2
+) -> Union[T1, T2]:
+    ...
 
 
 async def max(
-    iterable: AnyIterable[LT],
+    iterable: AnyIterable[Any],
     *,
-    key: Optional[Callable[[LT], Any]] = None,
-    default: LT = __MAX_DEFAULT,  # type: ignore
-) -> LT:
+    key: Optional[Callable[[Any], Any]] = None,
+    default: Any = __MIN_MAX_DEFAULT,
+) -> Any:
     """
     Return the largest item from an (async) iterable or from two or more values
 
@@ -452,33 +476,39 @@ async def max(
         as it does not benefit from being ``async``.
         Use the builtin :py:func:`max` function instead.
     """
-    async with ScopedIter(iterable) as item_iter:
-        best = await anext(item_iter, default=__MAX_DEFAULT)
-        if best is __MAX_DEFAULT:
-            if default is __MAX_DEFAULT:
-                raise ValueError("max() arg is an empty sequence")
-            return default
-        if key is None:
-            async for item in item_iter:
-                if item > best:
-                    best = item
-        else:
-            key = _awaitify(key)
-            best_key = await key(best)
-            async for item in item_iter:
-                item_key = await key(item)
-                if item_key > best_key:
-                    best = item
-                    best_key = item_key
-    return best
+    return await _min_max(iterable, key, True, default)
+
+
+@overload
+async def min(iterable: AnyIterable[LT], *, key: None = ...) -> LT:
+    ...
+
+
+@overload
+async def min(
+    iterable: AnyIterable[LT], *, key: None = ..., default: T
+) -> Union[LT, T]:
+    ...
+
+
+@overload
+async def min(iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ...) -> T1:
+    ...
+
+
+@overload
+async def min(
+    iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ..., default: T2
+) -> Union[T1, T2]:
+    ...
 
 
 async def min(
-    iterable: AnyIterable[LT],
+    iterable: AnyIterable[Any],
     *,
-    key: Optional[Callable[[LT], Any]] = None,
-    default: LT = __MAX_DEFAULT,  # type: ignore
-) -> LT:
+    key: Optional[Callable[[Any], Any]] = None,
+    default: Any = __MIN_MAX_DEFAULT,
+) -> Any:
     """
     Return the smallest item from an (async) iterable or from two or more values
 
@@ -496,22 +526,37 @@ async def min(
         as it does not benefit from being ``async``.
         Use the builtin :py:func:`min` function instead.
     """
+    return await _min_max(iterable, key, False, default)
+
+
+async def _min_max(
+    iterable: AnyIterable[LT],
+    key: Optional[Callable[[LT], Any]],
+    invert: bool,
+    default: LT = __MIN_MAX_DEFAULT,  # type: ignore
+) -> LT:
+    """
+    Implementation of ``min``/``max``
+
+    :param invert: compute ``max`` if ``True`` and ``min`` otherwise
+    """
     async with ScopedIter(iterable) as item_iter:
-        best = await anext(item_iter, default=__MAX_DEFAULT)
-        if best is __MAX_DEFAULT:
-            if default is __MAX_DEFAULT:
-                raise ValueError("min() arg is an empty sequence")
+        best = await anext(item_iter, default=__MIN_MAX_DEFAULT)
+        if best is __MIN_MAX_DEFAULT:
+            if default is __MIN_MAX_DEFAULT:
+                name = "max" if invert else "min"
+                raise ValueError(f"{name}() arg is an empty sequence")
             return default
         if key is None:
             async for item in item_iter:
-                if item < best:
+                if invert ^ (item < best):
                     best = item
         else:
             key = _awaitify(key)
             best_key = await key(best)
             async for item in item_iter:
                 item_key = await key(item)
-                if item_key < best_key:
+                if invert ^ (item_key < best_key):
                     best = item
                     best_key = item_key
     return best
