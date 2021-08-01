@@ -429,12 +429,36 @@ async def map(
 __MIN_MAX_DEFAULT = Sentinel("<no default>")
 
 
+@overload
+async def max(iterable: AnyIterable[LT], *, key: None = ...) -> LT:
+    ...
+
+
+@overload
 async def max(
-    iterable: AnyIterable[LT],
+    iterable: AnyIterable[LT], *, key: None = ..., default: T
+) -> Union[LT, T]:
+    ...
+
+
+@overload
+async def max(iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ...) -> T1:
+    ...
+
+
+@overload
+async def max(
+    iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ..., default: T2
+) -> Union[T1, T2]:
+    ...
+
+
+async def max(
+    iterable: AnyIterable[Any],
     *,
-    key: Optional[Callable[[LT], Any]] = None,
-    default: LT = __MIN_MAX_DEFAULT,  # type: ignore
-) -> LT:
+    key: Optional[Callable[[Any], Any]] = None,
+    default: Any = __MIN_MAX_DEFAULT,
+) -> Any:
     """
     Return the largest item from an (async) iterable or from two or more values
 
@@ -455,12 +479,36 @@ async def max(
     return await _min_max(iterable, key, True, default)
 
 
+@overload
+async def min(iterable: AnyIterable[LT], *, key: None = ...) -> LT:
+    ...
+
+
+@overload
 async def min(
-    iterable: AnyIterable[LT],
+    iterable: AnyIterable[LT], *, key: None = ..., default: T
+) -> Union[LT, T]:
+    ...
+
+
+@overload
+async def min(iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ...) -> T1:
+    ...
+
+
+@overload
+async def min(
+    iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ..., default: T2
+) -> Union[T1, T2]:
+    ...
+
+
+async def min(
+    iterable: AnyIterable[Any],
     *,
-    key: Optional[Callable[[LT], Any]] = None,
-    default: LT = __MIN_MAX_DEFAULT,  # type: ignore
-) -> LT:
+    key: Optional[Callable[[Any], Any]] = None,
+    default: Any = __MIN_MAX_DEFAULT,
+) -> Any:
     """
     Return the smallest item from an (async) iterable or from two or more values
 
