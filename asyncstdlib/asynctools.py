@@ -364,7 +364,8 @@ def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
     @wraps(function)
     async def async_wrapped(*args, **kwargs):
         result = function(*args, **kwargs)
-
+        if isinstance(result, Awaitable):
+            return await result
         return result
 
     return async_wrapped
