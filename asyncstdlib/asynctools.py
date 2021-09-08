@@ -326,7 +326,17 @@ async def apply(
     )
 
 
+@overload
+def sync(function: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+    ...
+
+
+@overload
 def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+    ...
+
+
+def sync(function: Callable) -> Callable[..., Awaitable[T]]:
     r"""
     Wraps a callable to ensure its result can be ``await``\ ed
 
@@ -359,7 +369,7 @@ def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
         raise TypeError("function argument should be Callable")
 
     if iscoroutinefunction(function):
-        return function  # type: ignore
+        return function
 
     @wraps(function)
     async def async_wrapped(*args, **kwargs):

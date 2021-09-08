@@ -23,8 +23,7 @@ Iterator lifetime
 Async transforming
 ==================
 
-.. autofunction:: sync(function:(...) -> T) -> (...) -> await T
-    :async:
+.. autofunction:: sync(function: (...) -> (await) T) -> (...) -> await T
 
     .. versionadded:: 3.9.3
 
