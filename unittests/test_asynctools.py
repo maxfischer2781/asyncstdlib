@@ -221,3 +221,17 @@ async def test_sync():
     assert t1 == 110
     assert t2 == 120
     assert t3 == 125
+
+
+@sync
+async def test_sync_awaitable():
+    """Test any (…) -> await T is recognised"""
+
+    @a.sync
+    def nocoro_async(value):
+        async def coro():
+            return value
+
+        return coro()
+
+    assert await nocoro_async(5) == 5

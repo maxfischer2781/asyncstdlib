@@ -29,7 +29,7 @@ test = [
     "pytest-cov",
     "mypy; implementation_name=='cpython'",
 ]
-doc = ["sphinx", "sphinxcontrib-contentui", "sphinxcontrib-trio"]
+doc = ["sphinx", "sphinxcontrib-trio"]
 
 [tool.flit.metadata.urls]
 Documentation = "https://asyncstdlib.readthedocs.io/en/latest/"

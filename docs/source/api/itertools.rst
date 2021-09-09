@@ -61,7 +61,7 @@ Iterator splitting
     :for: :(async iter T, ...)
 
 .. autofunction:: pairwise(iterable: (async) iter T)
-    :for: :(T, T)
+    :async-for: :(T, T)
 
     .. versionadded:: 3.10.0
 
