@@ -82,7 +82,7 @@ async def test_contextmanager_raise_asyncstop():
         try:
             yield
         except StopAsyncIteration:
-            raise StopAsyncIteration("inside")
+            raise StopAsyncIteration("inside") from None
 
     with pytest.raises(RuntimeError):
         async with replace():
@@ -104,7 +104,7 @@ async def test_contextmanager_raise_runtimeerror():
         try:
             yield
         except RuntimeError:
-            raise RuntimeError("inside")
+            raise RuntimeError("inside") from None
 
     with pytest.raises(RuntimeError, match="inside"):
         async with replace():
@@ -129,7 +129,7 @@ async def test_contextmanager_raise_same():
         try:
             yield
         except BaseException as err:
-            raise type(err)("inside")
+            raise type(err)("inside") from None
 
     with pytest.raises(KeyError, match="inside"):
         async with recreate():
