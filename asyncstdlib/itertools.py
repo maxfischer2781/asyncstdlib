@@ -99,7 +99,7 @@ async def accumulate(
                 if initial is not __ACCUMULATE_SENTINEL
                 else await anext(item_iter)
             )
-        except StopAsyncIteration as err:
+        except StopAsyncIteration:
             raise TypeError(
                 "accumulate() of empty sequence with no initial value"
             ) from None
