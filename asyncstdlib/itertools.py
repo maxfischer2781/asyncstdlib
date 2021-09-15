@@ -99,8 +99,10 @@ async def accumulate(
                 if initial is not __ACCUMULATE_SENTINEL
                 else await anext(item_iter)
             )
-        except StopAsyncIteration:
-            raise TypeError("accumulate() of empty sequence with no initial value")
+        except StopAsyncIteration as err:
+            raise TypeError(
+                "accumulate() of empty sequence with no initial value"
+            ) from None
         function = _awaitify(function)
         yield value
         async for head in item_iter:

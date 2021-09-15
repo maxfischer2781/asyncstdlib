@@ -262,7 +262,7 @@ async def _zip_inner_strict(aiters):
             plural = " " if tried == 1 else "s 1-"
             raise ValueError(
                 f"zip() argument {tried+1} is shorter than argument{plural}{tried}"
-            )
+            ) from None
         # after the first iterable was empty, some later iterable may be not
         sentinel = object()
         for tried, _aiter in _sync_builtins.enumerate(aiters):
@@ -270,7 +270,7 @@ async def _zip_inner_strict(aiters):
                 plural = " " if tried == 1 else "s 1-"
                 raise ValueError(
                     f"zip() argument {tried+1} is longer than argument{plural}{tried}"
-                )
+                ) from None
         return
 
 
