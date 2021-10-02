@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-def cache(user_function: C) -> Any:
+def cache(user_function: C) -> LRUAsyncCallable[C]:
     """
     Simple unbounded cache, aka memoization,  for async functions
 
@@ -36,15 +36,15 @@ class AwaitableValue:
 
     __slots__ = ("value",)
 
-    def __init__(self, value: Any):
+    def __init__(self, value):
         self.value = value
 
     # noinspection PyUnreachableCode
-    def __await__(self) -> Any:
+    def __await__(self):
         return self.value
         yield  # type: ignore # pragma: no cover
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return f"{self.__class__.__name__}({self.value!r})"
 
 
@@ -95,7 +95,7 @@ class CachedProperty:
         self._name = getter.__name__
         self.__doc__ = getter.__doc__
 
-    def __set_name__(self, owner: Any, name: Any) -> Any:
+    def __set_name__(self, owner, name):
         # Check whether we can store anything on the instance
         # Note that this is a failsafe, and might fail ugly.
         # People who are clever enough to avoid this heuristic
@@ -107,12 +107,12 @@ class CachedProperty:
             )
         self._name = name
 
-    def __get__(self, instance: Any, owner: Any) -> Any:
+    def __get__(self, instance, owner):
         if instance is None:
             return self
         return self._get_attribute(instance)
 
-    async def _get_attribute(self, instance: Any) -> T:
+    async def _get_attribute(self, instance) -> T:
         value = await self.__wrapped__(instance)
         instance.__dict__[self._name] = AwaitableValue(value)
         return value
