@@ -1,11 +1,14 @@
 from inspect import iscoroutinefunction
 from typing import (
+    Any,
     AsyncIterator,
     Iterable,
     AsyncIterable,
     Union,
     Generic,
     Optional,
+    Tuple,
+    Dict,
     Awaitable,
     Callable,
 )
@@ -18,10 +21,10 @@ class Sentinel:
 
     __slots__ = ("name",)
 
-    def __init__(self, name):
+    def __init__(self, name: Any):
         self.name = name
 
-    def __repr__(self):
+    def __repr__(self) -> Any:
         return self.name
 
 
@@ -67,7 +70,7 @@ class ScopedIter(Generic[T]):
         self._iterable = None
         return self._iterator
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         try:
             aclose = self._iterator.aclose()  # type: ignore
         except AttributeError:
@@ -77,7 +80,7 @@ class ScopedIter(Generic[T]):
         return False
 
 
-async def borrow(iterator: AsyncIterator):
+async def borrow(iterator: AsyncIterator[Any]) -> Any:
     """Borrow an async iterator for iteration, preventing it from being closed"""
     async for item in iterator:
         yield item
@@ -102,7 +105,7 @@ class Awaitify(Generic[T]):
         self.__wrapped__ = function
         self._async_call: Optional[Callable[..., Awaitable[T]]] = None
 
-    def __call__(self, *args, **kwargs) -> Awaitable[T]:
+    def __call__(self, *args: Tuple[Any, ...], **kwargs: Dict[Any, Any]) -> Awaitable[T]:
         async_call = self._async_call
         if async_call is None:
             value = self.__wrapped__(*args, **kwargs)
@@ -121,7 +124,7 @@ async def await_value(value: T) -> T:
 
 
 def force_async(call: Callable[..., T]) -> Callable[..., Awaitable[T]]:
-    async def async_wrapped(*args, **kwargs):
+    async def async_wrapped(*args: Tuple[Any, ...], **kwargs: Dict[Any, Any]) -> Any:
         return call(*args, **kwargs)
 
     return async_wrapped
