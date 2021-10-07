@@ -134,7 +134,7 @@ async def await_value(value: T) -> T:
 
 
 def force_async(call: Callable[..., T]) -> Callable[..., Awaitable[T]]:
-    async def async_wrapped(*args: Tuple[Any, ...], **kwargs: Dict[Any, Any]) -> Any:
+    async def async_wrapped(*args: Any, **kwargs: Any) -> T:
         return call(*args, **kwargs)
 
     return async_wrapped
