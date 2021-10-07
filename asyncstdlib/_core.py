@@ -114,7 +114,7 @@ class Awaitify(Generic[T]):
         self._async_call: Optional[Callable[..., Awaitable[T]]] = None
 
     def __call__(
-        self, *args: Tuple[Any, ...], **kwargs: Dict[Any, Any]
+        self, *args: Any, **kwargs: Any
     ) -> Awaitable[T]:
         async_call = self._async_call
         if async_call is None:
