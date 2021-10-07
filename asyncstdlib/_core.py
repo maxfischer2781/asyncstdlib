@@ -3,7 +3,6 @@ from typing import (
     Any,
     AsyncIterator,
     AsyncGenerator,
-    Dict,
     Iterable,
     AsyncIterable,
     Union,
@@ -12,7 +11,6 @@ from typing import (
     Awaitable,
     Callable,
     Type,
-    Tuple,
 )
 from types import TracebackType
 
@@ -113,9 +111,7 @@ class Awaitify(Generic[T]):
         self.__wrapped__ = function
         self._async_call: Optional[Callable[..., Awaitable[T]]] = None
 
-    def __call__(
-        self, *args: Any, **kwargs: Any
-    ) -> Awaitable[T]:
+    def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T]:
         async_call = self._async_call
         if async_call is None:
             value = self.__wrapped__(*args, **kwargs)
