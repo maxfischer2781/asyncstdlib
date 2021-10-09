@@ -27,6 +27,7 @@ test = [
     "black; implementation_name=='cpython'",
     "coverage",
     "pytest-cov",
+    "flake8-2020",
     "mypy; implementation_name=='cpython'",
 ]
 doc = ["sphinx", "sphinxcontrib-trio"]
