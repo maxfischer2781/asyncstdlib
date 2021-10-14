@@ -36,7 +36,7 @@ async def test_scoped_iter_graceful():
             return AIterator()
 
     async_iterable = AIterable()
-    async with _core.ScopedIter(async_iterable) as async_iterator:
+    async with _core.scoped_iter(async_iterable) as async_iterator:
         # test that no error from calling the missing `aclose` is thrown
         assert async_iterator is not async_iterable
         assert (await async_iterator.__anext__()) == 1

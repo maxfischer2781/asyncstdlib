@@ -170,6 +170,15 @@ async def test_islice_exact(slicing):
     )
 
 
+@sync
+async def test_islice_scoped_iter():
+    async_iterable, iterable = asyncify(range(10)), iter(range(10))
+    async with a.scoped_iter(async_iterable) as a1:
+        assert await a.list(a.islice(a1, 5)) == list(itertools.islice(iterable, 5))
+        assert await a.list(a.islice(a1, 5)) == list(itertools.islice(iterable, 5))
+        assert await a.list(a.islice(a1, 5)) == list(itertools.islice(iterable, 5))
+
+
 starmap_cases = [
     (lambda x, y: x + y, [(1, 2), (3, 4)]),
     (lambda *args: sum(args), [range(i) for i in range(1, 10)]),

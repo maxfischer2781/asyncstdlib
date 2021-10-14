@@ -17,8 +17,8 @@ import builtins as _sync_builtins
 
 from ._typing import T, T1, T2, T3, T4, T5, R, HK, LT, ADD, AnyIterable
 from ._core import (
+    scoped_iter,
     aiter,
-    ScopedIter,
     awaitify as _awaitify,
     Sentinel,
 )
@@ -110,7 +110,7 @@ async def all(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`True` if none of the elements of the (async) ``iterable`` are false
     """
-    async with ScopedIter(iterable) as item_iter:
+    async with scoped_iter(iterable) as item_iter:
         async for element in item_iter:
             if not element:
                 return False
@@ -121,7 +121,7 @@ async def any(iterable: AnyIterable[T]) -> bool:
     """
     Return :py:data:`False` if none of the elements of the (async) ``iterable`` are true
     """
-    async with ScopedIter(iterable) as item_iter:
+    async with scoped_iter(iterable) as item_iter:
         async for element in item_iter:
             if element:
                 return True
@@ -420,7 +420,7 @@ async def map(
     Multiple ``iterable`` may be mixed regular and async iterables.
     """
     function = _awaitify(function)
-    async with ScopedIter(zip(*iterable)) as args_iter:
+    async with scoped_iter(zip(*iterable)) as args_iter:
         async for args in args_iter:
             result = function(*args)
             yield await result
@@ -540,7 +540,7 @@ async def _min_max(
 
     :param invert: compute ``max`` if ``True`` and ``min`` otherwise
     """
-    async with ScopedIter(iterable) as item_iter:
+    async with scoped_iter(iterable) as item_iter:
         best = await anext(item_iter, default=__MIN_MAX_DEFAULT)
         if best is __MIN_MAX_DEFAULT:
             if default is __MIN_MAX_DEFAULT:
@@ -575,7 +575,7 @@ async def filter(
     The ``function`` may be a regular or async callable.
     The ``iterable`` may be a regular or async iterable.
     """
-    async with ScopedIter(iterable) as item_iter:
+    async with scoped_iter(iterable) as item_iter:
         if function is None:
             async for item in item_iter:
                 if item:
@@ -596,7 +596,7 @@ async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[in
     The ``iterable`` may be a regular or async iterable.
     """
     count = start
-    async with ScopedIter(iterable) as item_iter:
+    async with scoped_iter(iterable) as item_iter:
         async for item in item_iter:
             yield count, item
             count += 1
