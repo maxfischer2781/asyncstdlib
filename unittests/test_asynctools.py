@@ -9,6 +9,23 @@ CLOSED = "closed"
 
 
 @sync
+async def test_scoped_iter_iterclose():
+    """A `scoped_iter` cannot be closed via its public interface"""
+    async_iterable, iterable = asyncify(range(10)), iter(range(10))
+    async with a.scoped_iter(async_iterable) as a1:
+        assert await a.anext(a1) == next(iterable)
+        # closing a scoped iterator is a no-op
+        await a1.aclose()
+        assert await a.anext(a1) == next(iterable)
+        # explicitly test #68
+        await a.iter(a1).aclose()
+        assert await a.anext(a1) == next(iterable)
+        assert await a.list(async_iterable) == list(iterable)
+    assert await a.anext(a1, CLOSED) == CLOSED
+    assert await a.anext(async_iterable, CLOSED) == CLOSED
+
+
+@sync
 async def test_nested_lifetime():
     async_iterable, iterable = asyncify(range(10)), iter(range(10))
     async with a.scoped_iter(async_iterable) as a1:
