@@ -39,6 +39,9 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
 
     def __init__(self, iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]):
         self.__wrapped__ = iterator
+        # Create an actual async generator wrapper that we can close. Otherwise,
+        # if we pass on the original iterator methods we cannot disable them if
+        # anyone has a reference to them.
         self._wrapper: AsyncGenerator[T, S] = self._wrapped_iterator(iterator)
         # Forward all async iterator/generator methods but __aiter__ and aclose:
         # An async *iterator* (e.g. `async def: yield`) must return
