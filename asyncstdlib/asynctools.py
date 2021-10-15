@@ -27,34 +27,29 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
     Borrowed async iterator/generator, preventing to ``aclose`` the ``iterable``
     """
 
-    # adding special methods such as `__aiter__` as `__slots__` allows to set them
+    # adding special methods such as `__anext__` as `__slots__` allows to set them
     # on the instance: the interpreter expects *descriptors* not methods, and
     # `__slots__` are descriptors just like methods.
-    __slots__ = "__wrapped__", "__aiter__", "__anext__", "asend", "athrow"
+    __slots__ = "__wrapped__", "__anext__", "asend", "athrow", "_wrapper"
 
     # Type checker does not understand `__slot__` definitions
-    __aiter__: Callable[[Any], AsyncGenerator[T, S]]
     __anext__: Callable[[Any], Awaitable[T]]
     asend: Any
     athrow: Any
 
     def __init__(self, iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]):
         self.__wrapped__ = iterator
-        # iterator.__aiter__ is likely to return iterator (e.g. for async def: yield)
-        # We wrap it in a separate async iterator/generator to hide its __aiter__.
-        try:
-            wrapped_iterator: AsyncGenerator[T, S] = self._wrapped_iterator(iterator)
-            self.__anext__ = iterator.__anext__  # type: ignore
-            self.__aiter__ = wrapped_iterator.__aiter__  # type: ignore
-        except (AttributeError, TypeError):
+        self._wrapper: AsyncGenerator[T, S] = self._wrapped_iterator(iterator)
+        if not hasattr(iterator, "__anext__"):
             raise TypeError(
                 "borrowing requires an async iterator "
                 + f"with __aiter__ and __anext__ method, got {type(iterator).__name__}"
-            ) from None
-        self.__anext__ = wrapped_iterator.__anext__  # type: ignore
-        # Our wrapper cannot pass on asend/athrow without getting much heavier.
-        # Since interleaving anext/asend/athrow is not allowed, and the wrapper holds
-        # no internal state other than the iterator, circumventing it should be fine.
+            )
+        # Forward all async iterator/generator methods but __aiter__ and aclose:
+        # An async *iterator* (e.g. `async def: yield`) must return
+        # itself from __aiter__. If we do not shadow this then
+        # running aiter(self).aclose closes the underlying iterator.
+        self.__anext__ = self._wrapper.__anext__  # type: ignore
         if hasattr(iterator, "asend"):
             self.asend = iterator.asend  # type: ignore
         if hasattr(iterator, "athrow"):
@@ -70,11 +65,14 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         async for item in iterator:
             yield item
 
+    def __aiter__(self):
+        return self
+
     def __repr__(self):
         return f"<asyncstdlib.borrow of {self.__wrapped__!r} at 0x{(id(self)):x}>"
 
     async def _aclose_wrapper(self):
-        wrapper_iterator = self.__aiter__()
+        wrapper_iterator = self._wrapper
         # allow closing the intermediate wrapper
         # this prevents a resource warning if the wrapper is GC'd
         # the underlying iterator is NOT affected by this
