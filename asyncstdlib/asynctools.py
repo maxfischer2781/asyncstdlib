@@ -63,13 +63,13 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         async for item in iterator:
             yield item
 
-    def __aiter__(self):
+    def __aiter__(self) -> AsyncGenerator[T, S]:
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<asyncstdlib.borrow of {self.__wrapped__!r} at 0x{(id(self)):x}>"
 
-    async def _aclose_wrapper(self):
+    async def _aclose_wrapper(self) -> None:
         wrapper_iterator = self._wrapper
         # allow closing the intermediate wrapper
         # this prevents a resource warning if the wrapper is GC'd
@@ -81,17 +81,17 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         if hasattr(self, "athrow"):
             self.athrow = wrapper_iterator.athrow
 
-    def aclose(self):
+    def aclose(self) -> Awaitable[None]:
         return self._aclose_wrapper()
 
 
 class _ScopedAsyncIterator(_BorrowedAsyncIterator[T, S]):
     __slots__ = ()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<asyncstdlib.scoped_iter of {self.__wrapped__!r} at 0x{(id(self)):x}>"
 
-    async def aclose(self):
+    async def aclose(self) -> None:
         pass
 
 
@@ -115,16 +115,16 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         borrowed_iter = self._borrowed_iter = _ScopedAsyncIterator(self._iterator)
         return borrowed_iter
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, *args: Any) -> bool:
         await self._borrowed_iter._aclose_wrapper()  # type: ignore
         await self._iterator.aclose()  # type: ignore
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} of {self._iterator!r} at 0x{(id(self)):x}>"
 
 
-def borrow(iterator: AsyncIterator[T]) -> _BorrowedAsyncIterator[T, None]:
+def borrow(iterator: AsyncIterator[T]) -> AsyncIterator[T]:
     """
     Borrow an async iterator, preventing to ``aclose`` it
 
@@ -150,7 +150,7 @@ def borrow(iterator: AsyncIterator[T]) -> _BorrowedAsyncIterator[T, None]:
     return _BorrowedAsyncIterator(iterator)
 
 
-def scoped_iter(iterable: AnyIterable[T]):
+def scoped_iter(iterable: AnyIterable[T]) -> AsyncContextManager[AsyncIterator[T]]:
     """
     Context manager that provides an async iterator for an (async) ``iterable``
 
@@ -337,7 +337,7 @@ def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
     ...
 
 
-def sync(function: Callable) -> Callable[..., Awaitable[T]]:
+def sync(function: Callable[..., T]) -> Callable[..., Any]:
     r"""
     Wraps a callable to ensure its result can be ``await``\ ed
 
@@ -373,10 +373,10 @@ def sync(function: Callable) -> Callable[..., Awaitable[T]]:
         return function
 
     @wraps(function)
-    async def async_wrapped(*args, **kwargs):
+    async def async_wrapped(*args: Any, **kwargs: Any) -> T:
         result = function(*args, **kwargs)
         if isinstance(result, Awaitable):
-            return await result
+            return await result  # type: ignore
         return result
 
     return async_wrapped
