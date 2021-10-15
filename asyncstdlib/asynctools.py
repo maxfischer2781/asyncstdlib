@@ -40,11 +40,6 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
     def __init__(self, iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]):
         self.__wrapped__ = iterator
         self._wrapper: AsyncGenerator[T, S] = self._wrapped_iterator(iterator)
-        if not hasattr(iterator, "__anext__"):
-            raise TypeError(
-                "borrowing requires an async iterator "
-                + f"with __aiter__ and __anext__ method, got {type(iterator).__name__}"
-            )
         # Forward all async iterator/generator methods but __aiter__ and aclose:
         # An async *iterator* (e.g. `async def: yield`) must return
         # itself from __aiter__. If we do not shadow this then
@@ -144,6 +139,11 @@ def borrow(iterator: AsyncIterator[T]) -> _BorrowedAsyncIterator[T, None]:
     .. seealso:: Use :py:func:`~.scoped_iter` to ensure an (async) iterable
                  is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
+    if not hasattr(iterator, "__anext__") or not hasattr(iterator, "__aiter__"):
+        raise TypeError(
+            "borrowing requires an async iterator "
+            + f"with __aiter__ and __anext__ method, got {type(iterator).__name__}"
+        )
     return _BorrowedAsyncIterator(iterator)
 
 
