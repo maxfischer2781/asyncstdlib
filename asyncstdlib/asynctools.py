@@ -164,9 +164,9 @@ def scoped_iter(iterable: AnyIterable[T]):
         async def head_tail(iterable, leading=5, trailing=5):
             '''Provide the first ``leading`` and last ``trailing`` items'''
             # create async iterator valid for the entire block
-            async with scoped_iter(iterable) as async_iter:
+            async with a.scoped_iter(iterable) as async_iter:
                 # ... safely pass it on without it being closed ...
-                async for item in a.isclice(async_iter, leading):
+                async for item in a.islice(async_iter, leading):
                     yield item
                 tail = deque(maxlen=trailing)
                 # ... and use it again in the block
