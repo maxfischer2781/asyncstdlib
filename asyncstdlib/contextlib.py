@@ -179,11 +179,11 @@ class NullContext(Generic[T]):
         self.enter_result = enter_result
 
     @overload
-    def __aenter__(self: "NullContext[None]") -> None:
+    async def __aenter__(self: "NullContext[None]") -> None:
         ...
 
     @overload
-    def __aenter__(self: "NullContext[T]") -> T:
+    async def __aenter__(self: "NullContext[T]") -> T:
         ...
 
     async def __aenter__(self):
