@@ -40,6 +40,12 @@ The missing ``async`` toolbox
    source/api/contextlib
    source/api/itertools
    source/api/asynctools
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Async HOWTOs and Notes
+   :hidden:
+
    source/glossary
 
 .. toctree::
