@@ -35,7 +35,7 @@ exhausting iterators.
     ...     # loop until we are done
     ...     async for i, s in a.zip(range(5), async_iter):
     ...         print(f"{i}: {s}")
-    ...     assert await a.anext(async_iter, "Already closed!") == "Already closed!"
+    ...     assert await a.anext(async_iter, "Closed!") == "Closed!"
     ...
     >>> asyncio.run(main())
 
@@ -67,13 +67,15 @@ to :py:meth:`~agen.aclose` at the end of the block, but cannot be closed before.
     >>> async def main():
     ...     # iterator can be re-used in the async with block
     ...     async with a.scoped_iter(async_squares()) as async_iter:
-    ...         async for s in a.islice(async_iter, 0, 3):
+    ...         async for s in a.islice(async_iter, 3):
     ...             print(f"1st Batch: {s}")
-    ...         async for s in a.islice(async_iter, 0, 3):  # async_iter is still open
+    ...         # async_iter is still open for further iteration
+    ...         async for s in a.islice(async_iter, 3):
     ...             print(f"2nd Batch: {s}")
-    ...         async for s in a.islice(async_iter, 0, 3):  # async_iter is still open
+    ...         async for s in a.islice(async_iter, 3):
     ...             print(f"3rd Batch: {s}")
-    ...     assert await a.anext(async_iter, "Already closed!") == "Already closed!"
+    ...     # iterator is closed after the async with block
+    ...     assert await a.anext(async_iter, "Closed!") == "Closed!"
     ...
     >>> asyncio.run(main())
 
