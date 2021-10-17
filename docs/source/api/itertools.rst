@@ -8,6 +8,14 @@ The itertools library
 The :py:mod:`asyncstdlib.itertools` library implements
 Python's :py:mod:`itertools` for (async) functions and (async) iterables.
 
+.. note::
+
+    To avoid leaking resources, all utilities in this module explicitly close their
+    iterable arguments when done.
+    This can be unexpected for non-exhausting utilities such as :py:func:`~.dropwhile`
+    and may require explicit scoping.
+    See the guide on :ref:`guide_iteration` for details and usage examples.
+
 Infinite iterators
 ==================
 

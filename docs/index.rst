@@ -43,7 +43,7 @@ The missing ``async`` toolbox
 
 .. toctree::
    :maxdepth: 1
-   :caption: Async HOWTOs and Notes
+   :caption: Guides and Notes
    :hidden:
 
    source/notes/iter_scope
