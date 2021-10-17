@@ -46,6 +46,7 @@ The missing ``async`` toolbox
    :caption: Async HOWTOs and Notes
    :hidden:
 
+   source/notes/iter_scope
    source/glossary
 
 .. toctree::
