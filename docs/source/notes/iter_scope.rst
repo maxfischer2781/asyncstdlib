@@ -84,6 +84,6 @@ to :py:meth:`~agen.aclose` at the end of the block, but cannot be closed before.
 
 Scoped iterators should be the go-to approach for managing iterator lifetimes.
 However, not all lifetimes correspond to well-defined lexical scopes;
-for these cases, one can :term:`borrow` an iterator instead.
+for these cases, one can :term:`borrow <borrowing>` an iterator instead.
 
 .. _PEP 533: https://www.python.org/dev/peps/pep-0533/
