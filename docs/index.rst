@@ -40,6 +40,13 @@ The missing ``async`` toolbox
    source/api/contextlib
    source/api/itertools
    source/api/asynctools
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Guides and Notes
+   :hidden:
+
+   source/notes/iter_scope
    source/glossary
 
 .. toctree::
@@ -128,18 +135,12 @@ Async Iterator Cleanup
 ======================
 
 Cleanup of async iterables is special in that :py:meth:`~agen.aclose` may require
-an active event loop. This is not given when garbage collection finalizes an
-async iterable via its :py:meth:`~object.__del__` method. Thus, async iterators
-should be cleaned up deterministically whenever possible (see `PEP 533`_ for details).
-
-All async iterators of :py:mod:`asyncstdlib` that work on other iterators
-assume sole ownership of the iterators passed to them.
-Passed in async iterators are guaranteed to :py:meth:`~agen.aclose` as soon as
-the :py:mod:`asyncstdlib` async iterator itself is cleaned up.
+an active event loop. Thus, all utilities of :py:mod:`asyncstdlib` that work on async
+iterators will eagerly :py:meth:`~agen.aclose` them.
 Use :py:func:`~asyncstdlib.asynctools.borrow` to prevent automatic cleanup,
 and :py:func:`~asyncstdlib.asynctools.scoped_iter` to guarantee cleanup in custom code.
 
-.. _PEP 533: https://www.python.org/dev/peps/pep-0533/
+See the guide on :ref:`guide_iteration` for details and usage examples.
 
 Indices and tables
 ==================
