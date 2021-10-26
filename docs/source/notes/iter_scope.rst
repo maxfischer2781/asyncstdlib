@@ -8,7 +8,8 @@ Cleanup of ``async`` resources is special in that it may require an active event
 Since :term:`asynchronous iterators <python:asynchronous iterator>` can hold resources
 indefinitely, they should be cleaned up deterministically whenever possible
 (see `PEP 533`_ for discussion).
-Thus, ``asyncstdlib`` provides tools to explicitly manage the lifetime of iterators.
+Thus, ``asyncstdlib`` defaults to deterministic cleanup but provides tools to explicitly
+manage the lifetime of iterators.
 
 Cleanup in ``asyncstdlib``
 ==========================
@@ -80,5 +81,9 @@ to :py:meth:`~agen.aclose` at the end of the block, but cannot be closed before.
     ...     assert await a.anext(async_iter, "Closed!") == "Closed!"
     ...
     >>> asyncio.run(main())
+
+Scoped iterators should be the go-to approach for managing iterator lifetimes.
+However, not all lifetimes correspond to well-defined lexical scopes;
+for these cases, one can :term:`borrow` an iterator instead.
 
 .. _PEP 533: https://www.python.org/dev/peps/pep-0533/
