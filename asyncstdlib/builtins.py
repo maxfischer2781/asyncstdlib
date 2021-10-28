@@ -706,11 +706,6 @@ async def set(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Set[T]:
     return {element async for element in aiter(iterable)}
 
 
-async def _identity(x: T) -> T:
-    """Asynchronous identity function, returns its argument unchanged"""
-    return x
-
-
 @overload
 async def sorted(
     iterable: AnyIterable[LT], *, key: None = ..., reverse: bool = ...
