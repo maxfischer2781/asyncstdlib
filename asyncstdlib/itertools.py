@@ -24,7 +24,7 @@ from ._core import (
     Sentinel,
     borrow as _borrow,
 )
-from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
+from .builtins import anext, zip, enumerate as aenumerate, iter as aiter
 
 S = TypeVar("S")
 
@@ -376,9 +376,10 @@ async def pairwise(iterable: AnyIterable[T]) -> AsyncIterator[Tuple[T, T]]:
     ``pairwise`` will wait for and consume it before finishing.
     """
     async with ScopedIter(iterable) as async_iter:
-        prev = await anext(async_iter, None)  # any default is fine – we never yield it
+        # any default is fine – we never yield it if there are not at least two items
+        prev = await anext(async_iter, None)
         async for current in async_iter:
-            yield prev, current
+            yield prev, current  # type: ignore
             prev = current
 
 
