@@ -158,6 +158,8 @@ async def test_max_sa():
 async def test_min_default():
     assert await a.min((), default=3) == 3
     assert await a.min((), key=lambda x: x, default=3) == 3
+    # default does not override items
+    assert await a.min((3, 2, 1), default=3) == 1
     with pytest.raises(ValueError):
         assert await a.min(()) == 3
     with pytest.raises(ValueError):

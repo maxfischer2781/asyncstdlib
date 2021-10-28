@@ -561,11 +561,10 @@ async def _min_max(
     """
     async with ScopedIter(iterable) as item_iter:
         best = await anext(item_iter, default=default)
+        # this implies that item_iter is empty and default is __MIN_MAX_DEFAULT
         if best is __MIN_MAX_DEFAULT:  # type: ignore
-            if default is best:
-                name = "max" if invert else "min"
-                raise ValueError(f"{name}() arg is an empty sequence")
-            return default
+            name = "max" if invert else "min"
+            raise ValueError(f"{name}() arg is an empty sequence")
         elif key is None:
             async for item in item_iter:
                 if invert ^ (item < best):
