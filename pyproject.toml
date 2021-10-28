@@ -53,6 +53,7 @@ module = [
     "asyncstdlib.asynctools",
     "asyncstdlib.builtins",
     "asyncstdlib.functools",
+    "asyncstdlib.itertools",
     "asyncstdlib._core",
     "asyncstdlib._utility",
     "asyncstdlib._lrucache",
