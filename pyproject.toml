@@ -55,6 +55,7 @@ module = [
     "asyncstdlib._core",
     "asyncstdlib._utility",
     "asyncstdlib._lrucache",
+    "asyncstdlib._typing",
 ]
 disallow_any_generics = true
 disallow_subclassing_any = true

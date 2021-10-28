@@ -5,7 +5,7 @@ This module is for internal use only. Do *not* put any new
 "async typing" definitions here.
 """
 import sys
-from typing import TypeVar, Hashable, Union, AsyncIterable, Iterable, Callable
+from typing import TypeVar, Hashable, Union, AsyncIterable, Iterable, Callable, Any
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, AsyncContextManager, ContextManager, TypedDict
@@ -44,7 +44,7 @@ T3 = TypeVar("T3")
 T4 = TypeVar("T4")
 T5 = TypeVar("T5")
 R = TypeVar("R", covariant=True)
-C = TypeVar("C", bound=Callable)
+C = TypeVar("C", bound=Callable[..., Any])
 
 #: Hashable Key
 HK = TypeVar("HK", bound=Hashable)
