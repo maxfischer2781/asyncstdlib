@@ -68,7 +68,9 @@ def contextmanager(
 
 
 class _AsyncGeneratorContextManager(Generic[T]):
-    def __init__(self, func: Callable[..., AsyncGenerator[T, None]], args: Any, kwds: Any):
+    def __init__(
+        self, func: Callable[..., AsyncGenerator[T, None]], args: Any, kwds: Any
+    ):
         self.gen = func(*args, **kwds)
         self.__doc__ = getattr(func, "__doc__", type(self).__doc__)
 
@@ -180,7 +182,7 @@ class NullContext(Generic[T]):
     def __init__(self: "NullContext[T]", enter_result: T) -> None:
         ...
 
-    def __init__(self, enter_result : Optional[T] = None):
+    def __init__(self, enter_result: Optional[T] = None):
         self.enter_result = enter_result
 
     @overload
@@ -237,7 +239,9 @@ class ExitStack:
         self._exit_callbacks: Deque[Callable[..., Awaitable[Optional[bool]]]] = deque()
 
     @staticmethod
-    async def _aexit_callback(callback: Callable[[], Awaitable[Any]], exc_type: Any, exc_val: Any, tb: Any) -> bool:
+    async def _aexit_callback(
+        callback: Callable[[], Awaitable[Any]], exc_type: Any, exc_val: Any, tb: Any
+    ) -> bool:
         """Invoke a callback as if it were an ``__aexit__`` method"""
         await callback()
         return False  # callbacks never suppress exceptions

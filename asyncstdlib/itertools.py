@@ -566,7 +566,9 @@ def groupby(  # noqa: F811
 
 async def groupby(  # noqa: F811
     iterable: AnyIterable[Any],
-    key: Optional[Union[Callable[[Any], Any], Callable[[Any], Awaitable[Any]]]] = identity,
+    key: Optional[
+        Union[Callable[[Any], Any], Callable[[Any], Awaitable[Any]]]
+    ] = identity,
 ) -> AsyncIterator[Tuple[Any, AsyncIterator[Any]]]:
     """
     Create an async iterator over consecutive keys and groups from the (async) iterable
