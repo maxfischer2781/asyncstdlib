@@ -1,6 +1,15 @@
-from typing import Callable, Awaitable, Union, Any
+from typing import (
+    Callable,
+    Awaitable,
+    Union,
+    Any,
+    Generic,
+    Generator,
+    Optional,
+    overload,
+)
 
-from ._typing import T, C, AnyIterable
+from ._typing import T, AC, AnyIterable
 from ._core import ScopedIter, awaitify as _awaitify, Sentinel
 from .builtins import anext
 from ._utility import public_module
@@ -18,7 +27,7 @@ __all__ = [
 ]
 
 
-def cache(user_function: C) -> LRUAsyncCallable[C]:
+def cache(user_function: AC) -> LRUAsyncCallable[AC]:
     """
     Simple unbounded cache, aka memoization,  for async functions
 
@@ -31,25 +40,25 @@ def cache(user_function: C) -> LRUAsyncCallable[C]:
 __REDUCE_SENTINEL = Sentinel("<no default>")
 
 
-class AwaitableValue:
+class AwaitableValue(Generic[T]):
     """Helper to provide an arbitrary value in ``await``"""
 
     __slots__ = ("value",)
 
-    def __init__(self, value):
+    def __init__(self, value: T):
         self.value = value
 
     # noinspection PyUnreachableCode
-    def __await__(self):
+    def __await__(self) -> Generator[None, None, T]:
         return self.value
         yield  # type: ignore # pragma: no cover
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.value!r})"
 
 
 @public_module(__name__, "cached_property")
-class CachedProperty:
+class CachedProperty(Generic[T]):
     """
     Transform a method into an attribute whose value is cached
 
@@ -95,7 +104,7 @@ class CachedProperty:
         self._name = getter.__name__
         self.__doc__ = getter.__doc__
 
-    def __set_name__(self, owner, name):
+    def __set_name__(self, owner: Any, name: str) -> None:
         # Check whether we can store anything on the instance
         # Note that this is a failsafe, and might fail ugly.
         # People who are clever enough to avoid this heuristic
@@ -107,12 +116,22 @@ class CachedProperty:
             )
         self._name = name
 
-    def __get__(self, instance, owner):
+    @overload
+    def __get__(self, instance: None, owner: type) -> "CachedProperty[T]":
+        ...
+
+    @overload
+    def __get__(self, instance: object, owner: Optional[type]) -> Awaitable[T]:
+        ...
+
+    def __get__(
+        self, instance: Optional[object], owner: Optional[type]
+    ) -> Union["CachedProperty[T]", Awaitable[T]]:
         if instance is None:
             return self
         return self._get_attribute(instance)
 
-    async def _get_attribute(self, instance) -> T:
+    async def _get_attribute(self, instance: object) -> T:
         value = await self.__wrapped__(instance)
         instance.__dict__[self._name] = AwaitableValue(value)
         return value

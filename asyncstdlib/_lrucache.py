@@ -13,11 +13,14 @@ from typing import (
     Tuple,
     Dict,
     Union,
+    Hashable,
+    overload,
+    cast,
 )
 from functools import update_wrapper
 from collections import OrderedDict
 
-from ._typing import Protocol, TypedDict, C
+from ._typing import Protocol, TypedDict, AC
 from ._utility import public_module
 
 
@@ -56,16 +59,16 @@ class CacheParameters(TypedDict):
 
 
 @public_module("asyncstdlib.functools")
-class LRUAsyncCallable(Protocol[C]):
+class LRUAsyncCallable(Protocol[AC]):
     """
     :py:class:`~typing.Protocol` of a LRU cache wrapping a callable to an awaitable
     """
 
     #: The callable wrapped by this cache
-    __wrapped__: C
+    __wrapped__: AC
 
     #: Get the result of ``await __wrapped__(...)`` from the cache or evaluation
-    __call__: C
+    __call__: AC
 
     def cache_parameters(self) -> CacheParameters:
         """Get the parameters of the cache"""
@@ -80,8 +83,22 @@ class LRUAsyncCallable(Protocol[C]):
         """Evict all call argument patterns and their results from the cache"""
 
 
+@overload
+def lru_cache(maxsize: AC, typed: bool = ...) -> LRUAsyncCallable[AC]:
+    ...
+
+
+@overload
+def lru_cache(
+    maxsize: Optional[int] = ..., typed: bool = ...
+) -> Callable[[AC], LRUAsyncCallable[AC]]:
+    ...
+
+
 @public_module("asyncstdlib.functools")
-def lru_cache(maxsize: Optional[Union[int, Callable]] = 128, typed: bool = False):
+def lru_cache(
+    maxsize: Optional[Union[int, AC]] = 128, typed: bool = False
+) -> Union[LRUAsyncCallable[AC], Callable[[AC], LRUAsyncCallable[AC]]]:
     """
     Least Recently Used cache for async functions
 
@@ -127,14 +144,16 @@ def lru_cache(maxsize: Optional[Union[int, Callable]] = 128, typed: bool = False
         maxsize = 0 if maxsize < 0 else maxsize
     elif callable(maxsize):
         # used as function decorator, first arg is the function to be wrapped
-        fast_wrapper = _bounded_lru(function=maxsize, maxsize=128, typed=typed)
+        fast_wrapper = _bounded_lru(
+            function=cast(AC, maxsize), maxsize=128, typed=typed
+        )
         return update_wrapper(fast_wrapper, maxsize)
     elif maxsize is not None:
         raise TypeError(
             "first argument to 'lru_cache' must be an int, a callable or None"
         )
 
-    def lru_decorator(function: C) -> LRUAsyncCallable[C]:
+    def lru_decorator(function: AC) -> LRUAsyncCallable[AC]:
         assert not callable(maxsize)
         if maxsize is None:
             wrapper = _unbound_lru(function=function, typed=typed)
@@ -148,28 +167,44 @@ def lru_cache(maxsize: Optional[Union[int, Callable]] = 128, typed: bool = False
 
 
 class CallKey:
+    """Representation of a call suitable as a ``dict`` key and for equality testing"""
+
     __slots__ = "_hash", "values"
 
-    def __init__(self, values):
+    def __init__(self, values: Tuple[Hashable, ...]):
+        # we may need the hash very often so caching helps
         self._hash = hash(values)
         self.values = values
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self._hash
 
-    def __eq__(self, other):
-        return type(self) is type(other) and self.values == other.values
+    def __eq__(self, other: object) -> bool:
+        return type(self) is type(other) and self.values == other.values  # type: ignore
 
-    # DEVIATION: fast_types tuple vs. set contains is faster +40%/pypy vs. +20%/cpython
+    # DEVIATION: fast_types tuple vs. set contains is faster +40%/pypy and +20%/cpython
     @classmethod
     def from_call(
         cls,
-        args: Tuple,
-        kwds: Dict,
+        args: Tuple[Hashable, ...],
+        kwds: Dict[str, Hashable],
         typed: bool,
-        fast_types=(int, str),
-        kwarg_sentinel=object(),
+        fast_types: Tuple[type, ...] = (int, str),
+        kwarg_sentinel: Hashable = object(),
     ) -> "Union[CallKey, int, str]":
+        """
+        Create a key based on call arguments
+
+        :param args: positional call arguments
+        :param kwds: keyword call arguments
+        :param typed: whether to compare arguments by strict type as well
+        :param fast_types: types which do not need wrapping
+        :param kwarg_sentinel: internal marker, stick with default
+        :return: representation of the call arguments
+
+        The `fast_types` and `kwarg_sentinel` primarily are arguments to make them
+        pre-initialised locals for speed; their defaults should be optimal already.
+        """
         key = args if not kwds else (*args, kwarg_sentinel, *kwds.items())
         if typed:
             key += (
@@ -178,16 +213,16 @@ class CallKey:
                 else (*map(type, args), *map(type, kwds.values()))
             )
         elif len(key) == 1 and type(key[0]) in fast_types:
-            return key[0]
+            return key[0]  # type: ignore
         return cls(key)
 
 
-def _empty_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
+def _empty_lru(function: AC, typed: bool) -> LRUAsyncCallable[AC]:
     """Wrap the async ``function`` in an async LRU cache without any capacity"""
     # cache statistics
     misses = 0
 
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
         nonlocal misses
         misses += 1
         return await function(*args, **kwargs)
@@ -198,7 +233,7 @@ def _empty_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
     def cache_info() -> CacheInfo:
         return CacheInfo(0, misses, 0, 0)
 
-    def cache_clear():
+    def cache_clear() -> None:
         nonlocal misses
         misses = 0
 
@@ -208,7 +243,7 @@ def _empty_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
     return wrapper  # type: ignore
 
 
-def _unbound_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
+def _unbound_lru(function: AC, typed: bool) -> LRUAsyncCallable[AC]:
     """Wrap the async ``function`` in an async LRU cache with infinite capacity"""
     # local lookup
     make_key = CallKey.from_call
@@ -218,7 +253,7 @@ def _unbound_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
     # cache content
     cache: Dict[Union[CallKey, int, str], Any] = {}
 
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
         nonlocal hits, misses
         key = make_key(args, kwargs, typed=typed)
         try:
@@ -241,7 +276,7 @@ def _unbound_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
     def cache_info() -> CacheInfo:
         return CacheInfo(hits, misses, None, len(cache))
 
-    def cache_clear():
+    def cache_clear() -> None:
         nonlocal hits, misses
         misses = 0
         hits = 0
@@ -253,7 +288,7 @@ def _unbound_lru(function: C, typed: bool) -> LRUAsyncCallable[C]:
     return wrapper  # type: ignore
 
 
-def _bounded_lru(function: C, typed: bool, maxsize: int) -> LRUAsyncCallable[C]:
+def _bounded_lru(function: AC, typed: bool, maxsize: int) -> LRUAsyncCallable[AC]:
     """Wrap the async ``function`` in an async LRU cache with fixed capacity"""
     # local lookup
     make_key = CallKey.from_call
@@ -264,7 +299,7 @@ def _bounded_lru(function: C, typed: bool, maxsize: int) -> LRUAsyncCallable[C]:
     cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
     filled = False
 
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
         nonlocal hits, misses, filled
         key = make_key(args, kwargs, typed=typed)
         try:
@@ -298,7 +333,7 @@ def _bounded_lru(function: C, typed: bool, maxsize: int) -> LRUAsyncCallable[C]:
     def cache_info() -> CacheInfo:
         return CacheInfo(hits, misses, maxsize, len(cache))
 
-    def cache_clear():
+    def cache_clear() -> None:
         nonlocal hits, misses, filled
         misses = 0
         hits = 0
