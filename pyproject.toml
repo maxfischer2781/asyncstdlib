@@ -51,6 +51,7 @@ warn_unreachable = true
 [[tool.mypy.overrides]]
 module = [
     "asyncstdlib.asynctools",
+    "asyncstdlib.builtins",
     "asyncstdlib.functools",
     "asyncstdlib._core",
     "asyncstdlib._utility",
