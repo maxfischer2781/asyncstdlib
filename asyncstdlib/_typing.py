@@ -72,7 +72,7 @@ ADD = TypeVar("ADD", bound="SupportsAdd")
 
 
 class SupportsAdd(Protocol):
-    def __add__(self: ADD, other: ADD) -> bool:
+    def __add__(self: ADD, other: ADD) -> ADD:
         raise NotImplementedError
 
 
