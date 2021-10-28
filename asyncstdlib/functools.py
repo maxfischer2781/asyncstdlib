@@ -9,7 +9,7 @@ from typing import (
     overload,
 )
 
-from ._typing import T, C, AnyIterable
+from ._typing import T, AC, AnyIterable
 from ._core import ScopedIter, awaitify as _awaitify, Sentinel
 from .builtins import anext
 from ._utility import public_module
@@ -27,7 +27,7 @@ __all__ = [
 ]
 
 
-def cache(user_function: C) -> LRUAsyncCallable[C]:
+def cache(user_function: AC) -> LRUAsyncCallable[AC]:
     """
     Simple unbounded cache, aka memoization,  for async functions
 
