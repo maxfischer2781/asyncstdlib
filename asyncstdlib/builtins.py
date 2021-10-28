@@ -27,7 +27,19 @@ from ._core import (
 __ANEXT_DEFAULT = Sentinel("<no default>")
 
 
-async def anext(iterator: AsyncIterator[T], default=__ANEXT_DEFAULT) -> T:
+@overload
+async def anext(iterator: AsyncIterator[T]) -> T:
+    ...
+
+
+@overload
+async def anext(iterator: AsyncIterator[T], default: T) -> T:
+    ...
+
+
+async def anext(
+    iterator: AsyncIterator[T], default: Union[Sentinel, T] = __ANEXT_DEFAULT
+) -> T:
     """
     Retrieve the next item from the async iterator
 
@@ -47,7 +59,7 @@ async def anext(iterator: AsyncIterator[T], default=__ANEXT_DEFAULT) -> T:
     except StopAsyncIteration:
         if default is __ANEXT_DEFAULT:
             raise
-        return default
+        return default  # type: ignore
 
 
 __ITER_DEFAULT = Sentinel("<no default>")
@@ -132,7 +144,7 @@ async def any(iterable: AnyIterable[T]) -> bool:
 def zip(
     __it1: AnyIterable[T1],
     *,
-    strict=False,
+    strict: bool = ...,
 ) -> AsyncIterator[Tuple[T1]]:
     ...
 
@@ -142,7 +154,7 @@ def zip(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     *,
-    strict=False,
+    strict: bool = ...,
 ) -> AsyncIterator[Tuple[T1, T2]]:
     ...
 
@@ -153,7 +165,7 @@ def zip(
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
     *,
-    strict=False,
+    strict: bool = ...,
 ) -> AsyncIterator[Tuple[T1, T2, T3]]:
     ...
 
@@ -165,7 +177,7 @@ def zip(
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
     *,
-    strict=False,
+    strict: bool = ...,
 ) -> AsyncIterator[Tuple[T1, T2, T3, T4]]:
     ...
 
@@ -178,7 +190,7 @@ def zip(
     __it4: AnyIterable[T4],
     __it5: AnyIterable[T5],
     *,
-    strict=False,
+    strict: bool = ...,
 ) -> AsyncIterator[Tuple[T1, T2, T3, T4, T5]]:
     ...
 
@@ -191,13 +203,13 @@ def zip(
     __it4: AnyIterable[Any],
     __it5: AnyIterable[Any],
     *iterables: AnyIterable[Any],
-    strict=False,
+    strict: bool = ...,
 ) -> AsyncIterator[Tuple[Any, ...]]:
     ...
 
 
 async def zip(
-    *iterables: AnyIterable[Any], strict=False
+    *iterables: AnyIterable[Any], strict: bool = False
 ) -> AsyncIterator[Tuple[Any, ...]]:
     """
     Create an async iterator that aggregates elements from each of the (async) iterables
@@ -240,7 +252,10 @@ async def zip(
                 await aclose()
 
 
-async def _zip_inner(aiters):
+async def _zip_inner(
+    aiters: Tuple[AsyncIterator[T], ...]
+) -> AsyncIterator[Tuple[T, ...]]:
+    """Direct zip transposing tuple-of-iterators to iterator-of-tuples"""
     try:
         while True:
             yield (*[await anext(it) for it in aiters],)
@@ -248,7 +263,11 @@ async def _zip_inner(aiters):
         return
 
 
-async def _zip_inner_strict(aiters):
+async def _zip_inner_strict(
+    aiters: Tuple[AsyncIterator[T], ...]
+) -> AsyncIterator[Tuple[T, ...]]:
+    """Length aware zip checking that all iterators are equal length"""
+    # track index of the last iterator we tried to anext
     tried = 0
     try:
         while True:
@@ -541,13 +560,13 @@ async def _min_max(
     :param invert: compute ``max`` if ``True`` and ``min`` otherwise
     """
     async with ScopedIter(iterable) as item_iter:
-        best = await anext(item_iter, default=__MIN_MAX_DEFAULT)
-        if best is __MIN_MAX_DEFAULT:
-            if default is __MIN_MAX_DEFAULT:
+        best = await anext(item_iter, default=default)
+        if best is __MIN_MAX_DEFAULT:  # type: ignore
+            if default is best:
                 name = "max" if invert else "min"
                 raise ValueError(f"{name}() arg is an empty sequence")
             return default
-        if key is None:
+        elif key is None:
             async for item in item_iter:
                 if invert ^ (item < best):
                     best = item
@@ -587,7 +606,9 @@ async def filter(
                     yield item
 
 
-async def enumerate(iterable: AnyIterable[T], start=0) -> AsyncIterator[Tuple[int, T]]:
+async def enumerate(
+    iterable: AnyIterable[T], start: int = 0
+) -> AsyncIterator[Tuple[int, T]]:
     """
     An async iterator of running count and element in an (async) iterable
 
