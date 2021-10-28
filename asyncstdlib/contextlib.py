@@ -15,9 +15,12 @@ from collections import deque
 from functools import partial
 import sys
 
-from ._typing import Protocol, AsyncContextManager, ContextManager, T
+from ._typing import Protocol, AsyncContextManager, ContextManager, T, C
 from ._core import awaitify
 from ._utility import public_module, slot_get as _slot_get
+
+
+AnyContextManager = Union[AsyncContextManager[T], ContextManager[T]]
 
 
 # typing.AsyncContextManager uses contextlib.AbstractAsyncContextManager if available,
@@ -26,7 +29,7 @@ AbstractContextManager = AsyncContextManager
 
 
 class ACloseable(Protocol):
-    async def aclose(self):
+    async def aclose(self) -> None:
         """Asynchronously close this object"""
 
 
@@ -58,29 +61,29 @@ def contextmanager(
     """
 
     @wraps(func)
-    def helper(*args, **kwds):
+    def helper(*args: Any, **kwds: Any) -> AsyncContextManager[T]:
         return _AsyncGeneratorContextManager(func, args, kwds)
 
     return helper
 
 
-class _AsyncGeneratorContextManager:
-    def __init__(self, func, args, kwds):
+class _AsyncGeneratorContextManager(Generic[T]):
+    def __init__(self, func: Callable[..., AsyncGenerator[T, None]], args: Any, kwds: Any):
         self.gen = func(*args, **kwds)
         self.__doc__ = getattr(func, "__doc__", type(self).__doc__)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> T:
         try:
             return await self.gen.__anext__()
         except StopAsyncIteration:
             raise RuntimeError("generator did not yield to __aenter__") from None
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         if exc_type is None:
             try:
                 await self.gen.__anext__()
             except StopAsyncIteration:
-                return
+                return False
             else:
                 raise RuntimeError("generator did not stop after __aexit__")
         else:
@@ -99,6 +102,7 @@ class _AsyncGeneratorContextManager:
             except exc_type as exc:
                 if exc is not exc_val:
                     raise
+                return False
             else:
                 raise RuntimeError("generator did not stop after throw() in __aexit__")
 
@@ -134,8 +138,9 @@ class Closing(Generic[AC]):
     async def __aenter__(self) -> AC:
         return self.thing
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         await self.thing.aclose()
+        return False
 
 
 closing = Closing
@@ -175,7 +180,7 @@ class NullContext(Generic[T]):
     def __init__(self: "NullContext[T]", enter_result: T) -> None:
         ...
 
-    def __init__(self, enter_result=None):
+    def __init__(self, enter_result : Optional[T] = None):
         self.enter_result = enter_result
 
     @overload
@@ -186,11 +191,11 @@ class NullContext(Generic[T]):
     async def __aenter__(self: "NullContext[T]") -> T:
         ...
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Optional[T]:
         return self.enter_result
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        pass
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
+        return False
 
 
 nullcontext = NullContext
@@ -199,8 +204,8 @@ nullcontext = NullContext
 SE = TypeVar(
     "SE",
     bound=Union[
-        AsyncContextManager,
-        ContextManager,
+        AsyncContextManager[Any],
+        ContextManager[Any],
         Callable[[Any, BaseException, Any], Optional[bool]],
         Callable[[Any, BaseException, Any], Awaitable[Optional[bool]]],
     ],
@@ -228,11 +233,11 @@ class ExitStack:
         There are no separate methods to distinguish async and regular arguments.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._exit_callbacks: Deque[Callable[..., Awaitable[Optional[bool]]]] = deque()
 
     @staticmethod
-    async def _aexit_callback(callback, exc_type, exc_val, tb):
+    async def _aexit_callback(callback: Callable[[], Awaitable[Any]], exc_type: Any, exc_val: Any, tb: Any) -> bool:
         """Invoke a callback as if it were an ``__aexit__`` method"""
         await callback()
         return False  # callbacks never suppress exceptions
@@ -298,7 +303,7 @@ class ExitStack:
         self._exit_callbacks.append(aexit)
         return exit
 
-    def callback(self, callback: Callable, *args, **kwargs):
+    def callback(self, callback: C, *args: Any, **kwargs: Any) -> C:
         """
         Registers an arbitrary callback to be called with arguments on unwinding
 
@@ -312,11 +317,11 @@ class ExitStack:
         This method does not change its argument, and can be used as a context manager.
         """
         self._exit_callbacks.append(
-            partial(self._aexit_callback, awaitify(partial(callback, *args, **kwargs)))
+            partial(self._aexit_callback, partial(awaitify(callback), *args, **kwargs))
         )
         return callback
 
-    async def enter_context(self, cm: AsyncContextManager):
+    async def enter_context(self, cm: AnyContextManager[T]) -> T:
         """
         Enter the supplied context manager, and register it for exit if successful
 
@@ -353,9 +358,9 @@ class ExitStack:
         else:
             context_value = await _slot_get(cm, "__aenter__")()
         self._exit_callbacks.append(aexit)
-        return context_value
+        return context_value  # type: ignore
 
-    async def aclose(self):
+    async def aclose(self) -> None:
         """
         Immediately unwind the context stack
 
@@ -371,7 +376,7 @@ class ExitStack:
         exception: BaseException,
         context: BaseException,
         base_context: Optional[BaseException],
-    ):
+    ) -> None:
         """
         Emulate that `exception` was caused by an unhandled `context`
 
@@ -392,10 +397,10 @@ class ExitStack:
         # we expect it to reference
         exception.__context__ = context
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "ExitStack":
         return self
 
-    async def __aexit__(self, exc_type, exc_val, tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, tb: Any) -> bool:
         received_exc = exc_type is not None
         # Even if we don't handle an exception *right now*, we may be part
         # of an exception handler unwinding gracefully. This is our __context__.

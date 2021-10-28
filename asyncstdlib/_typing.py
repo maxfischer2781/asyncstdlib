@@ -53,6 +53,7 @@ T3 = TypeVar("T3")
 T4 = TypeVar("T4")
 T5 = TypeVar("T5")
 R = TypeVar("R", covariant=True)
+C = TypeVar("C", bound=Callable[..., Any])
 AC = TypeVar("AC", bound=Callable[..., Awaitable[Any]])
 
 #: Hashable Key
