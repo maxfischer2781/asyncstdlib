@@ -9,6 +9,7 @@ from typing import (
     Optional,
     Deque,
     Generic,
+    Iterable,
     Iterator,
     Tuple,
     overload,
@@ -16,7 +17,7 @@ from typing import (
 )
 from collections import deque
 
-from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable
+from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable, ADD
 from ._utility import public_module
 from ._core import (
     ScopedIter,
@@ -24,7 +25,7 @@ from ._core import (
     Sentinel,
     borrow as _borrow,
 )
-from .builtins import anext, zip, enumerate as aenumerate, aiter as aiter
+from .builtins import anext, zip, enumerate as aenumerate, iter as aiter
 
 S = TypeVar("S")
 
@@ -58,17 +59,47 @@ async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
 __ACCUMULATE_SENTINEL = Sentinel("<no default>")
 
 
-async def add(x, y):
+async def add(x: ADD, y: ADD) -> ADD:
     """The default reduction of :py:func:`~.accumulate`"""
     return x + y
 
 
-async def accumulate(
+@overload
+def accumulate(iterable: AnyIterable[ADD]) -> AsyncIterator[ADD]:
+    ...
+
+
+@overload
+def accumulate(iterable: AnyIterable[ADD], *, initial: ADD) -> AsyncIterator[ADD]:
+    ...
+
+
+@overload
+def accumulate(
     iterable: AnyIterable[T],
-    function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]] = add,
-    *,
-    initial: T = __ACCUMULATE_SENTINEL,  # type: ignore
+    function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
 ) -> AsyncIterator[T]:
+    ...
+
+
+@overload
+def accumulate(
+    iterable: AnyIterable[T],
+    function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
+    *,
+    initial: T,
+) -> AsyncIterator[T]:
+    ...
+
+
+async def accumulate(
+    iterable: AnyIterable[Any],
+    function: Union[
+        Callable[[Any, Any], Any], Callable[[Any, Any], Awaitable[Any]]
+    ] = add,
+    *,
+    initial: Any = __ACCUMULATE_SENTINEL,
+) -> AsyncIterator[Any]:
     """
     An :term:`asynchronous iterator` on the running reduction of ``iterable``
 
@@ -223,7 +254,7 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
 
 async def starmap(
     function: Union[Callable[..., T], Callable[..., Awaitable[T]]],
-    iterable: AnyIterable,
+    iterable: AnyIterable[Iterable[Any]],
 ) -> AsyncIterator[T]:
     """
     An :term:`asynchronous iterator` applying a function to arguments from an iterable
@@ -346,7 +377,7 @@ class Tee(Generic[T]):
     def __len__(self) -> int:
         return len(self._children)
 
-    def __getitem__(self, item) -> AsyncIterator[T]:
+    def __getitem__(self, item: int) -> AsyncIterator[T]:
         return self._children[item]
 
     def __iter__(self) -> Iterator[AnyIterable[T]]:
@@ -355,11 +386,11 @@ class Tee(Generic[T]):
     async def __aenter__(self) -> "Tee[T]":
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         await self.aclose()
         return False
 
-    async def aclose(self):
+    async def aclose(self) -> None:
         for child in self._children:
             await child.aclose()
 
@@ -376,13 +407,14 @@ async def pairwise(iterable: AnyIterable[T]) -> AsyncIterator[Tuple[T, T]]:
     ``pairwise`` will wait for and consume it before finishing.
     """
     async with ScopedIter(iterable) as async_iter:
-        prev = await anext(async_iter, None)  # any default is fine – we never yield it
+        # any default is fine – we never yield it if there are not at least two items
+        prev = await anext(async_iter, None)
         async for current in async_iter:
-            yield prev, current
+            yield prev, current  # type: ignore
             prev = current
 
 
-async def _repeat(value):
+async def _repeat(value: T) -> AsyncIterator[T]:
     while True:
         yield value
 
@@ -533,9 +565,11 @@ def groupby(  # noqa: F811
 
 
 async def groupby(  # noqa: F811
-    iterable: AnyIterable[T],
-    key: Optional[Union[Callable[[T], R], Callable[[T], Awaitable[R]]]] = identity,  # type: ignore  # noqa: B950
-):
+    iterable: AnyIterable[Any],
+    key: Optional[
+        Union[Callable[[Any], Any], Callable[[Any], Awaitable[Any]]]
+    ] = identity,
+) -> AsyncIterator[Tuple[Any, AsyncIterator[Any]]]:
     """
     Create an async iterator over consecutive keys and groups from the (async) iterable
 
@@ -559,18 +593,18 @@ async def groupby(  # noqa: F811
     exhausted = False
     # `current_*`: buffer for key/value the current group peeked beyond its end
     current_key = current_value = nothing = object()  # type: Any
-    make_key: Callable[[T], Awaitable[R]] = (
+    make_key: Callable[[Any], Awaitable[Any]] = (
         _awaitify(key) if key is not None else identity  # type: ignore
     )
     async with ScopedIter(iterable) as async_iter:
         # fast-forward mode: advance to the next group
-        async def seek_group() -> AsyncIterator[T]:
+        async def seek_group() -> AsyncIterator[Any]:
             nonlocal current_value, current_key, exhausted
             # Note: `value` always ends up being some T
             # - value is something: we can never unset it
             # - value is `nothing`: the previous group was not exhausted,
             #                       and we scan at least one new value
-            value: T = current_value
+            value: Any = current_value
             if not exhausted:
                 previous_key = current_key
                 while previous_key == current_key:
@@ -581,11 +615,11 @@ async def groupby(  # noqa: F811
             return group(current_key, value=value)
 
         # the lazy iterable of all items with the same key
-        async def group(desired_key, value: T) -> AsyncIterator[T]:
+        async def group(desired_key: Any, value: Any) -> AsyncIterator[Any]:
             nonlocal current_value, current_key, exhausted
             yield value
             async for value in async_iter:
-                next_key = await make_key(value)
+                next_key: Any = await make_key(value)
                 if next_key == desired_key:
                     yield value
                 else:
