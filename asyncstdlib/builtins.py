@@ -728,7 +728,7 @@ async def sorted(
 async def sorted(
     iterable: AnyIterable[T],
     *,
-    key: Optional[Callable[[T], Any]] = None,
+    key: Optional[Callable[[T], LT]] = None,
     reverse: bool = False,
 ) -> List[T]:
     """
@@ -751,11 +751,15 @@ async def sorted(
         It is guaranteed to be worst-case O(n log n) runtime.
     """
     if key is None:
+        # TODO: is this a worthwhile optimisation?
         try:
             return _sync_builtins.sorted(iterable, reverse=reverse)  # type: ignore
         except TypeError:
-            pass
-    key = _awaitify(key) if key is not None else _identity
-    keyed_items = [(await key(item), item) async for item in aiter(iterable)]
-    keyed_items.sort(key=lambda ki: ki[0], reverse=reverse)
-    return [item for key, item in keyed_items]
+            items = [item async for item in aiter(iterable)]
+            items.sort(reverse=reverse)
+            return items
+    else:
+        async_key = _awaitify(key)
+        keyed_items = [(await async_key(item), item) async for item in aiter(iterable)]
+        keyed_items.sort(key=lambda ki: ki[0], reverse=reverse)
+        return [item for key, item in keyed_items]
