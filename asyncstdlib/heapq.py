@@ -26,7 +26,8 @@ class _KeyIter(Generic[LT]):
             except StopAsyncIteration:
                 pass
             else:
-                yield cls(head, iterator, reverse, await key(head), key)
+                head_key = await key(head) if key is not None else head
+                yield cls(head, iterator, reverse, head_key, key)
 
     async def pull_head(self) -> bool:
         """
@@ -37,7 +38,7 @@ class _KeyIter(Generic[LT]):
         except StopAsyncIteration:
             return False
         else:
-            self.head_key = self.key(head) if self.key is not None else head
+            self.head_key = await self.key(head) if self.key is not None else head
             return True
 
     def __lt__(self, other: "_KeyIter[LT]"):
@@ -64,10 +65,10 @@ async def merge(
     is yielded before ``b``. Use ``reverse=True`` for descending sort order.
     The ``iterables`` must be pre-sorted in the same order.
     """
+    # sortable iterators with (reverse) position to ensure stable sort for ties
     iter_heap: List[Tuple[_KeyIter, int]] = [
         (itr, idx if not reverse else -idx)
-        async for idx, itr
-        in a_enumerate(_KeyIter.from_iters(iterables, reverse, key))
+        async for idx, itr in a_enumerate(_KeyIter.from_iters(iterables, reverse, key))
     ]
     try:
         _heapq.heapify(iter_heap)
@@ -80,6 +81,7 @@ async def merge(
                     _heapq.heapreplace(iter_heap, (itr, idx))
                 else:
                     _heapq.heappop(iter_heap)
+                    break
         # there is only one iterator left, no need for merging
         if iter_heap:
             itr, idx = iter_heap[0]
