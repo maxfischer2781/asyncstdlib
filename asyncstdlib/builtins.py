@@ -140,6 +140,9 @@ async def any(iterable: AnyIterable[T]) -> bool:
     return False
 
 
+__ZIP_MISSING = Sentinel("<no next zip>")
+
+
 @overload
 def zip(
     __it1: AnyIterable[T1],
@@ -239,58 +242,23 @@ async def zip(
     aiters = (*(aiter(it) for it in iterables),)
     del iterables
     try:
-        inner = _zip_inner(aiters) if not strict else _zip_inner_strict(aiters)
-        async for items in inner:
-            yield items
+        while True:
+            iteration = await asyncio.gather(*[anext(iterator, __ZIP_MISSING) for iterator in iterators])
+            if any(item is __ZIP_MISSING for item in iteration):
+                break
+            yield tuple(iteration)
+        if not strict:
+            return
+        for i, item in enumerate(iteration):
+            plural = " " if i == 1 else "s 1-"
+            if item is not __ZIP_MISSING is iteration[0]:
+                raise ValueError(f"zip() argument {i + 1} is longer than argument{plural}{i}")
+            elif item is __ZIP_MISSING is not iteration[0]:
+                raise ValueError(f"zip() argument {i + 1} is shorter than argument{plural}{i}")
     finally:
         for iterator in aiters:
-            try:
-                aclose = iterator.aclose  # type: ignore
-            except AttributeError:
-                pass
-            else:
-                await aclose()
-
-
-async def _zip_inner(
-    aiters: Tuple[AsyncIterator[T], ...]
-) -> AsyncIterator[Tuple[T, ...]]:
-    """Direct zip transposing tuple-of-iterators to iterator-of-tuples"""
-    try:
-        while True:
-            yield (*[await anext(it) for it in aiters],)
-    except StopAsyncIteration:
-        return
-
-
-async def _zip_inner_strict(
-    aiters: Tuple[AsyncIterator[T], ...]
-) -> AsyncIterator[Tuple[T, ...]]:
-    """Length aware zip checking that all iterators are equal length"""
-    # track index of the last iterator we tried to anext
-    tried = 0
-    try:
-        while True:
-            items = []
-            for tried, _aiter in _sync_builtins.enumerate(aiters):  # noqa: B007
-                items.append(await anext(_aiter))
-            yield (*items,)
-    except StopAsyncIteration:
-        # after the first iterable provided an item, some later iterable was empty
-        if tried > 0:
-            plural = " " if tried == 1 else "s 1-"
-            raise ValueError(
-                f"zip() argument {tried+1} is shorter than argument{plural}{tried}"
-            ) from None
-        # after the first iterable was empty, some later iterable may be not
-        sentinel = object()
-        for tried, _aiter in _sync_builtins.enumerate(aiters):
-            if await anext(_aiter, sentinel) is not sentinel:
-                plural = " " if tried == 1 else "s 1-"
-                raise ValueError(
-                    f"zip() argument {tried+1} is longer than argument{plural}{tried}"
-                ) from None
-        return
+            if hasattr(iterator, "aclose"):
+                await iterator.aclose()  # type: ignore
 
 
 @overload
