@@ -1,24 +1,79 @@
-from typing import Generic, AsyncIterator, Tuple, List
+from typing import (
+    Generic,
+    AsyncIterator,
+    Tuple,
+    List,
+    Optional,
+    Callable,
+    Any,
+    overload,
+    Awaitable,
+)
 import heapq as _heapq
 
-from .builtins import aiter, enumerate as a_enumerate
-from ._typing import AnyIterable, LT
+from .builtins import enumerate as a_enumerate
+from ._core import aiter, awaitify
+from ._typing import AnyIterable, LT, T
 
 
 class _KeyIter(Generic[LT]):
     __slots__ = ("head", "tail", "reverse", "head_key", "key")
 
-    def __init__(self, head: LT, tail: AsyncIterator[LT], reverse: bool, head_key, key):
+    @overload
+    def __init__(
+        self,
+        head: T,
+        tail: AsyncIterator[T],
+        reverse: bool,
+        head_key: LT,
+        key: Callable[[T], Awaitable[LT]],
+    ):
+        pass
+
+    @overload
+    def __init__(
+        self, head: LT, tail: AsyncIterator[LT], reverse: bool, head_key: LT, key: None
+    ):
+        pass
+
+    def __init__(
+        self,
+        head: Any,
+        tail: AsyncIterator[Any],
+        reverse: bool,
+        head_key: LT,
+        key: Any,
+    ):
         self.head = head
         self.head_key = head_key
         self.tail = tail
         self.key = key
         self.reverse = reverse
 
+    @overload
+    @classmethod
+    def from_iters(
+        cls,
+        iterables: Tuple[AnyIterable[T], ...],
+        reverse: bool,
+        key: Callable[[T], Awaitable[LT]],
+    ) -> "AsyncIterator[_KeyIter[LT]]":
+        pass
+
+    @overload
+    @classmethod
+    def from_iters(
+        cls, iterables: Tuple[AnyIterable[LT], ...], reverse: bool, key: None
+    ) -> "AsyncIterator[_KeyIter[LT]]":
+        pass
+
     @classmethod
     async def from_iters(
-        cls, iterables: Tuple[AnyIterable[LT]], reverse: bool, key
-    ) -> "AsyncIterator[_KeyIter[LT]]":
+        cls,
+        iterables: Tuple[AnyIterable[Any], ...],
+        reverse: bool,
+        key: Optional[Callable[[Any], Any]],
+    ) -> "AsyncIterator[_KeyIter[Any]]":
         for iterable in iterables:
             iterator = aiter(iterable)
             try:
@@ -41,13 +96,38 @@ class _KeyIter(Generic[LT]):
             self.head_key = await self.key(head) if self.key is not None else head
             return True
 
-    def __lt__(self, other: "_KeyIter[LT]"):
+    def __lt__(self, other: "_KeyIter[LT]") -> bool:
         return self.reverse ^ (self.head_key < other.head_key)
 
 
-async def merge(
-    *iterables: AnyIterable[LT], key=None, reverse: bool = False
+@overload
+def merge(
+    *iterables: AnyIterable[LT], key: None = ..., reverse: bool = ...
 ) -> AsyncIterator[LT]:
+    pass
+
+
+@overload
+def merge(
+    *iterables: AnyIterable[T],
+    key: Callable[[T], Awaitable[LT]] = ...,
+    reverse: bool = ...
+) -> AsyncIterator[T]:
+    pass
+
+
+@overload
+def merge(
+    *iterables: AnyIterable[T], key: Callable[[T], LT] = ..., reverse: bool = ...
+) -> AsyncIterator[T]:
+    pass
+
+
+async def merge(
+    *iterables: AnyIterable[Any],
+    key: Optional[Callable[[Any], Any]] = None,
+    reverse: bool = False
+) -> AsyncIterator[Any]:
     """
     Merge all pre-sorted (async) ``iterables`` into a single sorted iterator
 
@@ -65,10 +145,13 @@ async def merge(
     is yielded before ``b``. Use ``reverse=True`` for descending sort order.
     The ``iterables`` must be pre-sorted in the same order.
     """
+    a_key = awaitify(key) if key is not None else None
     # sortable iterators with (reverse) position to ensure stable sort for ties
-    iter_heap: List[Tuple[_KeyIter, int]] = [
+    iter_heap: List[Tuple[_KeyIter[Any], int]] = [
         (itr, idx if not reverse else -idx)
-        async for idx, itr in a_enumerate(_KeyIter.from_iters(iterables, reverse, key))
+        async for idx, itr in a_enumerate(
+            _KeyIter.from_iters(iterables, reverse, a_key)
+        )
     ]
     try:
         _heapq.heapify(iter_heap)
