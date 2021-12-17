@@ -86,7 +86,7 @@ class _KeyIter(Generic[LT]):
 
     async def pull_head(self) -> bool:
         """
-        Pulling the next ``head`` element from the iterator and signal success
+        Pull the next ``head`` element from the iterator and signal success
         """
         try:
             self.head = head = await self.tail.__anext__()
