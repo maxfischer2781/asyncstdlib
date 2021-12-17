@@ -82,7 +82,7 @@ async def test_nsmallest_stdlib_key(sample, n):
 @pytest.mark.parametrize("sample", MINMAX_SAMPLES)
 @pytest.mark.parametrize("n", [0, 1, 2, 10, 100, 400, 999, 1000, 1100])
 @sync
-async def test_nlargest_stdlib(sample, n):
+async def test_nlargest_stdlib_key(sample, n):
     assert heapq.nlargest(n, sample, key=lambda x: -x) == await a.nlargest(
         asyncify(sample), n, key=lambda x: -x
     )
