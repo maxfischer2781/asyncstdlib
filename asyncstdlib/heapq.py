@@ -174,7 +174,7 @@ async def merge(
     finally:
         for itr, _ in iter_heap:
             if hasattr(itr.tail, "aclose"):
-                await itr.tail.aclose()
+                await itr.tail.aclose()  # type: ignore
 
 
 class ReverseLT(Generic[LT]):
