@@ -209,8 +209,7 @@ async def _largest(
         order_sign = -1 if reverse else 1
         n_heap = [
             (ordered(await key(item)), index * order_sign, item)
-            async for index, item
-            in a_zip(range(n), borrow(iterator))
+            async for index, item in a_zip(range(n), borrow(iterator))
         ]
         if not n_heap:
             return []

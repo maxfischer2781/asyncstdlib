@@ -70,16 +70,19 @@ async def test_nlargest_stdlib(sample, n):
     assert heapq.nlargest(n, sample) == await a.nlargest(asyncify(sample), n)
 
 
-
 @pytest.mark.parametrize("sample", MINMAX_SAMPLES)
 @pytest.mark.parametrize("n", [0, 1, 2, 10, 100, 400, 999, 1000, 1100])
 @sync
 async def test_nsmallest_stdlib_key(sample, n):
-    assert heapq.nsmallest(n, sample, key=lambda x: -x) == await a.nsmallest(asyncify(sample), n, key=lambda x: -x)
+    assert heapq.nsmallest(n, sample, key=lambda x: -x) == await a.nsmallest(
+        asyncify(sample), n, key=lambda x: -x
+    )
 
 
 @pytest.mark.parametrize("sample", MINMAX_SAMPLES)
 @pytest.mark.parametrize("n", [0, 1, 2, 10, 100, 400, 999, 1000, 1100])
 @sync
 async def test_nlargest_stdlib(sample, n):
-    assert heapq.nlargest(n, sample, key=lambda x: -x) == await a.nlargest(asyncify(sample), n, key=lambda x: -x)
+    assert heapq.nlargest(n, sample, key=lambda x: -x) == await a.nlargest(
+        asyncify(sample), n, key=lambda x: -x
+    )
