@@ -203,7 +203,9 @@ async def _largest(
     key: Callable[[T], Awaitable[LT]],
     reverse: bool,
 ) -> list[T]:
-    ordered: Callable[[SupportsLT], SupportsLT] = ReverseLT if reverse else lambda x: x  # type: ignore
+    ordered: Callable[[SupportsLT], SupportsLT] = (
+        ReverseLT if reverse else lambda x: x  # type: ignore
+    )
     async with ScopedIter(iterable) as iterator:
         # assign an ordering to items to solve ties
         order_sign = -1 if reverse else 1
@@ -246,7 +248,9 @@ async def nlargest(
     The result is equivalent to ``sorted(iterable, key=key, reverse=True)[:n]``,
     but ``iterable`` is consumed lazily and items are discarded eagerly.
     """
-    a_key: Callable[[Any], Awaitable[Any]] = awaitify(key) if key is not None else _identity  # type: ignore
+    a_key: Callable[[Any], Awaitable[Any]] = (
+        awaitify(key) if key is not None else _identity  # type: ignore
+    )
     return await _largest(iterable=iterable, n=n, key=a_key, reverse=False)
 
 
@@ -260,5 +264,7 @@ async def nsmallest(
 
     Provides the reverse functionality to :py:func:`~.nlargest`.
     """
-    a_key: Callable[[Any], Awaitable[Any]] = awaitify(key) if key is not None else _identity  # type: ignore
+    a_key: Callable[[Any], Awaitable[Any]] = (
+        awaitify(key) if key is not None else _identity  # type: ignore
+    )
     return await _largest(iterable=iterable, n=n, key=a_key, reverse=True)
