@@ -173,12 +173,8 @@ async def merge(
                 yield item
     finally:
         for itr, _ in iter_heap:
-            try:
-                aclose = itr.tail.aclose  # type: ignore
-            except AttributeError:
-                pass
-            else:
-                await aclose()
+            if hasattr(itr.tail, "aclose"):
+                await itr.tail.aclose()
 
 
 class ReverseLT(Generic[LT]):
