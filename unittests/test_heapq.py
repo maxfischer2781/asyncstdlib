@@ -45,3 +45,41 @@ async def test_merge_stdlib_key(samples, reverse):
             *map(asyncify, samples), key=awaitify(lambda x: -x), reverse=reverse
         )
     ]
+
+
+MINMAX_SAMPLES = [
+    [0, 3, 1, 4, 2, 5],
+    [0, -3, 1, -4, -2, 5],
+    # [i * 1.1 for i in range(20)],
+    # [random.randint(-5, 5) in range(20)],
+    # [i * i if i % 3 else -i * i for i in range(2000)],
+]
+
+
+@pytest.mark.parametrize("sample", MINMAX_SAMPLES)
+@pytest.mark.parametrize("n", [0, 1, 2, 10, 100, 400, 999, 1000, 1100])
+@sync
+async def test_nsmallest_stdlib(sample, n):
+    assert heapq.nsmallest(n, sample) == await a.nsmallest(asyncify(sample), n)
+
+
+@pytest.mark.parametrize("sample", MINMAX_SAMPLES)
+@pytest.mark.parametrize("n", [0, 1, 2, 10, 100, 400, 999, 1000, 1100])
+@sync
+async def test_nlargest_stdlib(sample, n):
+    assert heapq.nlargest(n, sample) == await a.nlargest(asyncify(sample), n)
+
+
+
+@pytest.mark.parametrize("sample", MINMAX_SAMPLES)
+@pytest.mark.parametrize("n", [0, 1, 2, 10, 100, 400, 999, 1000, 1100])
+@sync
+async def test_nsmallest_stdlib_key(sample, n):
+    assert heapq.nsmallest(n, sample, key=lambda x: -x) == await a.nsmallest(asyncify(sample), n, key=lambda x: -x)
+
+
+@pytest.mark.parametrize("sample", MINMAX_SAMPLES)
+@pytest.mark.parametrize("n", [0, 1, 2, 10, 100, 400, 999, 1000, 1100])
+@sync
+async def test_nlargest_stdlib(sample, n):
+    assert heapq.nlargest(n, sample, key=lambda x: -x) == await a.nlargest(asyncify(sample), n, key=lambda x: -x)

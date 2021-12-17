@@ -34,7 +34,7 @@ from .itertools import (
     groupby,
 )
 from .asynctools import borrow, scoped_iter, await_each, apply, sync
-from .heapq import merge
+from .heapq import merge, nlargest, nsmallest
 
 __version__ = "3.10.2"
 
@@ -86,4 +86,6 @@ __all__ = [
     "sync",
     # heapq
     "merge",
+    "nlargest",
+    "nsmallest",
 ]
