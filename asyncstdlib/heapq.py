@@ -198,7 +198,7 @@ async def _largest(
     n: int,
     key: Callable[[T], Awaitable[LT]],
     reverse: bool,
-) -> list[T]:
+) -> List[T]:
     ordered: Callable[[SupportsLT], SupportsLT] = (
         ReverseLT if reverse else lambda x: x  # type: ignore
     )
@@ -232,7 +232,7 @@ async def nlargest(
     iterable: AsyncIterator[T],
     n: int,
     key: Optional[Callable[[Any], Awaitable[Any]]] = None,
-) -> list[T]:
+) -> List[T]:
     """
     Return a sorted list of the ``n`` largest elements from the (async) iterable
 
@@ -254,7 +254,7 @@ async def nsmallest(
     iterable: AsyncIterator[T],
     n: int,
     key: Optional[Callable[[Any], Awaitable[Any]]] = None,
-) -> list[T]:
+) -> List[T]:
     """
     Return a sorted list of the ``n`` smallest elements from the (async) iterable
 
