@@ -31,7 +31,7 @@ The missing ``async`` toolbox
     :synopsis: The async standard library
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: The Async Toolbox
    :hidden:
 
@@ -43,7 +43,7 @@ The missing ``async`` toolbox
    source/api/asynctools
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Guides and Notes
    :hidden:
 
@@ -51,7 +51,7 @@ The missing ``async`` toolbox
    source/glossary
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Development & Maintenance
    :hidden:
 
