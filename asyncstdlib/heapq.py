@@ -138,7 +138,7 @@ async def merge(
 
     The optional ``key`` argument specifies a one-argument (async) callable, which
     provides a substitute for determining the sort order of each item.
-    The special value and default :py:data:`None` represents the identity functions,
+    The special value and default :py:data:`None` represents the identity function,
     comparing items directly.
 
     The default sort order is ascending, that is items with ``a < b`` imply ``a``

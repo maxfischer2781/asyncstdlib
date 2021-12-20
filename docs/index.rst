@@ -39,6 +39,7 @@ The missing ``async`` toolbox
    source/api/functools
    source/api/contextlib
    source/api/itertools
+   source/api/heapq
    source/api/asynctools
 
 .. toctree::
@@ -92,6 +93,12 @@ with the same name as those of the Python standard library.
     such as :py:func:`~asyncstdlib.itertools.cycle`,
     :py:func:`~asyncstdlib.itertools.chain`,
     or :py:func:`~asyncstdlib.itertools.accumulate`.
+
+:py:mod:`asyncstdlib.heapq`
+    Replicates any :py:mod:`heapq` tools that benefit from being asynchronous,
+    which is just :py:func:`~asyncstdlib.heapq.merge`,
+    :py:func:`~asyncstdlib.heapq.nlargest`, and
+    :py:func:`~asyncstdlib.heapq.nsmallest`.
 
 For simplicity, the :py:mod:`asyncstdlib` namespace also exposes all individual
 functions and classes directly.
