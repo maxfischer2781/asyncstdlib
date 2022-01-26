@@ -380,3 +380,45 @@ def sync(function: Callable[..., T]) -> Callable[..., Any]:
         return result
 
     return async_wrapped
+
+
+async def any_iter(
+    __iter: Union[
+        Awaitable[AnyIterable[Awaitable[T]]],
+        Awaitable[AnyIterable[T]],
+        AnyIterable[Awaitable[T]],
+        AnyIterable[T],
+    ]
+) -> AsyncIterator[T]:
+    """
+    Provide an async iterator for various forms of "asynchronous iterable"
+
+    Useful to uniformly handle async iterables, awaitable iterables, iterables of
+    awaitables and similar. Among other things, this matches all forms of
+    ``async def`` functions providing iterables.
+
+    .. code-block:: python3
+
+        import random
+        import asyncstdlib.asynctools as a
+
+        # AsyncIterator[T]
+        async def async_iter(n):
+            for i in range(n):
+                yield i
+
+        # Awaitable[Iterator[T]]
+        async def await_iter(n):
+            return [*range(n)]
+
+        some_iter = random.choice([async_iter, await_iter, range])
+        async for item in a.any_iter(some_iter(4)):
+            print(item)
+    """
+    iterable = __iter if not isinstance(__iter, Awaitable) else await __iter
+    if isinstance(__iter, AsyncIterable):
+        async for item in iterable:
+            yield item if not isinstance(item, Awaitable) else await item
+    else:
+        for item in iterable:
+            yield item if not isinstance(item, Awaitable) else await item

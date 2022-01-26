@@ -27,6 +27,11 @@ Async transforming
 
     .. versionadded:: 3.9.3
 
+.. autofunction:: any_iter(iter: (await) (async) iter (await) T)
+    :async-for: :T
+
+    .. versionadded:: 3.10.3
+
 .. autofunction:: await_each(awaitables: iter await T)
     :async-for: :T
 
