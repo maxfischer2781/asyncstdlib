@@ -414,6 +414,12 @@ async def any_iter(
         some_iter = random.choice([async_iter, await_iter, range])
         async for item in a.any_iter(some_iter(4)):
             print(item)
+
+    This function must eagerly resolve each "async layer" before checking if
+    the next layer is as expected. This incurs a performance penalty and
+    non-iterables may be left unusable by this.
+    Prefer :py:func:`~.builtins.iter` to test for iterables with :term:`EAFP`
+    and for performance when only simple iterables need handling.
     """
     iterable = __iter if not isinstance(__iter, Awaitable) else await __iter
     if isinstance(iterable, AsyncIterable):
