@@ -416,7 +416,7 @@ async def any_iter(
             print(item)
     """
     iterable = __iter if not isinstance(__iter, Awaitable) else await __iter
-    if isinstance(__iter, AsyncIterable):
+    if isinstance(iterable, AsyncIterable):
         async for item in iterable:
             yield item if not isinstance(item, Awaitable) else await item
     else:
