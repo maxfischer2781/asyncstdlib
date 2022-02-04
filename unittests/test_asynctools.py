@@ -284,4 +284,4 @@ async def await_async_iter_await(n: int):
 @sync
 async def test_any_iter(n, any_iterable_t):
     iterable = any_iterable_t(n)
-    assert [item async for item in a.asynctools.any_iter(iterable)] == [*range(n)]
+    assert [item async for item in a.any_iter(iterable)] == [*range(n)]
