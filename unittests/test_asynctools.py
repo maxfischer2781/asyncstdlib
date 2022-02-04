@@ -230,7 +230,7 @@ async def test_sync():
 
     t1 = await a.sync(check_3)(x=100)
     t2 = await a.sync(check_4)(x=5, y=5, z=10)
-    t3 = await a.sync(lambda x: x ** 3)(x=5)
+    t3 = await a.sync(lambda x: x**3)(x=5)
 
     with pytest.raises(TypeError):
         a.sync("string")(10)
@@ -252,3 +252,36 @@ async def test_sync_awaitable():
         return coro()
 
     assert await nocoro_async(5) == 5
+
+
+async def await_iter(n: int):
+    return [*range(n)]
+
+
+async def async_iter(n: int):
+    for i in range(n):
+        yield i
+
+
+async def await_value(i):
+    return i
+
+
+async def await_iter_await(n: int):
+    return [await_value(i) for i in range(n)]
+
+
+async def await_async_iter_await(n: int):
+    for i in range(n):
+        yield await_value(i)
+
+
+@pytest.mark.parametrize("n", [0, 1, 12])
+@pytest.mark.parametrize(
+    "any_iterable_t",
+    [range, await_iter, async_iter, await_iter_await, await_async_iter_await],
+)
+@sync
+async def test_any_iter(n, any_iterable_t):
+    iterable = any_iterable_t(n)
+    assert [item async for item in a.asynctools.any_iter(iterable)] == [*range(n)]
