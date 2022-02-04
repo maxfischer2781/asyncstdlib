@@ -242,19 +242,23 @@ class CallKey:
         return cls(key)
 
 
+def cache__get(self, instance, owner):
+    """Descriptor ``__get__`` for caches to bind them on lookup"""
+    bound_wrapped = self.__wrapped__.__get__(instance, owner)
+    return LRUAsyncBoundCallable(self, bound_wrapped.__self__)
+
+
 @public_module("asyncstdlib.functools")
 class EmptyLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` in an async LRU cache without any capacity"""
     __slots__ = ("__wrapped__", "__misses", "__typed")
 
+    __get__ = cache__get
+
     def __init__(self, call: AC, typed: bool):
         self.__wrapped__ = call
-        self.__typed = typed
         self.__misses = 0
-
-    def __get__(self, instance, owner):
-        bound_wrapped = self.__wrapped__.__get__(instance, owner)
-        return LRUAsyncBoundCallable(self, bound_wrapped.__self__)
+        self.__typed = typed
 
     async def __call__(self, *args, **kwargs):
         self.__misses += 1
