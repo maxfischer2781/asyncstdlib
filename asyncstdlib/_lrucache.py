@@ -83,6 +83,31 @@ class LRUAsyncCallable(Protocol[AC]):
         """Evict all call argument patterns and their results from the cache"""
 
 
+@public_module("asyncstdlib.functools")
+class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
+    __slots__ = ("__lru", "__self")
+
+    def __init__(self, lru: LRUAsyncCallable[AC], __self__):
+        self.__lru = lru
+        self.__self = __self__
+
+    @property
+    def __wrapped__(self):
+        return self.__lru.__wrapped__
+
+    def __call__(self, *args, **kwargs):
+        return self.__lru(self.__self, *args, **kwargs)
+
+    def cache_parameters(self) -> CacheParameters:
+        return self.__lru.cache_parameters()
+
+    def cache_info(self) -> CacheInfo:
+        return self.__lru.cache_info()
+
+    def cache_clear(self) -> None:
+        return self.__lru.cache_clear()
+
+
 @overload
 def lru_cache(maxsize: AC, typed: bool = ...) -> LRUAsyncCallable[AC]:
     ...
@@ -158,7 +183,7 @@ def lru_cache(
         if maxsize is None:
             wrapper = _unbound_lru(function=function, typed=typed)
         elif maxsize == 0:
-            wrapper = _empty_lru(function=function, typed=typed)
+            wrapper = EmptyLRUAsyncCallable(function, typed)
         else:
             wrapper = _bounded_lru(function=function, maxsize=maxsize, typed=typed)
         return update_wrapper(wrapper, function)
@@ -217,30 +242,32 @@ class CallKey:
         return cls(key)
 
 
-def _empty_lru(function: AC, typed: bool) -> LRUAsyncCallable[AC]:
-    """Wrap the async ``function`` in an async LRU cache without any capacity"""
-    # cache statistics
-    misses = 0
+@public_module("asyncstdlib.functools")
+class EmptyLRUAsyncCallable(LRUAsyncCallable[AC]):
+    """Wrap the async ``call`` in an async LRU cache without any capacity"""
+    __slots__ = ("__wrapped__", "__misses", "__typed")
 
-    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
-        nonlocal misses
-        misses += 1
-        return await function(*args, **kwargs)
+    def __init__(self, call: AC, typed: bool):
+        self.__wrapped__ = call
+        self.__typed = typed
+        self.__misses = 0
 
-    def cache_parameters() -> CacheParameters:
-        return CacheParameters(maxsize=0, typed=typed)
+    def __get__(self, instance, owner):
+        bound_wrapped = self.__wrapped__.__get__(instance, owner)
+        return LRUAsyncBoundCallable(self, bound_wrapped.__self__)
 
-    def cache_info() -> CacheInfo:
-        return CacheInfo(0, misses, 0, 0)
+    async def __call__(self, *args, **kwargs):
+        self.__misses += 1
+        return await self.__wrapped__(*args, **kwargs)
 
-    def cache_clear() -> None:
-        nonlocal misses
-        misses = 0
+    def cache_parameters(self) -> CacheParameters:
+        return CacheParameters(maxsize=0, typed=self.__typed)
 
-    wrapper.cache_parameters = cache_parameters  # type: ignore
-    wrapper.cache_info = cache_info  # type: ignore
-    wrapper.cache_clear = cache_clear  # type: ignore
-    return wrapper  # type: ignore
+    def cache_info(self) -> CacheInfo:
+        return CacheInfo(0, self.__misses, 0, 0)
+
+    def cache_clear(self) -> None:
+        self.__misses = 0
 
 
 def _unbound_lru(function: AC, typed: bool) -> LRUAsyncCallable[AC]:
