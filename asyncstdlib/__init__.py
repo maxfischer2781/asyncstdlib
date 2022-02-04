@@ -33,7 +33,7 @@ from .itertools import (
     zip_longest,
     groupby,
 )
-from .asynctools import borrow, scoped_iter, await_each, apply, sync
+from .asynctools import borrow, scoped_iter, await_each, any_iter, apply, sync
 from .heapq import merge, nlargest, nsmallest
 
 __version__ = "3.10.2"
@@ -82,6 +82,7 @@ __all__ = [
     "borrow",
     "scoped_iter",
     "await_each",
+    "any_iter",
     "apply",
     "sync",
     # heapq

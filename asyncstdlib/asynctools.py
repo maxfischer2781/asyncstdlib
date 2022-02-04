@@ -380,3 +380,51 @@ def sync(function: Callable[..., T]) -> Callable[..., Any]:
         return result
 
     return async_wrapped
+
+
+async def any_iter(
+    __iter: Union[
+        Awaitable[AnyIterable[Awaitable[T]]],
+        Awaitable[AnyIterable[T]],
+        AnyIterable[Awaitable[T]],
+        AnyIterable[T],
+    ]
+) -> AsyncIterator[T]:
+    """
+    Provide an async iterator for various forms of "asynchronous iterable"
+
+    Useful to uniformly handle async iterables, awaitable iterables, iterables of
+    awaitables, and similar in an ``async for`` loop. Among other things, this
+    matches all forms of ``async def`` functions providing iterables.
+
+    .. code-block:: python3
+
+        import random
+        import asyncstdlib as a
+
+        # AsyncIterator[T]
+        async def async_iter(n):
+            for i in range(n):
+                yield i
+
+        # Awaitable[Iterator[T]]
+        async def await_iter(n):
+            return [*range(n)]
+
+        some_iter = random.choice([async_iter, await_iter, range])
+        async for item in a.any_iter(some_iter(4)):
+            print(item)
+
+    This function must eagerly resolve each "async layer" before checking if
+    the next layer is as expected. This incurs a performance penalty and
+    non-iterables may be left unusable by this.
+    Prefer :py:func:`~.builtins.iter` to test for iterables with :term:`EAFP`
+    and for performance when only simple iterables need handling.
+    """
+    iterable = __iter if not isinstance(__iter, Awaitable) else await __iter
+    if isinstance(iterable, AsyncIterable):
+        async for item in iterable:
+            yield item if not isinstance(item, Awaitable) else await item
+    else:
+        for item in iterable:
+            yield item if not isinstance(item, Awaitable) else await item
