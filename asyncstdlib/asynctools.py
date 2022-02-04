@@ -394,13 +394,13 @@ async def any_iter(
     Provide an async iterator for various forms of "asynchronous iterable"
 
     Useful to uniformly handle async iterables, awaitable iterables, iterables of
-    awaitables and similar in an ``async for`` loop. Among other things, this
+    awaitables, and similar in an ``async for`` loop. Among other things, this
     matches all forms of ``async def`` functions providing iterables.
 
     .. code-block:: python3
 
         import random
-        import asyncstdlib.asynctools as a
+        import asyncstdlib as a
 
         # AsyncIterator[T]
         async def async_iter(n):
