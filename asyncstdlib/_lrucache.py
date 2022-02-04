@@ -181,7 +181,7 @@ def lru_cache(
     def lru_decorator(function: AC) -> LRUAsyncCallable[AC]:
         assert not callable(maxsize)
         if maxsize is None:
-            wrapper = _unbound_lru(function=function, typed=typed)
+            wrapper = UnboundLRUAsyncCallable(function, typed)
         elif maxsize == 0:
             wrapper = EmptyLRUAsyncCallable(function, typed)
         else:
@@ -274,49 +274,47 @@ class EmptyLRUAsyncCallable(LRUAsyncCallable[AC]):
         self.__misses = 0
 
 
-def _unbound_lru(function: AC, typed: bool) -> LRUAsyncCallable[AC]:
-    """Wrap the async ``function`` in an async LRU cache with infinite capacity"""
-    # local lookup
-    make_key = CallKey.from_call
-    # cache statistics
-    hits = 0
-    misses = 0
-    # cache content
-    cache: Dict[Union[CallKey, int, str], Any] = {}
+@public_module("asyncstdlib.functools")
+class UnboundLRUAsyncCallable(LRUAsyncCallable[AC]):
+    """Wrap the async ``call`` in an async LRU cache with infinite capacity"""
+    __slots__ = ("__wrapped__", "__hits", "__misses", "__typed", "__cache")
 
-    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
-        nonlocal hits, misses
-        key = make_key(args, kwargs, typed=typed)
+    __get__ = cache__get
+
+    def __init__(self, call: AC, typed: bool):
+        self.__wrapped__ = call
+        self.__hits = 0
+        self.__misses = 0
+        self.__typed = typed
+        self.__cache: Dict[Union[CallKey, int, str], Any] = {}
+
+    async def __call__(self, *args, **kwargs):
+        key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
-            result = cache[key]
+            result = self.__cache[key]
         except KeyError:
-            misses += 1
-            result = await function(*args, **kwargs)
+            self.__misses += 1
+            result = await self.__wrapped__(*args, **kwargs)
             # function finished early for another call with the same arguments
             # the cache has been updated already, do nothing to it
-            if key not in cache:
-                cache[key] = result
+            if key not in self.__cache:
+                self.__cache[key] = result
             return result
         else:
-            hits += 1
+            self.__hits += 1
             return result
 
-    def cache_parameters() -> CacheParameters:
-        return CacheParameters(maxsize=None, typed=typed)
+    def cache_parameters(self) -> CacheParameters:
+        return CacheParameters(maxsize=None, typed=self.__typed)
 
-    def cache_info() -> CacheInfo:
-        return CacheInfo(hits, misses, None, len(cache))
+    def cache_info(self) -> CacheInfo:
+        return CacheInfo(self.__hits, self.__misses, None, len(self.__cache))
 
-    def cache_clear() -> None:
-        nonlocal hits, misses
-        misses = 0
-        hits = 0
-        cache.clear()
+    def cache_clear(self) -> None:
+        self.__hits = 0
+        self.__misses = 0
+        self.__cache.clear()
 
-    wrapper.cache_parameters = cache_parameters  # type: ignore
-    wrapper.cache_info = cache_info  # type: ignore
-    wrapper.cache_clear = cache_clear  # type: ignore
-    return wrapper  # type: ignore
 
 
 def _bounded_lru(function: AC, typed: bool, maxsize: int) -> LRUAsyncCallable[AC]:
