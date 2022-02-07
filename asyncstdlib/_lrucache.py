@@ -169,8 +169,8 @@ def lru_cache(
         maxsize = 0 if maxsize < 0 else maxsize
     elif callable(maxsize):
         # used as function decorator, first arg is the function to be wrapped
-        fast_wrapper = _bounded_lru(
-            function=cast(AC, maxsize), maxsize=128, typed=typed
+        fast_wrapper = BoundedLRUAsyncCallable(
+            cast(AC, maxsize), typed, 128,
         )
         return update_wrapper(fast_wrapper, maxsize)
     elif maxsize is not None:
@@ -185,7 +185,7 @@ def lru_cache(
         elif maxsize == 0:
             wrapper = EmptyLRUAsyncCallable(function, typed)
         else:
-            wrapper = _bounded_lru(function=function, maxsize=maxsize, typed=typed)
+            wrapper = BoundedLRUAsyncCallable(function, typed, maxsize)
         return update_wrapper(wrapper, function)
 
     return lru_decorator
@@ -316,60 +316,54 @@ class UnboundLRUAsyncCallable(LRUAsyncCallable[AC]):
         self.__cache.clear()
 
 
+@public_module("asyncstdlib.functools")
+class BoundedLRUAsyncCallable(LRUAsyncCallable[AC]):
+    """Wrap the async ``call`` in an async LRU cache with infinite capacity"""
+    __slots__ = ("__wrapped__", "__hits", "__misses", "__typed", "__maxsize", "__cache")
 
-def _bounded_lru(function: AC, typed: bool, maxsize: int) -> LRUAsyncCallable[AC]:
-    """Wrap the async ``function`` in an async LRU cache with fixed capacity"""
-    # local lookup
-    make_key = CallKey.from_call
-    # cache statistics
-    hits = 0
-    misses = 0
-    # cache content
-    cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
-    filled = False
+    __get__ = cache__get
 
-    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
-        nonlocal hits, misses, filled
-        key = make_key(args, kwargs, typed=typed)
+    def __init__(self, call: AC, typed: bool, maxsize: int):
+        self.__wrapped__ = call
+        self.__hits = 0
+        self.__misses = 0
+        self.__typed = typed
+        self.__maxsize = maxsize
+        self.__cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
+
+    async def __call__(self, *args, **kwargs):
+        key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
-            result = cache[key]
+            result = self.__cache[key]
         except KeyError:
-            misses += 1
-            result = await function(*args, **kwargs)
+            self.__misses += 1
+            result = await self.__wrapped__(*args, **kwargs)
             # function finished early for another call with the same arguments
             # the cache has been updated already, do nothing to it
-            if key in cache:
+            if key in self.__cache:
                 pass
             # the cache is filled already
             # push the new content to the current root and rotate the list once
-            elif filled:
-                cache.popitem(last=False)
-                cache[key] = result
+            elif len(self.__cache) >= self.__maxsize:
+                self.__cache.popitem(last=False)
+                self.__cache[key] = result
             # the cache still has room
             # insert the new element at the back
             else:
-                cache[key] = result
-                filled = len(cache) >= maxsize
+                self.__cache[key] = result
             return result
         else:
-            cache.move_to_end(key, last=True)
-            hits += 1
+            self.__cache.move_to_end(key, last=True)
+            self.__hits += 1
             return result
 
-    def cache_parameters() -> CacheParameters:
-        return CacheParameters(maxsize=maxsize, typed=typed)
+    def cache_parameters(self) -> CacheParameters:
+        return CacheParameters(maxsize=self.__maxsize, typed=self.__typed)
 
-    def cache_info() -> CacheInfo:
-        return CacheInfo(hits, misses, maxsize, len(cache))
+    def cache_info(self) -> CacheInfo:
+        return CacheInfo(self.__hits, self.__misses, self.__maxsize, len(self.__cache))
 
-    def cache_clear() -> None:
-        nonlocal hits, misses, filled
-        misses = 0
-        hits = 0
-        filled = False
-        cache.clear()
-
-    wrapper.cache_parameters = cache_parameters  # type: ignore
-    wrapper.cache_info = cache_info  # type: ignore
-    wrapper.cache_clear = cache_clear  # type: ignore
-    return wrapper  # type: ignore
+    def cache_clear(self) -> None:
+        self.__hits = 0
+        self.__misses = 0
+        self.__cache.clear()
