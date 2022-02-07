@@ -85,18 +85,23 @@ class LRUAsyncCallable(Protocol[AC]):
 
 @public_module("asyncstdlib.functools")
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
-    __slots__ = ("__lru", "__self")
+    """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
+    __slots__ = ("__lru", "__self__")
 
     def __init__(self, lru: LRUAsyncCallable[AC], __self__):
         self.__lru = lru
-        self.__self = __self__
+        self.__self__ = __self__
 
     @property
     def __wrapped__(self):
         return self.__lru.__wrapped__
 
+    @property
+    def __func__(self):
+        return self.__lru
+
     def __call__(self, *args, **kwargs):
-        return self.__lru(self.__self, *args, **kwargs)
+        return self.__lru(self.__self__, *args, **kwargs)
 
     def cache_parameters(self) -> CacheParameters:
         return self.__lru.cache_parameters()
