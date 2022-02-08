@@ -132,14 +132,14 @@ def lru_cache(
     """
     Least Recently Used cache for async functions
 
-    Applies an LRU cache, mapping the most recent function call arguments
-    to the *awaited* function return value. This makes this cache appropriate for
-    :term:`coroutine functions <coroutine function>`, :py:func:`~functools.partial`
-    coroutines and any other callable that returns an :term:`awaitable`.
+    Applies an LRU cache storing call arguments and their *awaited* return value.
+    This is appropriate for :term:`coroutine functions <coroutine function>`,
+    :py:func:`~functools.partial` coroutines and any other callable that returns
+    an :term:`awaitable`.
 
-    Arguments to the cached function must be :term:`hashable`. On a successful cache
-    hit, the underlying function is *not* called. This means any side-effects, including
-    scheduling in an internal event loop, are skipped. Ideally, ``lru_cache`` is used
+    Arguments to the cached function must be :term:`hashable`; when the arguments are
+    in the cache, the underlying function is *not* called. This means any side-effects,
+    including scheduling in an event loop, are skipped. Ideally, ``lru_cache`` is used
     for long-running queries or requests that return the same result for the same input.
 
     The maximum number of cached items is defined by ``maxsize``:
@@ -155,19 +155,20 @@ def lru_cache(
       argument pattern adds an entry to the cache; patterns and values are never
       automatically evicted.
 
-    The cache can always be explicitly emptied via
-    :py:meth:`~LRUAsyncCallable.cache_clear`.
+    In addition to automatic cache eviction from ``maxsize``, the cache can be
+    explicitly emptied via :py:meth:`~LRUAsyncCallable.cache_clear`.
     Use the cache's :py:meth:`~LRUAsyncCallable.cache_info` to inspect the cache's
     performance and filling level.
 
     If ``typed`` is :py:data:`True`, values in argument patterns are compared by
-    value *and* type. For example, this means that passing ``3`` and ``3.0`` as
-    the same argument are treated as distinct pattern elements.
+    value *and* type. For example, this means ``3`` and ``3.0`` are treated as
+    distinct arguments; however, this is not applied recursively so the type of
+    both ``(3, 4)`` and ``(3.0, 4.0)`` is the same.
 
     .. note::
 
-        This wrapper is intended for use with a single event loop, and supports
-        overlapping concurrent calls.
+        This LRU cache supports overlapping ``await`` calls, provided that the
+        wrapped async function does as well.
         Unlike the original :py:func:`functools.lru_cache`, it is not thread-safe.
     """
     if isinstance(maxsize, int):
