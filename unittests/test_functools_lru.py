@@ -72,25 +72,25 @@ async def test_method(size, counter_factory):
                 misses = 1 if size != 0 else reset * 5 + access + 1
                 assert misses == await instance.count()
     counter_type.count.cache_clear()
-    # classmethod does not respect descriptors up to 3.8
-    if sys.version_info >= (3, 9) or not isinstance(
-        counter_type.__dict__["count"], classmethod
-    ):
-        # caching with resetting everything
-        for _instance in range(4):
-            instance = counter_type()
-            for reset in range(5):
-                for access in range(5):
-                    misses = reset + 1 if size != 0 else reset * 5 + access + 1
-                    assert misses == await instance.count()
-                instance.count.cache_clear()
-        counter_type.count.cache_clear()
-    # caching with resetting specific item
+    # caching with resetting everything
     for _instance in range(4):
         instance = counter_type()
         for reset in range(5):
             for access in range(5):
-                misses = reset * 5 + access + 1
+                misses = reset + 1 if size != 0 else reset * 5 + access + 1
                 assert misses == await instance.count()
-                instance.count.cache_discard()
+            instance.count.cache_clear()
+    counter_type.count.cache_clear()
+    # classmethod does not respect descriptors up to 3.8
+    if sys.version_info >= (3, 9) or not isinstance(
+        counter_type.__dict__["count"], classmethod
+    ):
+        # caching with resetting specific item
+        for _instance in range(4):
+            instance = counter_type()
+            for reset in range(5):
+                for access in range(5):
+                    misses = reset * 5 + access + 1
+                    assert misses == await instance.count()
+                    instance.count.cache_discard()
     counter_type.count.cache_clear()
