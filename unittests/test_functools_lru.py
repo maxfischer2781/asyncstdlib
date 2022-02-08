@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 import asyncstdlib as a
@@ -5,11 +7,7 @@ import asyncstdlib as a
 from .utility import sync
 
 
-@pytest.mark.parametrize("size", [0, 3, 10, None])
-@sync
-async def test_method(size):
-    """Test wrapping a method"""
-
+def method_counter(size):
     class Counter:
         def __init__(self):
             self._count = 0
@@ -19,14 +17,10 @@ async def test_method(size):
             self._count += 1
             return self._count
 
-    await _test_counter(size, Counter)
+    return Counter
 
 
-@pytest.mark.parametrize("size", [0, 3, 10, None])
-@sync
-async def test_classmethod(size):
-    """Test wrapping a classmethod"""
-
+def classmethod_counter(size):
     class Counter:
         _count = 0
 
@@ -39,14 +33,10 @@ async def test_classmethod(size):
             cls._count += 1
             return cls._count
 
-    await _test_counter(size, Counter)
+    return Counter
 
 
-@pytest.mark.parametrize("size", [0, 3, 10, None])
-@sync
-async def test_staticmethod(size):
-    """Test wrapping a staticmethod"""
-
+def staticmethod_counter(size):
     # I'm sorry for writing this test – please don't do this at home!
     _count = 0
 
@@ -62,16 +52,19 @@ async def test_staticmethod(size):
             _count += 1
             return _count
 
-    await _test_counter(size, Counter)
+    return Counter
 
 
-async def _test_counter(size, counter_type):
-    await _test_counting(size, counter_type)
-    await _test_cache_clear(size, counter_type)
-    await _test_cache_discard(counter_type)
+@pytest.mark.parametrize("size", [0, 3, 10, None])
+@pytest.mark.parametrize(
+    "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
+)
+@sync
+async def test_method(size, counter_factory):
+    """Test wrapping various method kinds"""
 
-
-async def _test_counting(size, counter_type):
+    counter_type = counter_factory(size)
+    # caching without resetting
     for _instance in range(4):
         instance = counter_type()
         for reset in range(5):
@@ -79,20 +72,20 @@ async def _test_counting(size, counter_type):
                 misses = 1 if size != 0 else reset * 5 + access + 1
                 assert misses == await instance.count()
     counter_type.count.cache_clear()
-
-
-async def _test_cache_clear(size, counter_type):
-    for _instance in range(4):
-        instance = counter_type()
-        for reset in range(5):
-            for access in range(5):
-                misses = reset + 1 if size != 0 else reset * 5 + access + 1
-                assert misses == await instance.count()
-            instance.count.cache_clear()
-    counter_type.count.cache_clear()
-
-
-async def _test_cache_discard(counter_type):
+    # classmethod does not respect descriptors up to 3.8
+    if sys.version_info >= (3, 9) or not isinstance(
+        counter_type.__dict__["count"], classmethod
+    ):
+        # caching with resetting everything
+        for _instance in range(4):
+            instance = counter_type()
+            for reset in range(5):
+                for access in range(5):
+                    misses = reset + 1 if size != 0 else reset * 5 + access + 1
+                    assert misses == await instance.count()
+                instance.count.cache_clear()
+        counter_type.count.cache_clear()
+    # caching with resetting specific item
     for _instance in range(4):
         instance = counter_type()
         for reset in range(5):
