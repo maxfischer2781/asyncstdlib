@@ -89,6 +89,7 @@ class LRUAsyncCallable(Protocol[AC]):
 @public_module("asyncstdlib.functools")
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
     """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
+
     __slots__ = ("__lru", "__self__")
 
     def __init__(self, lru: LRUAsyncCallable[AC], __self__):
@@ -181,9 +182,7 @@ def lru_cache(
         maxsize = 0 if maxsize < 0 else maxsize
     elif callable(maxsize):
         # used as function decorator, first arg is the function to be wrapped
-        fast_wrapper = CachedLRUAsyncCallable(
-            cast(AC, maxsize), typed, 128,
-        )
+        fast_wrapper = CachedLRUAsyncCallable(cast(AC, maxsize), typed, 128)
         return update_wrapper(fast_wrapper, maxsize)
     elif maxsize is not None:
         raise TypeError(
@@ -264,6 +263,7 @@ def cache__get(self, instance, owner):
 @public_module("asyncstdlib.functools")
 class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` to track accesses as for caching/memoization"""
+
     __slots__ = ("__wrapped__", "__misses", "__typed")
 
     __get__ = cache__get
@@ -293,6 +293,7 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
 @public_module("asyncstdlib.functools")
 class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async memoization"""
+
     __slots__ = ("__wrapped__", "__hits", "__misses", "__typed", "__cache")
 
     __get__ = cache__get
@@ -338,6 +339,7 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
 @public_module("asyncstdlib.functools")
 class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async LRU caching of finite capacity"""
+
     __slots__ = ("__wrapped__", "__hits", "__misses", "__typed", "__maxsize", "__cache")
 
     __get__ = cache__get
