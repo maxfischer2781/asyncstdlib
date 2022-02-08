@@ -256,8 +256,9 @@ class CallKey:
 
 def cache__get(self, instance, owner):
     """Descriptor ``__get__`` for caches to bind them on lookup"""
-    bound_wrapped = self.__wrapped__.__get__(instance, owner)
-    return LRUAsyncBoundCallable(self, bound_wrapped.__self__)
+    if instance is None:
+        return self
+    return LRUAsyncBoundCallable(self, instance)
 
 
 @public_module("asyncstdlib.functools")
