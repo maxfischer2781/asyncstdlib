@@ -19,7 +19,7 @@ async def test_method(size):
             self._count += 1
             return self._count
 
-    await _test_counting(size, Counter)
+    await _test_counter(size, Counter)
 
 
 @pytest.mark.parametrize("size", [0, 3, 10, None])
@@ -39,7 +39,7 @@ async def test_classmethod(size):
             cls._count += 1
             return cls._count
 
-    await _test_counting(size, Counter)
+    await _test_counter(size, Counter)
 
 
 @pytest.mark.parametrize("size", [0, 3, 10, None])
@@ -62,7 +62,13 @@ async def test_staticmethod(size):
             _count += 1
             return _count
 
-    await _test_counting(size, Counter)
+    await _test_counter(size, Counter)
+
+
+async def _test_counter(size, counter_type):
+    await _test_counting(size, counter_type)
+    await _test_cache_clear(size, counter_type)
+    await _test_cache_discard(counter_type)
 
 
 async def _test_counting(size, counter_type):
@@ -70,6 +76,28 @@ async def _test_counting(size, counter_type):
         instance = counter_type()
         for reset in range(5):
             for access in range(5):
+                misses = 1 if size != 0 else reset * 5 + access + 1
+                assert misses == await instance.count()
+    counter_type.count.cache_clear()
+
+
+async def _test_cache_clear(size, counter_type):
+    for _instance in range(4):
+        instance = counter_type()
+        for reset in range(5):
+            for access in range(5):
                 misses = reset + 1 if size != 0 else reset * 5 + access + 1
                 assert misses == await instance.count()
             instance.count.cache_clear()
+    counter_type.count.cache_clear()
+
+
+async def _test_cache_discard(counter_type):
+    for _instance in range(4):
+        instance = counter_type()
+        for reset in range(5):
+            for access in range(5):
+                misses = reset * 5 + access + 1
+                assert misses == await instance.count()
+                instance.count.cache_discard()
+    counter_type.count.cache_clear()
