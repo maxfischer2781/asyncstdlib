@@ -82,6 +82,9 @@ class LRUAsyncCallable(Protocol[AC]):
     def cache_clear(self) -> None:
         """Evict all call argument patterns and their results from the cache"""
 
+    def cache_discard(self, *args, **kwargs) -> None:
+        """Evict the call argument pattern and its result from the cache"""
+
 
 @public_module("asyncstdlib.functools")
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
@@ -111,6 +114,9 @@ class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
 
     def cache_clear(self) -> None:
         return self.__lru.cache_clear()
+
+    def cache_discard(self, *args, **kwargs) -> None:
+        return self.__lru.cache_discard(self.__self__, *args, **kwargs)
 
 
 @overload
@@ -279,6 +285,9 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     def cache_clear(self) -> None:
         self.__misses = 0
 
+    def cache_discard(self, *args, **kwargs) -> None:
+        return
+
 
 @public_module("asyncstdlib.functools")
 class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
@@ -320,6 +329,9 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
         self.__hits = 0
         self.__misses = 0
         self.__cache.clear()
+
+    def cache_discard(self, *args, **kwargs) -> None:
+        self.__cache.pop(CallKey.from_call(args, kwargs, typed=self.__typed), None)
 
 
 @public_module("asyncstdlib.functools")
@@ -373,3 +385,6 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
         self.__hits = 0
         self.__misses = 0
         self.__cache.clear()
+
+    def cache_discard(self, *args, **kwargs) -> None:
+        self.__cache.pop(CallKey.from_call(args, kwargs, typed=self.__typed), None)
