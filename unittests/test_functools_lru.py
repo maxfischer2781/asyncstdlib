@@ -60,19 +60,26 @@ def staticmethod_counter(size):
     "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
 )
 @sync
-async def test_method(size, counter_factory):
-    """Test wrapping various method kinds"""
+async def test_method_plain(size, counter_factory):
+    """Test caching without resetting"""
 
     counter_type = counter_factory(size)
-    # caching without resetting
     for _instance in range(4):
         instance = counter_type()
         for reset in range(5):
             for access in range(5):
                 misses = 1 if size != 0 else reset * 5 + access + 1
                 assert misses == await instance.count()
-    counter_type.count.cache_clear()
-    # caching with resetting everything
+
+
+@pytest.mark.parametrize("size", [0, 3, 10, None])
+@pytest.mark.parametrize(
+    "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
+)
+@sync
+async def test_method_clear(size, counter_factory):
+    """Test caching with resetting everything"""
+    counter_type = counter_factory(size)
     for _instance in range(4):
         instance = counter_type()
         for reset in range(5):
@@ -80,17 +87,51 @@ async def test_method(size, counter_factory):
                 misses = reset + 1 if size != 0 else reset * 5 + access + 1
                 assert misses == await instance.count()
             instance.count.cache_clear()
-    counter_type.count.cache_clear()
-    # classmethod does not respect descriptors up to 3.8
-    if sys.version_info >= (3, 9) or not isinstance(
-        counter_type.__dict__["count"], classmethod
+
+
+@pytest.mark.parametrize("size", [0, 3, 10, None])
+@pytest.mark.parametrize(
+    "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
+)
+@sync
+async def test_method_discard(size, counter_factory):
+    """Test caching with resetting specific item"""
+    counter_type = counter_factory(size)
+    if (
+        sys.version_info <= (3, 8)
+        and type(counter_type.__dict__["count"]) is classmethod
     ):
-        # caching with resetting specific item
-        for _instance in range(4):
-            instance = counter_type()
-            for reset in range(5):
-                for access in range(5):
-                    misses = reset * 5 + access + 1
-                    assert misses == await instance.count()
-                    instance.count.cache_discard()
-    counter_type.count.cache_clear()
+        pytest.skip("classmethod does not respect descriptors up to 3.8")
+    for _instance in range(4):
+        instance = counter_type()
+        for reset in range(5):
+            for access in range(5):
+                misses = reset * 5 + access + 1
+                assert misses == await instance.count()
+                instance.count.cache_discard()
+
+
+@pytest.mark.parametrize("size", [0, 3, 10, None])
+@pytest.mark.parametrize(
+    "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
+)
+@sync
+async def test_method_metadata(size, counter_factory):
+    """Test cache metadata on methods"""
+    tp = counter_factory(size)
+    for instance in range(4):
+        ct = tp()
+        for reset in range(5):
+            for access in range(5):
+                await ct.count()
+                assert tp.count.__wrapped__ == ct.count.__wrapped__
+                assert tp.count.cache_parameters() == ct.count.cache_parameters()
+                assert tp.count.cache_info() == ct.count.cache_info()
+                assert (
+                    ct.count.cache_info().maxsize
+                    == ct.count.cache_parameters()["maxsize"]
+                    == size
+                )
+                totals = instance * 25 + reset * 5 + (access + 1)
+                hits, misses, *_ = ct.count.cache_info()
+                assert totals == hits + misses
