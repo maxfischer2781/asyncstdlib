@@ -119,6 +119,10 @@ class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
     def cache_discard(self, *args, **kwargs) -> None:
         return self.__lru.cache_discard(self.__self__, *args, **kwargs)
 
+    def __repr__(self):
+        name = getattr(self.__wrapped__, "__qualname__", "?")
+        return f"<bound async cache {name} of {self.__self__}>"
+
 
 @overload
 def lru_cache(maxsize: AC, typed: bool = ...) -> LRUAsyncCallable[AC]:
