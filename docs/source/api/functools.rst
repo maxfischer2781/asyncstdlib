@@ -30,6 +30,11 @@ of :py:mod:`asyncstdlib` work only with async callables
 Notably, they also work with regular callables that return an :term:`awaitable`,
 such as an ``async def`` function wrapped by :py:func:`~functools.partial`.
 
+.. autofunction:: cached_property(getter: (Self) → await T)
+    :decorator:
+
+    .. versionadded:: 1.1.0
+
 The caches track *call argument patterns* and their return values.
 A pattern is an *ordered* representation of positional and keyword arguments;
 notably, this disregards defaults and overlap between positional and keyword arguments.
@@ -38,11 +43,6 @@ and ``f(b=2, a=1)`` are considered three distinct patterns.
 
 In addition, exceptions are not return values. This allows retrying a long-running
 query that may fail, caching any *eventual* result for quick and reliable lookup.
-
-.. autofunction:: cached_property(getter: (Self) → await T)
-    :decorator:
-
-    .. versionadded:: 1.1.0
 
 The :py:func:`~asyncstdlib.functools.lru_cache`
 can be applied as a decorator, both with and without arguments:
