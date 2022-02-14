@@ -83,7 +83,17 @@ class LRUAsyncCallable(Protocol[AC]):
         """Evict all call argument patterns and their results from the cache"""
 
     def cache_discard(self, *args, **kwargs) -> None:
-        """Evict the call argument pattern and its result from the cache"""
+        """
+        Evict the call argument pattern and its result from the cache
+
+        When a cache is wrapped by another :term:`descriptor`
+        (``property``, ``staticmethod``, ...),
+        the descriptor must support wrapping descriptors for this method
+        to detect implicit arguments such as ``self``.
+        """
+        # "support wrapping descriptors" means that the wrapping descriptor has to use
+        # the cache as a descriptor as well, i.e. invoke its ``__get__`` method instead
+        # of just passing in `self`/`cls`/... directly.
 
 
 @public_module("asyncstdlib.functools")
@@ -155,19 +165,20 @@ def lru_cache(
 
     The maximum number of cached items is defined by ``maxsize``:
 
-    * If set to a positive integer, at most ``maxsize`` distinct function argument
-      patterns are stored; further calls with *different* patterns evict the oldest
-      stored pattern from the cache.
+    * If set to a positive integer, up to ``maxsize`` function argument
+      patterns are stored; further calls with *different* patterns replace the oldest
+      pattern in the cache.
 
     * If set to zero or a negative integer, the cache is disabled. Every call is
       directly forwarded to the underlying function, and counted as a cache miss.
 
-    * If set to :py:data:`None`, the cache has unlimited size. Every new function
-      argument pattern adds an entry to the cache; patterns and values are never
+    * If set to :py:data:`None`, the cache has unlimited size. Every used function
+      argument pattern adds an entry to the cache; patterns are never
       automatically evicted.
 
     In addition to automatic cache eviction from ``maxsize``, the cache can be
-    explicitly emptied via :py:meth:`~LRUAsyncCallable.cache_clear`.
+    explicitly emptied via :py:meth:`~LRUAsyncCallable.cache_clear`
+    and :py:meth:`~LRUAsyncCallable.cache_discard`.
     Use the cache's :py:meth:`~LRUAsyncCallable.cache_info` to inspect the cache's
     performance and filling level.
 
