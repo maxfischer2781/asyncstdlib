@@ -55,10 +55,11 @@ def staticmethod_counter(size):
     return Counter
 
 
+counter_factories = [method_counter, classmethod_counter, staticmethod_counter]
+
+
 @pytest.mark.parametrize("size", [0, 3, 10, None])
-@pytest.mark.parametrize(
-    "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
-)
+@pytest.mark.parametrize("counter_factory", counter_factories)
 @sync
 async def test_method_plain(size, counter_factory):
     """Test caching without resetting"""
@@ -73,9 +74,7 @@ async def test_method_plain(size, counter_factory):
 
 
 @pytest.mark.parametrize("size", [0, 3, 10, None])
-@pytest.mark.parametrize(
-    "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
-)
+@pytest.mark.parametrize("counter_factory", counter_factories)
 @sync
 async def test_method_clear(size, counter_factory):
     """Test caching with resetting everything"""
@@ -90,9 +89,7 @@ async def test_method_clear(size, counter_factory):
 
 
 @pytest.mark.parametrize("size", [0, 3, 10, None])
-@pytest.mark.parametrize(
-    "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
-)
+@pytest.mark.parametrize("counter_factory", counter_factories)
 @sync
 async def test_method_discard(size, counter_factory):
     """Test caching with resetting specific item"""
@@ -112,9 +109,7 @@ async def test_method_discard(size, counter_factory):
 
 
 @pytest.mark.parametrize("size", [0, 3, 10, None])
-@pytest.mark.parametrize(
-    "counter_factory", [method_counter, classmethod_counter, staticmethod_counter]
-)
+@pytest.mark.parametrize("counter_factory", counter_factories)
 @sync
 async def test_method_metadata(size, counter_factory):
     """Test cache metadata on methods"""
