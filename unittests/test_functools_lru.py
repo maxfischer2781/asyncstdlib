@@ -130,3 +130,27 @@ async def test_method_metadata(size, counter_factory):
                 totals = instance * 25 + reset * 5 + (access + 1)
                 hits, misses, *_ = ct.count.cache_info()
                 assert totals == hits + misses
+
+
+@pytest.mark.parametrize("size", [None, 0, 10, 128])
+def test_wrapper_attributes(size):
+    class Bar:
+        @a.lru_cache
+        async def method(self, int_arg: int):
+            """Method docstring"""
+
+        @a.lru_cache
+        async def other_method(self):
+            """Method docstring"""
+
+    assert Bar.method.__doc__ == """Method docstring"""
+    for name in ("method", "other_method"):
+        for cache in (getattr(Bar, name), getattr(Bar(), name)):
+            assert cache.__doc__ == """Method docstring"""
+            assert cache.__name__ == name
+            assert cache.__qualname__.endswith(f"Bar.{name}")
+            if name != "method":
+                continue
+            # test direct and literal annotation styles
+            assert Bar.method.__annotations__["int_arg"] in {int, "int"}
+            assert Bar().method.__annotations__["int_arg"] in {int, "int"}

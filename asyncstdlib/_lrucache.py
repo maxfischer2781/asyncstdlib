@@ -64,6 +64,8 @@ class LRUAsyncCallable(Protocol[AC]):
     :py:class:`~typing.Protocol` of a LRU cache wrapping a callable to an awaitable
     """
 
+    __slots__: Tuple[str, ...] = ("__weakref__",)
+
     @property
     def __wrapped__(self) -> AC:
         """The callable wrapped by this cache"""
@@ -102,38 +104,49 @@ class LRUAsyncCallable(Protocol[AC]):
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
     """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
 
-    __slots__ = ("__lru", "__self__")
+    __slots__ = ("_lru", "__self__")
 
     def __init__(self, lru: LRUAsyncCallable[AC], __self__: object):
-        self.__lru = lru
+        self._lru = lru
         self.__self__ = __self__
 
     @property
     def __wrapped__(self) -> AC:
-        return self.__lru.__wrapped__
+        return self._lru.__wrapped__
 
     @property
     def __func__(self) -> LRUAsyncCallable[AC]:
-        return self.__lru
+        return self._lru
 
     def __call__(self, *args, **kwargs):  # type: ignore
-        return self.__lru(self.__self__, *args, **kwargs)
+        return self._lru(self.__self__, *args, **kwargs)
 
     def cache_parameters(self) -> CacheParameters:
-        return self.__lru.cache_parameters()
+        return self._lru.cache_parameters()
 
     def cache_info(self) -> CacheInfo:
-        return self.__lru.cache_info()
+        return self._lru.cache_info()
 
     def cache_clear(self) -> None:
-        return self.__lru.cache_clear()
+        return self._lru.cache_clear()
 
     def cache_discard(self, *args: Any, **kwargs: Any) -> None:
-        return self.__lru.cache_discard(self.__self__, *args, **kwargs)
+        return self._lru.cache_discard(self.__self__, *args, **kwargs)
 
     def __repr__(self) -> str:
         name = getattr(self.__wrapped__, "__qualname__", "?")
         return f"<bound async cache {name} of {self.__self__}>"
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._lru, name)
+
+    @property
+    def __doc__(self) -> Optional[str]:  # type: ignore
+        return self._lru.__doc__
+
+    @property
+    def __annotations__(self) -> Dict[str, Any]:  # type: ignore
+        return self._lru.__annotations__
 
 
 @overload
@@ -284,7 +297,7 @@ def cache__get(
 class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` to track accesses as for caching/memoization"""
 
-    __slots__ = ("__wrapped__", "__misses", "__typed")
+    __slots__ = ("__dict__", "__wrapped__", "__misses", "__typed")
 
     __get__ = cache__get
 
@@ -314,7 +327,7 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
 class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async memoization"""
 
-    __slots__ = ("__wrapped__", "__hits", "__misses", "__typed", "__cache")
+    __slots__ = ("__dict__", "__wrapped__", "__hits", "__misses", "__typed", "__cache")
 
     __get__ = cache__get
 
@@ -360,7 +373,15 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
 class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async LRU caching of finite capacity"""
 
-    __slots__ = ("__wrapped__", "__hits", "__misses", "__typed", "__maxsize", "__cache")
+    __slots__ = (
+        "__dict__",
+        "__wrapped__",
+        "__hits",
+        "__misses",
+        "__typed",
+        "__maxsize",
+        "__cache",
+    )
 
     __get__ = cache__get
 
