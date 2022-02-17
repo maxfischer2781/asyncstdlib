@@ -64,8 +64,10 @@ class LRUAsyncCallable(Protocol[AC]):
     :py:class:`~typing.Protocol` of a LRU cache wrapping a callable to an awaitable
     """
 
-    #: The callable wrapped by this cache
-    __wrapped__: AC
+    @property
+    def __wrapped__(self) -> AC:
+        """The callable wrapped by this cache"""
+        raise NotImplementedError
 
     #: Get the result of ``await __wrapped__(...)`` from the cache or evaluation
     __call__: AC
@@ -82,7 +84,7 @@ class LRUAsyncCallable(Protocol[AC]):
     def cache_clear(self) -> None:
         """Evict all call argument patterns and their results from the cache"""
 
-    def cache_discard(self, *args, **kwargs) -> None:
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
         """
         Evict the call argument pattern and its result from the cache
 
@@ -102,19 +104,19 @@ class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
 
     __slots__ = ("__lru", "__self__")
 
-    def __init__(self, lru: LRUAsyncCallable[AC], __self__):
+    def __init__(self, lru: LRUAsyncCallable[AC], __self__: object):
         self.__lru = lru
         self.__self__ = __self__
 
     @property
-    def __wrapped__(self):
+    def __wrapped__(self) -> AC:
         return self.__lru.__wrapped__
 
     @property
-    def __func__(self):
+    def __func__(self) -> LRUAsyncCallable[AC]:
         return self.__lru
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs):  # type: ignore
         return self.__lru(self.__self__, *args, **kwargs)
 
     def cache_parameters(self) -> CacheParameters:
@@ -126,10 +128,10 @@ class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
     def cache_clear(self) -> None:
         return self.__lru.cache_clear()
 
-    def cache_discard(self, *args, **kwargs) -> None:
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
         return self.__lru.cache_discard(self.__self__, *args, **kwargs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         name = getattr(self.__wrapped__, "__qualname__", "?")
         return f"<bound async cache {name} of {self.__self__}>"
 
@@ -206,6 +208,7 @@ def lru_cache(
 
     def lru_decorator(function: AC) -> LRUAsyncCallable[AC]:
         assert not callable(maxsize)
+        wrapper: LRUAsyncCallable[AC]
         if maxsize is None:
             wrapper = MemoizedLRUAsyncCallable(function, typed)
         elif maxsize == 0:
@@ -268,7 +271,9 @@ class CallKey:
         return cls(key)
 
 
-def cache__get(self, instance, owner):
+def cache__get(
+    self: LRUAsyncCallable[AC], instance: object, owner: Optional[type] = None
+) -> Union[LRUAsyncCallable[AC], LRUAsyncBoundCallable[AC]]:
     """Descriptor ``__get__`` for caches to bind them on lookup"""
     if instance is None:
         return self
@@ -284,11 +289,11 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore
         self.__misses = 0
         self.__typed = typed
 
-    async def __call__(self, *args, **kwargs):
+    async def __call__(self, *args, **kwargs):  # type: ignore
         self.__misses += 1
         return await self.__wrapped__(*args, **kwargs)
 
@@ -301,7 +306,7 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     def cache_clear(self) -> None:
         self.__misses = 0
 
-    def cache_discard(self, *args, **kwargs) -> None:
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
         return
 
 
@@ -314,13 +319,13 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
         self.__cache: Dict[Union[CallKey, int, str], Any] = {}
 
-    async def __call__(self, *args, **kwargs):
+    async def __call__(self, *args, **kwargs):  # type: ignore
         key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
             result = self.__cache[key]
@@ -347,7 +352,7 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
         self.__misses = 0
         self.__cache.clear()
 
-    def cache_discard(self, *args, **kwargs) -> None:
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
         self.__cache.pop(CallKey.from_call(args, kwargs, typed=self.__typed), None)
 
 
@@ -360,14 +365,14 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool, maxsize: int):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
         self.__maxsize = maxsize
         self.__cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
 
-    async def __call__(self, *args, **kwargs):
+    async def __call__(self, *args, **kwargs):  # type: ignore
         key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
             result = self.__cache[key]
@@ -404,5 +409,5 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
         self.__misses = 0
         self.__cache.clear()
 
-    def cache_discard(self, *args, **kwargs) -> None:
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
         self.__cache.pop(CallKey.from_call(args, kwargs, typed=self.__typed), None)
