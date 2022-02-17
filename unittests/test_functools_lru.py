@@ -95,7 +95,7 @@ async def test_method_discard(size, counter_factory):
     """Test caching with resetting specific item"""
     counter_type = counter_factory(size)
     if (
-        sys.version_info <= (3, 8)
+        sys.version_info < (3, 9)
         and type(counter_type.__dict__["count"]) is classmethod
     ):
         pytest.skip("classmethod does not respect descriptors up to 3.8")
