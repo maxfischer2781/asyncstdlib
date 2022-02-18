@@ -286,7 +286,7 @@ class CallKey:
 
 def cache__get(
     self: LRUAsyncCallable[AC], instance: object, owner: Optional[type] = None
-) -> Union[LRUAsyncCallable[AC], LRUAsyncBoundCallable[AC]]:
+) -> LRUAsyncCallable[AC]:
     """Descriptor ``__get__`` for caches to bind them on lookup"""
     if instance is None:
         return self
