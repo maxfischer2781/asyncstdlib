@@ -64,7 +64,7 @@ class LRUAsyncCallable(Protocol[AC]):
     :py:class:`~typing.Protocol` of a LRU cache wrapping a callable to an awaitable
     """
 
-    __slots__: Tuple[str, ...] = ("__weakref__",)
+    __slots__: Tuple[str, ...] = ()
 
     @property
     def __wrapped__(self) -> AC:
@@ -104,7 +104,7 @@ class LRUAsyncCallable(Protocol[AC]):
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
     """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
 
-    __slots__ = ("_lru", "__self__")
+    __slots__ = ("__weakref__", "_lru", "__self__")
 
     def __init__(self, lru: LRUAsyncCallable[AC], __self__: object):
         self._lru = lru
@@ -297,7 +297,7 @@ def cache__get(
 class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` to track accesses as for caching/memoization"""
 
-    __slots__ = ("__dict__", "__wrapped__", "__misses", "__typed")
+    __slots__ = ("__weakref__", "__dict__", "__wrapped__", "__misses", "__typed")
 
     __get__ = cache__get
 
@@ -327,7 +327,15 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
 class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async memoization"""
 
-    __slots__ = ("__dict__", "__wrapped__", "__hits", "__misses", "__typed", "__cache")
+    __slots__ = (
+        "__weakref__",
+        "__dict__",
+        "__wrapped__",
+        "__hits",
+        "__misses",
+        "__typed",
+        "__cache",
+    )
 
     __get__ = cache__get
 
@@ -374,6 +382,7 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async LRU caching of finite capacity"""
 
     __slots__ = (
+        "__weakref__",
         "__dict__",
         "__wrapped__",
         "__hits",
