@@ -64,8 +64,12 @@ class LRUAsyncCallable(Protocol[AC]):
     :py:class:`~typing.Protocol` of a LRU cache wrapping a callable to an awaitable
     """
 
-    #: The callable wrapped by this cache
-    __wrapped__: AC
+    __slots__: Tuple[str, ...] = ()
+
+    @property
+    def __wrapped__(self) -> AC:
+        """The callable wrapped by this cache"""
+        raise NotImplementedError
 
     #: Get the result of ``await __wrapped__(...)`` from the cache or evaluation
     __call__: AC
@@ -81,6 +85,68 @@ class LRUAsyncCallable(Protocol[AC]):
 
     def cache_clear(self) -> None:
         """Evict all call argument patterns and their results from the cache"""
+
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Evict the call argument pattern and its result from the cache
+
+        When a cache is wrapped by another :term:`descriptor`
+        (``property``, ``staticmethod``, ...),
+        the descriptor must support wrapping descriptors for this method
+        to detect implicit arguments such as ``self``.
+        """
+        # "support wrapping descriptors" means that the wrapping descriptor has to use
+        # the cache as a descriptor as well, i.e. invoke its ``__get__`` method instead
+        # of just passing in `self`/`cls`/... directly.
+
+
+@public_module("asyncstdlib.functools")
+class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
+    """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
+
+    __slots__ = ("__weakref__", "_lru", "__self__")
+
+    def __init__(self, lru: LRUAsyncCallable[AC], __self__: object):
+        self._lru = lru
+        self.__self__ = __self__
+
+    @property
+    def __wrapped__(self) -> AC:
+        return self._lru.__wrapped__
+
+    @property
+    def __func__(self) -> LRUAsyncCallable[AC]:
+        return self._lru
+
+    def __call__(self, *args, **kwargs):  # type: ignore
+        return self._lru(self.__self__, *args, **kwargs)
+
+    def cache_parameters(self) -> CacheParameters:
+        return self._lru.cache_parameters()
+
+    def cache_info(self) -> CacheInfo:
+        return self._lru.cache_info()
+
+    def cache_clear(self) -> None:
+        return self._lru.cache_clear()
+
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
+        return self._lru.cache_discard(self.__self__, *args, **kwargs)
+
+    def __repr__(self) -> str:
+        name = getattr(self.__wrapped__, "__qualname__", "?")
+        return f"<bound async cache {name} of {self.__self__}>"
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._lru, name)
+
+    @property
+    def __doc__(self) -> Optional[str]:  # type: ignore
+        return self._lru.__doc__
+
+    @property
+    def __annotations__(self) -> Dict[str, Any]:  # type: ignore
+        return self._lru.__annotations__
 
 
 @overload
@@ -102,51 +168,51 @@ def lru_cache(
     """
     Least Recently Used cache for async functions
 
-    Applies an LRU cache, mapping the most recent function call arguments
-    to the *awaited* function return value. This makes this cache appropriate for
-    :term:`coroutine functions <coroutine function>`, :py:func:`~functools.partial`
-    coroutines and any other callable that returns an :term:`awaitable`.
+    Applies an LRU cache storing call arguments and their *awaited* return value.
+    This is appropriate for :term:`coroutine functions <coroutine function>`,
+    :py:func:`~functools.partial` coroutines and any other callable that returns
+    an :term:`awaitable`.
 
-    Arguments to the cached function must be :term:`hashable`. On a successful cache
-    hit, the underlying function is *not* called. This means any side-effects, including
-    scheduling in an internal event loop, are skipped. Ideally, ``lru_cache`` is used
+    Arguments to the cached function must be :term:`hashable`; when the arguments are
+    in the cache, the underlying function is *not* called. This means any side-effects,
+    including scheduling in an event loop, are skipped. Ideally, ``lru_cache`` is used
     for long-running queries or requests that return the same result for the same input.
 
     The maximum number of cached items is defined by ``maxsize``:
 
-    * If set to a positive integer, at most ``maxsize`` distinct function argument
-      patterns are stored; further calls with *different* patterns evict the oldest
-      stored pattern from the cache.
+    * If set to a positive integer, up to ``maxsize`` function argument
+      patterns are stored; further calls with *different* patterns replace the oldest
+      pattern in the cache.
 
     * If set to zero or a negative integer, the cache is disabled. Every call is
       directly forwarded to the underlying function, and counted as a cache miss.
 
-    * If set to :py:data:`None`, the cache has unlimited size. Every new function
-      argument pattern adds an entry to the cache; patterns and values are never
+    * If set to :py:data:`None`, the cache has unlimited size. Every used function
+      argument pattern adds an entry to the cache; patterns are never
       automatically evicted.
 
-    The cache can always be explicitly emptied via
-    :py:meth:`~LRUAsyncCallable.cache_clear`.
+    In addition to automatic cache eviction from ``maxsize``, the cache can be
+    explicitly emptied via :py:meth:`~LRUAsyncCallable.cache_clear`
+    and :py:meth:`~LRUAsyncCallable.cache_discard`.
     Use the cache's :py:meth:`~LRUAsyncCallable.cache_info` to inspect the cache's
     performance and filling level.
 
     If ``typed`` is :py:data:`True`, values in argument patterns are compared by
-    value *and* type. For example, this means that passing ``3`` and ``3.0`` as
-    the same argument are treated as distinct pattern elements.
+    value *and* type. For example, this means ``3`` and ``3.0`` are treated as
+    distinct arguments; however, this is not applied recursively so the type of
+    both ``(3, 4)`` and ``(3.0, 4.0)`` is the same.
 
     .. note::
 
-        This wrapper is intended for use with a single event loop, and supports
-        overlapping concurrent calls.
+        This LRU cache supports overlapping ``await`` calls, provided that the
+        wrapped async function does as well.
         Unlike the original :py:func:`functools.lru_cache`, it is not thread-safe.
     """
     if isinstance(maxsize, int):
         maxsize = 0 if maxsize < 0 else maxsize
     elif callable(maxsize):
         # used as function decorator, first arg is the function to be wrapped
-        fast_wrapper = _bounded_lru(
-            function=cast(AC, maxsize), maxsize=128, typed=typed
-        )
+        fast_wrapper = CachedLRUAsyncCallable(cast(AC, maxsize), typed, 128)
         return update_wrapper(fast_wrapper, maxsize)
     elif maxsize is not None:
         raise TypeError(
@@ -155,12 +221,13 @@ def lru_cache(
 
     def lru_decorator(function: AC) -> LRUAsyncCallable[AC]:
         assert not callable(maxsize)
+        wrapper: LRUAsyncCallable[AC]
         if maxsize is None:
-            wrapper = _unbound_lru(function=function, typed=typed)
+            wrapper = MemoizedLRUAsyncCallable(function, typed)
         elif maxsize == 0:
-            wrapper = _empty_lru(function=function, typed=typed)
+            wrapper = UncachedLRUAsyncCallable(function, typed)
         else:
-            wrapper = _bounded_lru(function=function, maxsize=maxsize, typed=typed)
+            wrapper = CachedLRUAsyncCallable(function, typed, maxsize)
         return update_wrapper(wrapper, function)
 
     return lru_decorator
@@ -217,130 +284,160 @@ class CallKey:
         return cls(key)
 
 
-def _empty_lru(function: AC, typed: bool) -> LRUAsyncCallable[AC]:
-    """Wrap the async ``function`` in an async LRU cache without any capacity"""
-    # cache statistics
-    misses = 0
-
-    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
-        nonlocal misses
-        misses += 1
-        return await function(*args, **kwargs)
-
-    def cache_parameters() -> CacheParameters:
-        return CacheParameters(maxsize=0, typed=typed)
-
-    def cache_info() -> CacheInfo:
-        return CacheInfo(0, misses, 0, 0)
-
-    def cache_clear() -> None:
-        nonlocal misses
-        misses = 0
-
-    wrapper.cache_parameters = cache_parameters  # type: ignore
-    wrapper.cache_info = cache_info  # type: ignore
-    wrapper.cache_clear = cache_clear  # type: ignore
-    return wrapper  # type: ignore
+def cache__get(
+    self: LRUAsyncCallable[AC], instance: object, owner: Optional[type] = None
+) -> LRUAsyncCallable[AC]:
+    """Descriptor ``__get__`` for caches to bind them on lookup"""
+    if instance is None:
+        return self
+    return LRUAsyncBoundCallable(self, instance)
 
 
-def _unbound_lru(function: AC, typed: bool) -> LRUAsyncCallable[AC]:
-    """Wrap the async ``function`` in an async LRU cache with infinite capacity"""
-    # local lookup
-    make_key = CallKey.from_call
-    # cache statistics
-    hits = 0
-    misses = 0
-    # cache content
-    cache: Dict[Union[CallKey, int, str], Any] = {}
+@public_module("asyncstdlib.functools")
+class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
+    """Wrap the async ``call`` to track accesses as for caching/memoization"""
 
-    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
-        nonlocal hits, misses
-        key = make_key(args, kwargs, typed=typed)
+    __slots__ = ("__weakref__", "__dict__", "__wrapped__", "__misses", "__typed")
+
+    __get__ = cache__get
+
+    def __init__(self, call: AC, typed: bool):
+        self.__wrapped__ = call  # type: ignore
+        self.__misses = 0
+        self.__typed = typed
+
+    async def __call__(self, *args, **kwargs):  # type: ignore
+        self.__misses += 1
+        return await self.__wrapped__(*args, **kwargs)
+
+    def cache_parameters(self) -> CacheParameters:
+        return CacheParameters(maxsize=0, typed=self.__typed)
+
+    def cache_info(self) -> CacheInfo:
+        return CacheInfo(0, self.__misses, 0, 0)
+
+    def cache_clear(self) -> None:
+        self.__misses = 0
+
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
+        return
+
+
+@public_module("asyncstdlib.functools")
+class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
+    """Wrap the async ``call`` with async memoization"""
+
+    __slots__ = (
+        "__weakref__",
+        "__dict__",
+        "__wrapped__",
+        "__hits",
+        "__misses",
+        "__typed",
+        "__cache",
+    )
+
+    __get__ = cache__get
+
+    def __init__(self, call: AC, typed: bool):
+        self.__wrapped__ = call  # type: ignore
+        self.__hits = 0
+        self.__misses = 0
+        self.__typed = typed
+        self.__cache: Dict[Union[CallKey, int, str], Any] = {}
+
+    async def __call__(self, *args, **kwargs):  # type: ignore
+        key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
-            result = cache[key]
+            result = self.__cache[key]
         except KeyError:
-            misses += 1
-            result = await function(*args, **kwargs)
+            self.__misses += 1
+            result = await self.__wrapped__(*args, **kwargs)
             # function finished early for another call with the same arguments
             # the cache has been updated already, do nothing to it
-            if key not in cache:
-                cache[key] = result
+            if key not in self.__cache:
+                self.__cache[key] = result
             return result
         else:
-            hits += 1
+            self.__hits += 1
             return result
 
-    def cache_parameters() -> CacheParameters:
-        return CacheParameters(maxsize=None, typed=typed)
+    def cache_parameters(self) -> CacheParameters:
+        return CacheParameters(maxsize=None, typed=self.__typed)
 
-    def cache_info() -> CacheInfo:
-        return CacheInfo(hits, misses, None, len(cache))
+    def cache_info(self) -> CacheInfo:
+        return CacheInfo(self.__hits, self.__misses, None, len(self.__cache))
 
-    def cache_clear() -> None:
-        nonlocal hits, misses
-        misses = 0
-        hits = 0
-        cache.clear()
+    def cache_clear(self) -> None:
+        self.__hits = 0
+        self.__misses = 0
+        self.__cache.clear()
 
-    wrapper.cache_parameters = cache_parameters  # type: ignore
-    wrapper.cache_info = cache_info  # type: ignore
-    wrapper.cache_clear = cache_clear  # type: ignore
-    return wrapper  # type: ignore
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
+        self.__cache.pop(CallKey.from_call(args, kwargs, typed=self.__typed), None)
 
 
-def _bounded_lru(function: AC, typed: bool, maxsize: int) -> LRUAsyncCallable[AC]:
-    """Wrap the async ``function`` in an async LRU cache with fixed capacity"""
-    # local lookup
-    make_key = CallKey.from_call
-    # cache statistics
-    hits = 0
-    misses = 0
-    # cache content
-    cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
-    filled = False
+@public_module("asyncstdlib.functools")
+class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
+    """Wrap the async ``call`` with async LRU caching of finite capacity"""
 
-    async def wrapper(*args: Hashable, **kwargs: Hashable) -> Any:
-        nonlocal hits, misses, filled
-        key = make_key(args, kwargs, typed=typed)
+    __slots__ = (
+        "__weakref__",
+        "__dict__",
+        "__wrapped__",
+        "__hits",
+        "__misses",
+        "__typed",
+        "__maxsize",
+        "__cache",
+    )
+
+    __get__ = cache__get
+
+    def __init__(self, call: AC, typed: bool, maxsize: int):
+        self.__wrapped__ = call  # type: ignore
+        self.__hits = 0
+        self.__misses = 0
+        self.__typed = typed
+        self.__maxsize = maxsize
+        self.__cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
+
+    async def __call__(self, *args, **kwargs):  # type: ignore
+        key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
-            result = cache[key]
+            result = self.__cache[key]
         except KeyError:
-            misses += 1
-            result = await function(*args, **kwargs)
+            self.__misses += 1
+            result = await self.__wrapped__(*args, **kwargs)
             # function finished early for another call with the same arguments
             # the cache has been updated already, do nothing to it
-            if key in cache:
+            if key in self.__cache:
                 pass
             # the cache is filled already
             # push the new content to the current root and rotate the list once
-            elif filled:
-                cache.popitem(last=False)
-                cache[key] = result
+            elif len(self.__cache) >= self.__maxsize:
+                self.__cache.popitem(last=False)
+                self.__cache[key] = result
             # the cache still has room
             # insert the new element at the back
             else:
-                cache[key] = result
-                filled = len(cache) >= maxsize
+                self.__cache[key] = result
             return result
         else:
-            cache.move_to_end(key, last=True)
-            hits += 1
+            self.__cache.move_to_end(key, last=True)
+            self.__hits += 1
             return result
 
-    def cache_parameters() -> CacheParameters:
-        return CacheParameters(maxsize=maxsize, typed=typed)
+    def cache_parameters(self) -> CacheParameters:
+        return CacheParameters(maxsize=self.__maxsize, typed=self.__typed)
 
-    def cache_info() -> CacheInfo:
-        return CacheInfo(hits, misses, maxsize, len(cache))
+    def cache_info(self) -> CacheInfo:
+        return CacheInfo(self.__hits, self.__misses, self.__maxsize, len(self.__cache))
 
-    def cache_clear() -> None:
-        nonlocal hits, misses, filled
-        misses = 0
-        hits = 0
-        filled = False
-        cache.clear()
+    def cache_clear(self) -> None:
+        self.__hits = 0
+        self.__misses = 0
+        self.__cache.clear()
 
-    wrapper.cache_parameters = cache_parameters  # type: ignore
-    wrapper.cache_info = cache_info  # type: ignore
-    wrapper.cache_clear = cache_clear  # type: ignore
-    return wrapper  # type: ignore
+    def cache_discard(self, *args: Any, **kwargs: Any) -> None:
+        self.__cache.pop(CallKey.from_call(args, kwargs, typed=self.__typed), None)
