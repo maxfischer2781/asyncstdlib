@@ -45,9 +45,12 @@ only bump the *minor* or *major* version number to match a new Python release.
     * Push the commit and tags to github
 
 3. Publish to PyPI
-    * **You need maintainer access** on the `PyPI asyncstdlib project`_
-    * Check out the tagged version commit
-    * Run ``flit publish``
+    – GitHub Action
+        * Create a new `GitHub release`_ from the recent version tag
+    – Manual (legacy)
+        * **You need maintainer access** on the `PyPI asyncstdlib project`_
+        * Check out the tagged version commit
+        * Run ``flit publish``
 
 4. Publish to Conda-Forge
     * Create *a fork* of the `Conda-Forge asyncstdlib recipe`_
@@ -57,5 +60,6 @@ only bump the *minor* or *major* version number to match a new Python release.
 .. _PyPI: https://pypi.org
 .. _Conda-Forge: https://conda-forge.org
 .. _`PyPI asyncstdlib project`: https://pypi.org/project/asyncstdlib/
+.. _`GitHub release`: https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases
 .. _`Conda-Forge asyncstdlib recipe`: https://github.com/conda-forge/asyncstdlib-feedstock
 .. _`PyPI release`: https://pypi.org/project/asyncstdlib/#files
