@@ -2,13 +2,13 @@
 requires = ["flit_core"]
 build-backend = "flit_core.buildapi"
 
-[tool.flit.metadata]
-module = "asyncstdlib"
-author = "Max Fischer"
-author-email = "maxfischer2781@gmail.com"
-home-page = "https://github.com/maxfischer2781/asyncstdlib"
-description-file = "README.rst"
-keywords = "async enumerate itertools builtins functools contextlib"
+[project]
+dynamic = ["version", "description"]
+name = "asyncstdlib"
+authors = [
+    {name = "Max Fischer", email = "maxfischer2781@gmail.com"},
+]
+readme = "README.rst"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Framework :: AsyncIO",
@@ -21,10 +21,12 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
 ]
+license = {"file" = "LICENSE"}
+keywords = ["async", "enumerate", "itertools", "builtins", "functools", "contextlib"]
 requires-python = "~=3.6"
-requires = ["typing_extensions; python_version<'3.8'"]
+dependencies = ["typing_extensions; python_version<'3.8'"]
 
-[tool.flit.metadata.requires-extra]
+[project.optional-dependencies]
 test = [
     "pytest",
     "flake8",
@@ -37,8 +39,9 @@ test = [
 ]
 doc = ["sphinx", "sphinxcontrib-trio"]
 
-[tool.flit.metadata.urls]
+[project.urls]
 Documentation = "https://asyncstdlib.readthedocs.io/en/latest/"
+Source = "https://github.com/maxfischer2781/asyncstdlib"
 
 [tool.mypy]
 files = ["asyncstdlib/*.py"]
