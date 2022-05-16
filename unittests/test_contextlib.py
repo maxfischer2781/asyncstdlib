@@ -34,6 +34,7 @@ async def test_contextmanager():
 
 @sync
 async def test_contextmanager_no_yield():
+    """Test that it is an error for a context to not yield"""
     @a.contextmanager
     async def no_yield():
         if False:
@@ -46,6 +47,7 @@ async def test_contextmanager_no_yield():
 
 @sync
 async def test_contextmanager_no_stop():
+    """Test that it is an error for a context to yield again after stopping"""
     @a.contextmanager
     async def no_stop():
         yield
@@ -69,6 +71,7 @@ async def test_contextmanager_no_stop():
 
 @sync
 async def test_contextmanager_raise_asyncstop():
+    """Test that StopAsyncIteration may propagate out of a context block"""
     @a.contextmanager
     async def no_raise():
         yield
@@ -113,6 +116,7 @@ async def test_contextmanager_raise_runtimeerror():
 
 @sync
 async def test_contextmanager_raise_same():
+    """Test that outer exceptions do not shadow inner/newer ones"""
     @a.contextmanager
     async def reraise():
         try:
@@ -134,6 +138,26 @@ async def test_contextmanager_raise_same():
     with pytest.raises(KeyError, match="inside"):
         async with recreate():
             raise KeyError("outside")
+
+
+@sync
+async def test_contextmanager_raise_generatorexit():
+    """Test that shutdown via GeneratorExit is propagated"""
+    @a.contextmanager
+    async def no_op():
+        yield
+
+    with pytest.raises(GeneratorExit):
+        async with no_op():
+            raise GeneratorExit("used to tear down coroutines")
+
+    # during shutdown, generators may be killed in arbitrary order
+    # make sure we do not suppress GeneratorExit
+    with pytest.raises(GeneratorExit, match="inner"):
+        context = no_op()
+        async with context:
+            await context.gen.aclose()
+            raise GeneratorExit("inner")
 
 
 @sync
