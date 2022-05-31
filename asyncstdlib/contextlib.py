@@ -90,7 +90,13 @@ class _AsyncGeneratorContextManager(Generic[T]):
                 raise RuntimeError("generator did not stop after __aexit__")
         else:
             try:
-                result = await self.gen.athrow(exc_type, exc_val, exc_tb)
+                # We are being closed as part of (async) generator shutdown.
+                # Use `aclose` to have additional checks for the child to
+                # handle shutdown properly.
+                if exc_type is GeneratorExit:
+                    result = await self.gen.aclose()
+                else:
+                    result = await self.gen.athrow(exc_type, exc_val, exc_tb)
             except StopAsyncIteration as exc:
                 return exc is not exc_tb
             except RuntimeError as exc:
