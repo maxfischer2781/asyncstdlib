@@ -121,7 +121,7 @@ class _AsyncGeneratorContextManager(Generic[T]):
                 # but is the closest we can get to checking the situation.
                 # See https://github.com/maxfischer2781/asyncstdlib/issues/84
                 if exc_type is GeneratorExit and result is None:
-                    return False  # type: ignore[unreachable]
+                    return False
                 raise RuntimeError("generator did not stop after throw() in __aexit__")
 
 
