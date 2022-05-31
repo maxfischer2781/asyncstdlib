@@ -17,7 +17,7 @@ from typing import (
 )
 from collections import deque
 
-from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable, ADD
+from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable, ADD, AsyncContextManager
 from ._utility import public_module
 from ._core import (
     ScopedIter,
@@ -294,27 +294,41 @@ async def takewhile(
                 break
 
 
+class NoLock:
+    async def __aenter__(self):
+        pass
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return False
+
+
 async def tee_peer(
     iterator: AsyncIterator[T],
     buffer: Deque[T],
     peers: List[Deque[T]],
+    lock: AsyncContextManager,
 ) -> AsyncGenerator[T, None]:
     """An individual iterator of a :py:func:`~.tee`"""
     try:
         while True:
             if not buffer:
-                try:
-                    item = await iterator.__anext__()
-                except StopAsyncIteration:
-                    break
-                else:
-                    # Append to all buffers, including our own. We'll fetch our
-                    # item from the buffer again, instead of yielding it directly.
-                    # This ensures the proper item ordering if any of our peers
-                    # are fetching items concurrently. They may have buffered their
-                    # item already.
-                    for peer_buffer in peers:
-                        peer_buffer.append(item)
+                async with lock:
+                    # Another peer produced an item while we were waiting for the lock.
+                    # Proceed with the next loop iteration to yield the item.
+                    if buffer:
+                        continue
+                    try:
+                        item = await iterator.__anext__()
+                    except StopAsyncIteration:
+                        break
+                    else:
+                        # Append to all buffers, including our own. We'll fetch our
+                        # item from the buffer again, instead of yielding it directly.
+                        # This ensures the proper item ordering if any of our peers
+                        # are fetching items concurrently. They may have buffered their
+                        # item already.
+                        for peer_buffer in peers:
+                            peer_buffer.append(item)
             yield buffer.popleft()
     finally:
         # this peer is done – remove its buffer
@@ -362,7 +376,13 @@ class Tee(Generic[T]):
     the iterators are safe if there is only ever one single "most advanced" iterator.
     """
 
-    def __init__(self, iterable: AnyIterable[T], n: int = 2):
+    def __init__(
+        self,
+        iterable: AnyIterable[T],
+        n: int = 2,
+        *,
+        lock: AsyncContextManager = NoLock(),
+    ):
         self._iterator = aiter(iterable)
         self._buffers: List[Deque[T]] = [deque() for _ in range(n)]
         self._children = tuple(
@@ -370,6 +390,7 @@ class Tee(Generic[T]):
                 iterator=self._iterator,
                 buffer=buffer,
                 peers=self._buffers,
+                lock=lock,
             )
             for buffer in self._buffers
         )
