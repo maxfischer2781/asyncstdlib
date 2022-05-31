@@ -304,7 +304,9 @@ class NoLock:
 
 async def tee_peer(
     iterator: AsyncIterator[T],
+    # the buffer specific to this peer
     buffer: Deque[T],
+    # the buffers of all peers, including our own
     peers: List[Deque[T]],
     lock: AsyncContextManager,
 ) -> AsyncGenerator[T, None]:
@@ -336,6 +338,7 @@ async def tee_peer(
             if peer_buffer is buffer:
                 peers.pop(idx)
                 break
+        # if we are the last peer, try and close the iterator
         if not peers and hasattr(iterator, "aclose"):
             await iterator.aclose()  # type: ignore
 
