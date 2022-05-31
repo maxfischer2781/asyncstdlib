@@ -167,6 +167,43 @@ async def test_contextmanager_raise_generatorexit():
 
 
 @sync
+async def test_contextmanager_no_suppress_generatorexit():
+    """Test that GeneratorExit is not suppressed"""
+
+    @a.contextmanager
+    async def no_op():
+        yield
+
+    exc = GeneratorExit("GE should not be replaced normally")
+    with pytest.raises(type(exc)) as exc_info:
+        async with no_op():
+            raise exc
+    assert exc_info.value is exc
+
+    @a.contextmanager
+    async def exit_ge():
+        try:
+            yield
+        except GeneratorExit:
+            pass
+
+    with pytest.raises(GeneratorExit):
+        async with exit_ge():
+            raise GeneratorExit("Resume teardown if child exited")
+
+    @a.contextmanager
+    async def ignore_ge():
+        try:
+            yield
+        except GeneratorExit:
+            yield
+
+    with pytest.raises(RuntimeError):
+        async with ignore_ge():
+            raise GeneratorExit("Warn if child does not exit")
+
+
+@sync
 async def test_nullcontext():
     async with a.nullcontext(1337) as value:
         assert value == 1337
