@@ -296,6 +296,7 @@ async def takewhile(
 
 class NoLock:
     """Dummy lock that provides the proper interface but no protection"""
+
     async def __aenter__(self) -> None:
         pass
 
@@ -405,7 +406,17 @@ class Tee(Generic[T]):
     def __len__(self) -> int:
         return len(self._children)
 
+    @overload
     def __getitem__(self, item: int) -> AsyncIterator[T]:
+        ...
+
+    @overload
+    def __getitem__(self, item: slice) -> Tuple[AsyncIterator[T], ...]:
+        ...
+
+    def __getitem__(
+        self, item: Union[int, slice]
+    ) -> Union[AsyncIterator[T], Tuple[AsyncIterator[T], ...]]:
         return self._children[item]
 
     def __iter__(self) -> Iterator[AnyIterable[T]]:
