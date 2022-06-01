@@ -1,4 +1,5 @@
 import itertools
+import sys
 
 import pytest
 
@@ -232,6 +233,11 @@ async def test_tee_concurrent_locked():
     assert results == items
 
 
+# see https://github.com/python/cpython/issues/74956
+@pytest.mark.skipif(
+    sys.version_info < (3, 8),
+    reason="async generators only protect against concurrent access since 3.8",
+)
 @multi_sync
 async def test_tee_concurrent_unlocked():
     """Test that does not prevent concurrency without a lock"""
