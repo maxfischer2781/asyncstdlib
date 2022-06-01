@@ -374,7 +374,7 @@ class Tee(Generic[T]):
     If ``iterable`` is an iterator and read elsewhere, ``tee`` will *not*
     provide these items. Also, ``tee`` must internally buffer each item until the
     last iterator has yielded it; if the most and least advanced iterator differ
-    by most data, using a :py:class:`list` is faster (but not lazy).
+    by most data, using a :py:class:`list` is more efficient (but not lazy).
 
     If the underlying iterable is concurrency safe (``anext`` may be awaited
     concurrently) the resulting iterators are concurrency safe as well. Otherwise,
