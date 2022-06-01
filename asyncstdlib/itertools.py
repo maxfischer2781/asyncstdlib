@@ -378,6 +378,9 @@ class Tee(Generic[T]):
     If the underlying iterable is concurrency safe (``anext`` may be awaited
     concurrently) the resulting iterators are concurrency safe as well. Otherwise,
     the iterators are safe if there is only ever one single "most advanced" iterator.
+    To enforce sequential use of ``anext``, provide a ``lock``
+    - e.g. an :py:class:`asyncio.Lock` instance in an :py:mod:`asyncio` application -
+    and access is automatically synchronised.
     """
 
     def __init__(
