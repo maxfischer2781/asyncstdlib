@@ -385,7 +385,7 @@ class Tee(Generic[T]):
         iterable: AnyIterable[T],
         n: int = 2,
         *,
-        lock: AsyncContextManager[Any] = NoLock(),
+        lock: Optional[AsyncContextManager[Any]] = None,
     ):
         self._iterator = aiter(iterable)
         self._buffers: List[Deque[T]] = [deque() for _ in range(n)]
@@ -394,7 +394,7 @@ class Tee(Generic[T]):
                 iterator=self._iterator,
                 buffer=buffer,
                 peers=self._buffers,
-                lock=lock,
+                lock=lock if lock is not None else NoLock(),
             )
             for buffer in self._buffers
         )
