@@ -87,7 +87,7 @@ class Switch:
 
 def multi_sync(test_case: Callable[..., Coroutine]):
     """
-    Mark an ``async def`` test case to be run synchronously with chicldren
+    Mark an ``async def`` test case to be run synchronously with children
 
     This emulates a primitive "event loop" which only responds
     to the :py:class:`PingPong`, :py:class:`Schedule` and :py:class:`Switch`.
