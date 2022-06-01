@@ -295,10 +295,11 @@ async def takewhile(
 
 
 class NoLock:
-    async def __aenter__(self):
+    """Dummy lock that provides the proper interface but no protection"""
+    async def __aenter__(self) -> None:
         pass
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         return False
 
 
@@ -308,7 +309,7 @@ async def tee_peer(
     buffer: Deque[T],
     # the buffers of all peers, including our own
     peers: List[Deque[T]],
-    lock: AsyncContextManager,
+    lock: AsyncContextManager[Any],
 ) -> AsyncGenerator[T, None]:
     """An individual iterator of a :py:func:`~.tee`"""
     try:
@@ -384,7 +385,7 @@ class Tee(Generic[T]):
         iterable: AnyIterable[T],
         n: int = 2,
         *,
-        lock: AsyncContextManager = NoLock(),
+        lock: AsyncContextManager[Any] = NoLock(),
     ):
         self._iterator = aiter(iterable)
         self._buffers: List[Deque[T]] = [deque() for _ in range(n)]
