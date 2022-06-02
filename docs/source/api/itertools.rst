@@ -65,8 +65,12 @@ Iterator transforming
 Iterator splitting
 ==================
 
-.. autofunction:: tee(iterable: (async) iter T, n: int = 2)
+.. autofunction:: tee(iterable: (async) iter T, n: int = 2, [*, lock: async with Any])
     :for: :(async iter T, ...)
+
+    .. versionadded:: 3.10.5
+
+        The ``lock`` keyword parameter.
 
 .. autofunction:: pairwise(iterable: (async) iter T)
     :async-for: :(T, T)

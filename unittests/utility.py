@@ -85,12 +85,34 @@ class Switch:
         yield self
 
 
+class Lock:
+    def __init__(self):
+        self._owned = False
+        self._waiting = []
+
+    async def __aenter__(self):
+        if self._owned:
+            # wait until it is our turn to take the lock
+            token = object()
+            self._waiting.append(token)
+            while self._owned or self._waiting[0] is not token:
+                await Switch()
+            # take the lock and remove our wait claim
+            self._owned = True
+            self._waiting.pop(0)
+        self._owned = True
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self._owned = False
+
+
 def multi_sync(test_case: Callable[..., Coroutine]):
     """
-    Mark an ``async def`` test case to be run synchronously with chicldren
+    Mark an ``async def`` test case to be run synchronously with children
 
     This emulates a primitive "event loop" which only responds
-    to the :py:class:`PingPong`, :py:class:`Schedule` and :py:class:`Switch`.
+    to the :py:class:`PingPong`, :py:class:`Schedule`, :py:class:`Switch`
+    and :py:class:`Lock`.
     """
 
     @wraps(test_case)
@@ -103,7 +125,7 @@ def multi_sync(test_case: Callable[..., Coroutine]):
                 event = coro.send(event)
             except StopIteration as e:
                 result = e.args[0] if e.args else None
-                assert result is None
+                assert result is None, f"got '{result!r}' expected 'None'"
             else:
                 if isinstance(event, PingPong):
                     run_queue.appendleft((coro, event))

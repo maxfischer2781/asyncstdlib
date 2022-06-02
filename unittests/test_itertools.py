@@ -1,10 +1,11 @@
 import itertools
+import sys
 
 import pytest
 
 import asyncstdlib as a
 
-from .utility import sync, asyncify, awaitify
+from .utility import sync, asyncify, awaitify, multi_sync, Schedule, Switch, Lock
 
 
 @sync
@@ -208,6 +209,56 @@ async def test_tee():
     async with a.tee(asyncify(iterable), n=3) as iterators:
         for iterator in iterators:
             assert await a.list(iterator) == iterable
+
+
+@multi_sync
+async def test_tee_concurrent_locked():
+    """Test that properly uses a lock for synchronisation"""
+    items = [1, 2, 3, -5, 12, 78, -1, 111]
+
+    async def iter_values():
+        for item in items:
+            # switch to other tasks a few times to guarantees another runs
+            for _ in range(5):
+                await Switch()
+            yield item
+
+    async def test_peer(peer_tee):
+        assert await a.list(peer_tee) == items
+
+    head_peer, *peers = a.tee(iter_values(), n=len(items) // 2, lock=Lock())
+    await Schedule(*map(test_peer, peers))
+    await Switch()
+    results = [item async for item in head_peer]
+    assert results == items
+
+
+# see https://github.com/python/cpython/issues/74956
+@pytest.mark.skipif(
+    sys.version_info < (3, 8),
+    reason="async generators only protect against concurrent access since 3.8",
+)
+@multi_sync
+async def test_tee_concurrent_unlocked():
+    """Test that does not prevent concurrency without a lock"""
+    items = list(range(12))
+
+    async def iter_values():
+        for item in items:
+            # switch to other tasks a few times to guarantees another runs
+            for _ in range(5):
+                await Switch()
+            yield item
+
+    async def test_peer(peer_tee):
+        assert await a.list(peer_tee) == items
+
+    this, peer = a.tee(iter_values(), n=2)
+    await Schedule(test_peer(peer))
+    await Switch()
+    # underlying generator raises RuntimeError when `__anext__` is interleaved
+    with pytest.raises(RuntimeError):
+        await test_peer(this)
 
 
 @sync
