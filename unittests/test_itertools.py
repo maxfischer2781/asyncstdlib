@@ -213,7 +213,7 @@ async def test_tee():
 
 @multi_sync
 async def test_tee_concurrent_locked():
-    """Test that properly uses a lock for synchrinisation"""
+    """Test that properly uses a lock for synchronisation"""
     items = [1, 2, 3, -5, 12, 78, -1, 111]
 
     async def iter_values():
