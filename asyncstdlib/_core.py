@@ -1,3 +1,4 @@
+from __future__ import annotations
 from inspect import iscoroutinefunction
 from typing import (
     Any,
@@ -14,7 +15,7 @@ from typing import (
 )
 from types import TracebackType
 
-from ._typing import T, AnyIterable
+from ._typing import T, AnyIterable, P
 
 
 class Sentinel:
@@ -93,8 +94,8 @@ async def borrow(iterator: AsyncIterator[T]) -> AsyncGenerator[T, None]:
 
 
 def awaitify(
-    function: Union[Callable[..., T], Callable[..., Awaitable[T]]]
-) -> Callable[..., Awaitable[T]]:
+    function: Union[Callable[P, T], Callable[P, Awaitable[T]]]
+) -> Callable[P, Awaitable[T]]:
     """Ensure that ``function`` can be used in ``await`` expressions"""
     if iscoroutinefunction(function):
         return function  # type: ignore
@@ -102,16 +103,16 @@ def awaitify(
         return Awaitify(function)
 
 
-class Awaitify(Generic[T]):
+class Awaitify(Generic[P, T]):
     """Helper to peek at the return value of ``function`` and make it ``async``"""
 
     __slots__ = "__wrapped__", "_async_call"
 
-    def __init__(self, function: Union[Callable[..., T], Callable[..., Awaitable[T]]]):
+    def __init__(self, function: Union[Callable[P, T], Callable[P, Awaitable[T]]]):
         self.__wrapped__ = function
         self._async_call: Optional[Callable[..., Awaitable[T]]] = None
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T]:
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> Awaitable[T]:
         async_call = self._async_call
         if async_call is None:
             value = self.__wrapped__(*args, **kwargs)
@@ -129,8 +130,8 @@ async def await_value(value: T) -> T:
     return value
 
 
-def force_async(call: Callable[..., T]) -> Callable[..., Awaitable[T]]:
-    async def async_wrapped(*args: Any, **kwargs: Any) -> T:
+def force_async(call: Callable[P, T]) -> Callable[P, Awaitable[T]]:
+    async def async_wrapped(*args: P.args, **kwargs: P.kwargs) -> T:
         return call(*args, **kwargs)
 
     return async_wrapped

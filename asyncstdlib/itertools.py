@@ -633,7 +633,7 @@ async def groupby(  # noqa: F811
     # `current_*`: buffer for key/value the current group peeked beyond its end
     current_key = current_value = nothing = object()  # type: Any
     make_key: Callable[[Any], Awaitable[Any]] = (
-        _awaitify(key) if key is not None else identity  # type: ignore
+        _awaitify(key) if key is not None else identity
     )
     async with ScopedIter(iterable) as async_iter:
         # fast-forward mode: advance to the next group

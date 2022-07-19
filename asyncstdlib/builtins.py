@@ -753,7 +753,7 @@ async def sorted(
             items.sort(reverse=reverse)
             return items
     else:
-        async_key = _awaitify(key)
+        async_key: Callable[[T], Awaitable[LT]] = _awaitify(key)
         keyed_items = [(await async_key(item), item) async for item in aiter(iterable)]
         keyed_items.sort(key=lambda ki: ki[0], reverse=reverse)
         return [item for key, item in keyed_items]

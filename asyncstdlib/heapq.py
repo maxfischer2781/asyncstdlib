@@ -145,7 +145,9 @@ async def merge(
     is yielded before ``b``. Use ``reverse=True`` for descending sort order.
     The ``iterables`` must be pre-sorted in the same order.
     """
-    a_key = awaitify(key) if key is not None else None
+    a_key: Callable[[Any], Awaitable[Any]] | None = (
+        awaitify(key) if key is not None else None
+    )
     # sortable iterators with (reverse) position to ensure stable sort for ties
     iter_heap: List[Tuple[_KeyIter[Any], int]] = [
         (itr, idx if not reverse else -idx)
@@ -231,7 +233,7 @@ async def _identity(x: T) -> T:
 async def nlargest(
     iterable: AsyncIterator[T],
     n: int,
-    key: Optional[Callable[[Any], Awaitable[Any]]] = None,
+    key: Optional[Callable[[T], Awaitable[LT]]] = None,
 ) -> List[T]:
     """
     Return a sorted list of the ``n`` largest elements from the (async) iterable
@@ -244,7 +246,7 @@ async def nlargest(
     The result is equivalent to ``sorted(iterable, key=key, reverse=True)[:n]``,
     but ``iterable`` is consumed lazily and items are discarded eagerly.
     """
-    a_key: Callable[[Any], Awaitable[Any]] = (
+    a_key: Callable[[T], Awaitable[LT]] = (
         awaitify(key) if key is not None else _identity  # type: ignore
     )
     return await _largest(iterable=iterable, n=n, key=a_key, reverse=False)
@@ -253,14 +255,14 @@ async def nlargest(
 async def nsmallest(
     iterable: AsyncIterator[T],
     n: int,
-    key: Optional[Callable[[Any], Awaitable[Any]]] = None,
+    key: Optional[Callable[[T], Awaitable[LT]]] = None,
 ) -> List[T]:
     """
     Return a sorted list of the ``n`` smallest elements from the (async) iterable
 
     Provides the reverse functionality to :py:func:`~.nlargest`.
     """
-    a_key: Callable[[Any], Awaitable[Any]] = (
+    a_key: Callable[[T], Awaitable[LT]] = (
         awaitify(key) if key is not None else _identity  # type: ignore
     )
     return await _largest(iterable=iterable, n=n, key=a_key, reverse=True)

@@ -14,7 +14,7 @@ from typing import (
     Optional,
 )
 
-from ._typing import AsyncContextManager, T, T1, T2, T3, T4, T5, AnyIterable
+from ._typing import AsyncContextManager, T, T1, T2, T3, T4, T5, AnyIterable, P
 from ._core import aiter
 from .contextlib import nullcontext
 
@@ -328,12 +328,12 @@ async def apply(
 
 
 @overload
-def sync(function: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+def sync(function: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
     ...
 
 
 @overload
-def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+def sync(function: Callable[P, T]) -> Callable[P, Awaitable[T]]:
     ...
 
 

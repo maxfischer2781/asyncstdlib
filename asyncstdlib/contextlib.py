@@ -15,7 +15,7 @@ from collections import deque
 from functools import partial
 import sys
 
-from ._typing import Protocol, AsyncContextManager, ContextManager, T, C
+from ._typing import Protocol, AsyncContextManager, ContextManager, T, C, P
 from ._core import awaitify
 from ._utility import public_module, slot_get as _slot_get
 
@@ -37,8 +37,8 @@ AC = TypeVar("AC", bound=ACloseable)
 
 
 def contextmanager(
-    func: Callable[..., AsyncGenerator[T, None]]
-) -> Callable[..., AsyncContextManager[T]]:
+    func: Callable[P, AsyncGenerator[T, None]]
+) -> Callable[P, AsyncContextManager[T]]:
     """
     Create an asynchronous context manager out of an asynchronous generator function
 

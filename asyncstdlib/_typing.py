@@ -26,6 +26,12 @@ else:
         TypedDict,
     )
 
+try:
+    from typing import ParamSpec
+except ImportError:
+    from typing_extensions import ParamSpec
+
+
 __all__ = [
     "Protocol",
     "AsyncContextManager",
@@ -43,6 +49,7 @@ __all__ = [
     "LT",
     "ADD",
     "AnyIterable",
+    "P",
 ]
 
 # TypeVars for argument/return type
@@ -75,6 +82,9 @@ ADD = TypeVar("ADD", bound="SupportsAdd")
 class SupportsAdd(Protocol):
     def __add__(self: ADD, other: ADD) -> ADD:
         raise NotImplementedError
+
+
+P = ParamSpec("P")
 
 
 #: (async) iter T
