@@ -48,6 +48,7 @@ The missing ``async`` toolbox
    :hidden:
 
    source/notes/iter_scope
+   source/notes/compatible
    source/glossary
 
 .. toctree::
