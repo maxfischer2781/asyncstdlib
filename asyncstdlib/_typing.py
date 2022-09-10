@@ -26,9 +26,9 @@ else:
         TypedDict,
     )
 
-try:
+if sys.version_info >= (3, 10):
     from typing import ParamSpec
-except ImportError:
+else:
     from typing_extensions import ParamSpec
 
 
