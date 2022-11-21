@@ -439,7 +439,7 @@ class ExitStack:
                 self._stitch_context(exc, exc_val, unwind_context)
                 reraise_exc = True
                 exc_type, exc_val, tb = type(exc), exc, exc.__traceback__
-        if reraise_exc:
+        if reraise_exc and exc_val is not None:
             # The __context__ is replaced by a normal `raise`, and only
             # preserved by a bare `raise` in an except block.
             exc_context = exc_val.__context__
