@@ -100,7 +100,6 @@ class LRUAsyncCallable(Protocol[AC]):
         # of just passing in `self`/`cls`/... directly.
 
 
-@public_module("asyncstdlib.functools")
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
     """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
 
@@ -293,7 +292,6 @@ def cache__get(
     return LRUAsyncBoundCallable(self, instance)
 
 
-@public_module("asyncstdlib.functools")
 class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` to track accesses as for caching/memoization"""
 
@@ -323,7 +321,6 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
         return
 
 
-@public_module("asyncstdlib.functools")
 class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async memoization"""
 
@@ -377,7 +374,6 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
         self.__cache.pop(CallKey.from_call(args, kwargs, typed=self.__typed), None)
 
 
-@public_module("asyncstdlib.functools")
 class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async LRU caching of finite capacity"""
 
