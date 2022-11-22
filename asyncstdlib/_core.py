@@ -97,7 +97,7 @@ def awaitify(
 ) -> Callable[..., Awaitable[T]]:
     """Ensure that ``function`` can be used in ``await`` expressions"""
     if iscoroutinefunction(function):
-        return function  # type: ignore
+        return function
     else:
         return Awaitify(function)
 
