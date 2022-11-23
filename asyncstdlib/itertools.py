@@ -342,7 +342,7 @@ async def tee_peer(
                 break
         # if we are the last peer, try and close the iterator
         if not peers and hasattr(iterator, "aclose"):
-            await iterator.aclose()  # type: ignore
+            await iterator.aclose()
 
 
 @public_module(__name__, "tee")
