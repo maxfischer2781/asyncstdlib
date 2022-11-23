@@ -297,10 +297,11 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
 
     __slots__ = ("__weakref__", "__dict__", "__wrapped__", "__misses", "__typed")
 
+    __wrapped__: AC
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call  # type: ignore
+        self.__wrapped__ = call
         self.__misses = 0
         self.__typed = typed
 
@@ -334,10 +335,11 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
         "__cache",
     )
 
+    __wrapped__: AC
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call  # type: ignore
+        self.__wrapped__ = call
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
@@ -388,10 +390,11 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
         "__cache",
     )
 
+    __wrapped__: AC
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool, maxsize: int):
-        self.__wrapped__ = call  # type: ignore
+        self.__wrapped__ = call
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
