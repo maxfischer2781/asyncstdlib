@@ -94,7 +94,7 @@ class _AsyncGeneratorContextManager(Generic[T]):
                 # Use `aclose` to have additional checks for the child to
                 # handle shutdown properly.
                 if exc_type is GeneratorExit:
-                    result = await self.gen.aclose()
+                    result = await self.gen.aclose()  # type: ignore
                 else:
                     result = await self.gen.athrow(exc_type, exc_val, exc_tb)
             except StopAsyncIteration as exc:
