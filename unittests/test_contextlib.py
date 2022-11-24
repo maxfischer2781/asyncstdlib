@@ -185,6 +185,7 @@ async def test_contextmanager_no_suppress_generatorexit():
         try:
             yield
         except GeneratorExit:
+            # treat GE as regular exit
             pass
 
     with pytest.raises(GeneratorExit):

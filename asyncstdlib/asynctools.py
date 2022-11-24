@@ -49,9 +49,9 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         # running aiter(self).aclose closes the underlying iterator.
         self.__anext__ = self._wrapper.__anext__  # type: ignore
         if hasattr(iterator, "asend"):
-            self.asend = iterator.asend  # type: ignore
+            self.asend = iterator.asend
         if hasattr(iterator, "athrow"):
-            self.athrow = iterator.athrow  # type: ignore
+            self.athrow = iterator.athrow
 
     # Py3.6 compatibility
     # Use ``(item async for item in iterator)`` inside

@@ -100,7 +100,6 @@ class LRUAsyncCallable(Protocol[AC]):
         # of just passing in `self`/`cls`/... directly.
 
 
-@public_module("asyncstdlib.functools")
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
     """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
 
@@ -293,16 +292,16 @@ def cache__get(
     return LRUAsyncBoundCallable(self, instance)
 
 
-@public_module("asyncstdlib.functools")
 class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` to track accesses as for caching/memoization"""
 
     __slots__ = ("__weakref__", "__dict__", "__wrapped__", "__misses", "__typed")
 
+    __wrapped__: AC
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call  # type: ignore
+        self.__wrapped__ = call
         self.__misses = 0
         self.__typed = typed
 
@@ -323,7 +322,6 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
         return
 
 
-@public_module("asyncstdlib.functools")
 class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async memoization"""
 
@@ -337,10 +335,11 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
         "__cache",
     )
 
+    __wrapped__: AC
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call  # type: ignore
+        self.__wrapped__ = call
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
@@ -377,7 +376,6 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
         self.__cache.pop(CallKey.from_call(args, kwargs, typed=self.__typed), None)
 
 
-@public_module("asyncstdlib.functools")
 class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` with async LRU caching of finite capacity"""
 
@@ -392,10 +390,11 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
         "__cache",
     )
 
+    __wrapped__: AC
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool, maxsize: int):
-        self.__wrapped__ = call  # type: ignore
+        self.__wrapped__ = call
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
