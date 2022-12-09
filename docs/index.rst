@@ -48,6 +48,7 @@ The missing ``async`` toolbox
    :hidden:
 
    source/notes/iter_scope
+   source/notes/compatible
    source/glossary
 
 .. toctree::
@@ -120,12 +121,12 @@ Async Neutral Arguments
 
 Many objects of :py:mod:`asyncstdlib` are :term:`async neutral` -- they accept
 *both* regular and async arguments.
-Type annotations use *(async)* to denote async neutral objects.
-For example, the annotation *(int, ...) → (async) bool* denotes a call that takes an
-:py:class:`int` and either returns a boolean directly *or* requires ``await`` to
-return a boolean.
+Type annotations use parentheses to denote this;
+for example, "*(async) iter T*" in the signature **zip(**\ *\*iterables: (async) iter T*\ **)**
+means that :py:mod:`asyncstdlib`'s :py:func:`~builtins.zip`
+can handle both synchronous and asynchronous iterables.
 
-Whether a call is regular or async is determined by inspecting its
+Whether a callable is regular or async is determined by inspecting its
 return type at runtime.
 This supports async-producing factories, such as an ``async def``
 function wrapped in :py:class:`functools.partial`.

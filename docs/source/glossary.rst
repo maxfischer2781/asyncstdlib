@@ -10,9 +10,11 @@ Glossary of Terms
 .. glossary::
 
    async neutral
-      An object that may provide either of a regular or asynchronous implementation.
-      For example, an async neutral iterable may support either regular
+      Types that support either of a regular or asynchronous implementation.
+      For example, an async neutral iterable may provide either regular
       ``for _ in iterable`` or asynchronous ``async for _ in iterable`` iteration.
+      Commonly, callables have async neutral parameters to simplify using them
+      with a mixture of synchronous and regular arguments.
 
    borrowing
    borrowed object
