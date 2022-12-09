@@ -10,7 +10,7 @@ Glossary of Terms
 .. glossary::
 
    async neutral
-      Types that supports either of a regular or asynchronous implementation.
+      Types that support either of a regular or asynchronous implementation.
       For example, an async neutral iterable may provide either regular
       ``for _ in iterable`` or asynchronous ``async for _ in iterable`` iteration.
       Commonly, callables have async neutral parameters to simplify using them
