@@ -154,7 +154,7 @@ class CachedProperty(Generic[T]):
     ) -> Union["CachedProperty[T]", Awaitable[T]]:
         if instance is None:
             return self
-        return self._get_attribute(instance)
+        return _RepeatableCoroutine(self._get_attribute, instance)
 
     async def _get_attribute(self, instance: object) -> T:
         value = await self.__wrapped__(instance)
