@@ -74,9 +74,7 @@ class _RepeatableCoroutine(Generic[T]):
         self.kwargs = kwargs
 
     def __await__(self) -> Generator[None, None, T]:
-        return (
-            yield from self.call(*self.args, **self.kwargs).__await__()
-        )
+        return self.call(*self.args, **self.kwargs).__await__()
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} object {self.call.__name__} at {id(self)}>"
