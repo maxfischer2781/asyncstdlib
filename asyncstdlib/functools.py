@@ -64,10 +64,7 @@ class _RepeatableCoroutine(Generic[T]):
     __slots__ = ("call", "args", "kwargs")
 
     def __init__(
-            self,
-            __call: Callable[..., Coroutine[Any, Any, T]],
-            *args: Any,
-            **kwargs: Any
+        self, __call: Callable[..., Coroutine[Any, Any, T]], *args: Any, **kwargs: Any
     ):
         self.call = __call
         self.args = args

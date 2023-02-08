@@ -111,7 +111,7 @@ def merge(
 def merge(
     *iterables: AnyIterable[T],
     key: Callable[[T], Awaitable[LT]] = ...,
-    reverse: bool = ...
+    reverse: bool = ...,
 ) -> AsyncIterator[T]:
     pass
 
@@ -126,7 +126,7 @@ def merge(
 async def merge(
     *iterables: AnyIterable[Any],
     key: Optional[Callable[[Any], Any]] = None,
-    reverse: bool = False
+    reverse: bool = False,
 ) -> AsyncIterator[Any]:
     """
     Merge all pre-sorted (async) ``iterables`` into a single sorted iterator
