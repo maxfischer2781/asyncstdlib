@@ -6,6 +6,7 @@ from typing import (
     Generic,
     Generator,
     Optional,
+    Coroutine,
     overload,
 )
 
@@ -55,6 +56,25 @@ class AwaitableValue(Generic[T]):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.value!r})"
+
+
+class _RepeatableCoroutine(Generic[T]):
+    """Helper to ``await`` a coroutine also more or less than just once"""
+
+    __slots__ = ("call", "args", "kwargs")
+
+    def __init__(
+        self, __call: Callable[..., Coroutine[Any, Any, T]], *args: Any, **kwargs: Any
+    ):
+        self.call = __call
+        self.args = args
+        self.kwargs = kwargs
+
+    def __await__(self) -> Generator[Any, Any, T]:
+        return self.call(*self.args, **self.kwargs).__await__()
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} object {self.call.__name__} at {id(self)}>"
 
 
 @public_module(__name__, "cached_property")
@@ -129,7 +149,7 @@ class CachedProperty(Generic[T]):
     ) -> Union["CachedProperty[T]", Awaitable[T]]:
         if instance is None:
             return self
-        return self._get_attribute(instance)
+        return _RepeatableCoroutine(self._get_attribute, instance)
 
     async def _get_attribute(self, instance: object) -> T:
         value = await self.__wrapped__(instance)

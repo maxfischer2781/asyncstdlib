@@ -316,7 +316,6 @@ async def values(gby):
 @pytest.mark.parametrize("view", [keys, values])
 @sync
 async def test_groupby(iterable, key, view):
-
     for akey in (key, awaitify(key)):
         assert await view(a.groupby(iterable)) == await view(
             itertools.groupby(iterable)
