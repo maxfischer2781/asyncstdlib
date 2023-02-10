@@ -70,7 +70,7 @@ class _RepeatableCoroutine(Generic[T]):
         self.args = args
         self.kwargs = kwargs
 
-    def __await__(self) -> Generator[None, None, T]:
+    def __await__(self) -> Generator[Any, Any, T]:
         return self.call(*self.args, **self.kwargs).__await__()
 
     def __repr__(self) -> str:
