@@ -160,8 +160,8 @@ class chain(AsyncIterator[T]):
                         yield item
         self._impl = impl()
 
-    @classmethod
-    async def from_iterable(cls: type[Any], iterable: AnyIterable[AnyIterable[T]]) -> AsyncIterator[T]:
+    @staticmethod
+    async def from_iterable(iterable: AnyIterable[AnyIterable[T]]) -> AsyncIterator[T]:
         """
         Alternate constructor for :py:func:`~.chain` that lazily exhausts iterables as well
         """
