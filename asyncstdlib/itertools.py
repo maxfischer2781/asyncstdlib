@@ -141,7 +141,7 @@ async def accumulate(
             yield value
 
 
-class chain(Generic[T], AsyncIterator[T]):
+class chain(AsyncIterator[T]):
     """
     An :term:`asynchronous iterator` flattening values from all ``iterables``
 
