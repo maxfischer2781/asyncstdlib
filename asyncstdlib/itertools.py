@@ -150,7 +150,7 @@ class chain(AsyncIterator[T]):
     sequences and concatenating them, but lazily exhausts each iterable.
     """
 
-    __slots__ = "_impl",
+    __slots__ = ("_impl",)
 
     def __init__(self, *iterables: AnyIterable[T]):
         async def impl():
@@ -158,6 +158,7 @@ class chain(AsyncIterator[T]):
                 async with ScopedIter(iterable) as iterator:
                     async for item in iterator:
                         yield item
+
         self._impl = impl()
 
     @staticmethod
