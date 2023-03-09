@@ -164,7 +164,8 @@ class chain(AsyncIterator[T]):
     @staticmethod
     async def from_iterable(iterable: AnyIterable[AnyIterable[T]]) -> AsyncIterator[T]:
         """
-        Alternate constructor for :py:func:`~.chain` that lazily exhausts iterables as well
+        Alternate constructor for :py:func:`~.chain` that lazily exhausts
+        iterables as well
         """
         async with ScopedIter(iterable) as iterables:
             async for sub_iterable in iterables:
