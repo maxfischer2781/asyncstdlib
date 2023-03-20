@@ -141,7 +141,7 @@ async def accumulate(
             yield value
 
 
-async def chain(*iterables: AnyIterable[T]) -> AsyncIterator[T]:
+class chain(AsyncIterator[T]):
     """
     An :term:`asynchronous iterator` flattening values from all ``iterables``
 
@@ -149,27 +149,32 @@ async def chain(*iterables: AnyIterable[T]) -> AsyncIterator[T]:
     each of the ``iterables``. This is similar to converting all ``iterables`` to
     sequences and concatenating them, but lazily exhausts each iterable.
     """
-    for iterable in iterables:
-        async with ScopedIter(iterable) as iterator:
-            async for item in iterator:
-                yield item
 
+    __slots__ = ("_impl",)
 
-@public_module(__name__, "chain.from_iterable")
-async def chain_from_iterable(
-    iterable: AnyIterable[AnyIterable[T]],
-) -> AsyncIterator[T]:
-    """
-    Alternate constructor for :py:func:`~.chain` that lazily exhausts iterables as well
-    """
-    async with ScopedIter(iterable) as iterables:
-        async for sub_iterable in iterables:
-            async with ScopedIter(sub_iterable) as iterator:
-                async for item in iterator:
-                    yield item
+    def __init__(self, *iterables: AnyIterable[T]):
+        async def impl() -> AsyncIterator[T]:
+            for iterable in iterables:
+                async with ScopedIter(iterable) as iterator:
+                    async for item in iterator:
+                        yield item
 
+        self._impl = impl()
 
-chain.from_iterable = chain_from_iterable  # type: ignore
+    @staticmethod
+    async def from_iterable(iterable: AnyIterable[AnyIterable[T]]) -> AsyncIterator[T]:
+        """
+        Alternate constructor for :py:func:`~.chain` that lazily exhausts
+        iterables as well
+        """
+        async with ScopedIter(iterable) as iterables:
+            async for sub_iterable in iterables:
+                async with ScopedIter(sub_iterable) as iterator:
+                    async for item in iterator:
+                        yield item
+
+    def __anext__(self) -> Awaitable[T]:
+        return self._impl.__anext__()
 
 
 async def compress(
