@@ -204,6 +204,31 @@ async def test_lru_cache_typed():
 
 
 @sync
+async def test_lru_cache_method():
+    """
+    Test that the lru_cache can be used on methods
+    """
+    class SelfCached:
+        def __init__(self, ident: int):
+            self.ident = ident
+
+        @a.lru_cache()
+        async def pingpong(self, arg):
+            # return identifier of instance to separate cache entries per instance
+            return arg, self.ident
+
+    for iteration in range(4):
+        instance = SelfCached(iteration)
+        for val in range(20):
+            # 1 read initializes, 2 reads hit
+            assert await instance.pingpong(val) == (val, iteration)
+            assert await instance.pingpong(float(val)) == (val, iteration)
+            assert await instance.pingpong(val) == (val, iteration)
+            assert instance.pingpong.cache_info().misses == val + 1 + 20 * iteration
+            assert instance.pingpong.cache_info().hits == (val + 1 + 20 * iteration) * 2
+
+
+@sync
 async def test_lru_cache_bare():
     @a.lru_cache
     async def pingpong(arg):
