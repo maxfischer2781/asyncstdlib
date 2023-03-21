@@ -208,6 +208,7 @@ async def test_lru_cache_method():
     """
     Test that the lru_cache can be used on methods
     """
+
     class SelfCached:
         def __init__(self, ident: int):
             self.ident = ident
