@@ -43,6 +43,9 @@ doc = ["sphinx", "sphinxcontrib-trio"]
 Documentation = "https://asyncstdlib.readthedocs.io/en/latest/"
 Source = "https://github.com/maxfischer2781/asyncstdlib"
 
+[tool.flit.sdist]
+include = ["unittests"]
+
 [tool.mypy]
 files = ["asyncstdlib/*.py"]
 check_untyped_defs = true
