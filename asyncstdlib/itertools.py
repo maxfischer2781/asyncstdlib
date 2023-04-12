@@ -162,20 +162,20 @@ class chain(AsyncIterator[T]):
                     async for item in iterator:
                         yield item
 
-    def __init__(self, *iterables: AnyIterable[T]):
-        self._iterator = self._chain_iterator(iterables)
+    def __init__(
+        self, *iterables: AnyIterable[T], _iterables: AnyIterable[AnyIterable[T]] = ()
+    ):
+        self._iterator = self._chain_iterator(iterables or _iterables)
 
-    @staticmethod
-    async def from_iterable(iterable: AnyIterable[AnyIterable[T]]) -> AsyncIterator[T]:
+    @classmethod
+    def from_iterable(
+        cls, iterable: AnyIterable[AnyIterable[T]]
+    ) -> AsyncIterator[T]:
         """
         Alternate constructor for :py:func:`~.chain` that lazily exhausts
         iterables as well
         """
-        async with ScopedIter(iterable) as iterables:
-            async for sub_iterable in iterables:
-                async with ScopedIter(sub_iterable) as iterator:
-                    async for item in iterator:
-                        yield item
+        return cls(_iterables=iterable)
 
     def __anext__(self) -> Awaitable[T]:
         return self._iterator.__anext__()
