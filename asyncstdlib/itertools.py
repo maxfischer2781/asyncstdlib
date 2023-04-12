@@ -153,14 +153,15 @@ class chain(AsyncIterator[T]):
     __slots__ = ("_iterator",)
 
     @staticmethod
-    async def impl(iterables) -> AsyncGenerator[T, None]:
-            for iterable in iterables:
+    async def _chain_iterator(iterables) -> AsyncGenerator[T, None]:
+        async with ScopedIter(iterables) as iterables_iter:
+            async for iterable in iterables_iter:
                 async with ScopedIter(iterable) as iterator:
                     async for item in iterator:
                         yield item
 
     def __init__(self, *iterables: AnyIterable[T]):
-        self._iterator = self.impl(iterables)
+        self._iterator = self._chain_iterator(iterables)
 
     @staticmethod
     async def from_iterable(iterable: AnyIterable[AnyIterable[T]]) -> AsyncIterator[T]:
