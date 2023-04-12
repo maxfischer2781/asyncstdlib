@@ -168,9 +168,7 @@ class chain(AsyncIterator[T]):
         self._iterator = self._chain_iterator(iterables or _iterables)
 
     @classmethod
-    def from_iterable(
-        cls, iterable: AnyIterable[AnyIterable[T]]
-    ) -> "chain[T]":
+    def from_iterable(cls, iterable: AnyIterable[AnyIterable[T]]) -> "chain[T]":
         """
         Alternate constructor for :py:func:`~.chain` that lazily exhausts
         iterables as well
