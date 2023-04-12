@@ -150,7 +150,7 @@ class chain(AsyncIterator[T]):
     sequences and concatenating them, but lazily exhausts each iterable.
     """
 
-    __slots__ = ("_impl",)
+    __slots__ = ("_iterator",)
 
     def __init__(self, *iterables: AnyIterable[T]):
         async def impl() -> AsyncGenerator[T, None]:
@@ -159,7 +159,7 @@ class chain(AsyncIterator[T]):
                     async for item in iterator:
                         yield item
 
-        self._impl = impl()
+        self._iterator = impl()
 
     @staticmethod
     async def from_iterable(iterable: AnyIterable[AnyIterable[T]]) -> AsyncIterator[T]:
@@ -174,10 +174,10 @@ class chain(AsyncIterator[T]):
                         yield item
 
     def __anext__(self) -> Awaitable[T]:
-        return self._impl.__anext__()
+        return self._iterator.__anext__()
 
     def aclose(self) -> Awaitable[None]:
-        return self._impl.aclose()
+        return self._iterator.aclose()
 
 
 async def compress(
