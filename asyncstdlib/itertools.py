@@ -176,6 +176,9 @@ class chain(AsyncIterator[T]):
     def __anext__(self) -> Awaitable[T]:
         return self._impl.__anext__()
 
+    def aclose(self) -> Awaitable[None]:
+        return self._impl.aclose()
+
 
 async def compress(
     data: AnyIterable[T], selectors: AnyIterable[bool]
