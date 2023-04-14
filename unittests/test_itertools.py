@@ -122,9 +122,10 @@ async def test_chain_close_auto(iterables):
 
 # insert a known filled iterable since chain closes all that are exhausted
 @pytest.mark.parametrize("iterables", [([1], *chain) for chain in chains])
-@pytest.mark.parametrize("chain_type, must_close", [
-    (lambda iterators: a.chain(*iterators), True), (a.chain.from_iterable, False)
-])
+@pytest.mark.parametrize(
+    "chain_type, must_close",
+    [(lambda iterators: a.chain(*iterators), True), (a.chain.from_iterable, False)],
+)
 @sync
 async def test_chain_close_partial(iterables, chain_type, must_close):
     """Test that `chain` closes owned iterators"""
