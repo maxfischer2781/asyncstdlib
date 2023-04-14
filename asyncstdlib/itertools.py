@@ -148,6 +148,10 @@ class chain(AsyncIterator[T]):
     The resulting iterator consecutively iterates over and yields all values from
     each of the ``iterables``. This is similar to converting all ``iterables`` to
     sequences and concatenating them, but lazily exhausts each iterable.
+
+    The ``chain`` assumes ownership of its ``iterables`` and closes them reliably
+    when the ``chain`` is closed. Pass the ``iterables`` via a :py:class:`tuple` to
+    ``chain.from_iterable`` to avoid closing all iterables but those already processed.
     """
 
     __slots__ = ("_iterator", "_owned_iterators")
@@ -176,7 +180,11 @@ class chain(AsyncIterator[T]):
     def from_iterable(cls, iterable: AnyIterable[AnyIterable[T]]) -> "chain[T]":
         """
         Alternate constructor for :py:func:`~.chain` that lazily exhausts
-        iterables as well
+        the ``iterable`` of iterables as well
+
+        This is suitable for chaining iterables from a lazy or infinite ``iterable``.
+        In turn, closing the ``chain`` only closes those iterables
+        already fetched from ``iterable``.
         """
         return cls(_iterables=iterable)
 
