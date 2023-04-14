@@ -134,6 +134,8 @@ async def test_chain_close_partial(iterables, chain_type, must_close):
     assert await a.anext(chain) == next(itertools.chain(*iterables))
     await chain.aclose()
     assert all(iterable.closed == must_close for iterable in closeable_iterables[1:])
+    # closed chain must remain closed regardless of iterators
+    assert await a.anext(chain, "sentinel") == "sentinel"
 
 
 compress_cases = [
