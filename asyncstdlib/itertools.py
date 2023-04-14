@@ -150,7 +150,7 @@ class chain(AsyncIterator[T]):
     sequences and concatenating them, but lazily exhausts each iterable.
     """
 
-    __slots__ = ("_iterator",)
+    __slots__ = ("_iterator", "_owned_iterators")
 
     @staticmethod
     async def _chain_iterator(
@@ -166,6 +166,11 @@ class chain(AsyncIterator[T]):
         self, *iterables: AnyIterable[T], _iterables: AnyIterable[AnyIterable[T]] = ()
     ):
         self._iterator = self._chain_iterator(iterables or _iterables)
+        self._owned_iterators = (
+            iterable
+            for iterable in iterables
+            if isinstance(iterable, AsyncIterator) and hasattr(iterable, "aclose")
+        )
 
     @classmethod
     def from_iterable(cls, iterable: AnyIterable[AnyIterable[T]]) -> "chain[T]":
@@ -178,8 +183,11 @@ class chain(AsyncIterator[T]):
     def __anext__(self) -> Awaitable[T]:
         return self._iterator.__anext__()
 
-    def aclose(self) -> Awaitable[None]:
-        return self._iterator.aclose()
+    async def aclose(self) -> None:
+        for iterable in self._owned_iterators:
+            if hasattr(iterable, "aclose"):
+                await iterable.aclose()
+        await self._iterator.aclose()
 
 
 async def compress(
