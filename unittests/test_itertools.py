@@ -87,6 +87,57 @@ async def test_chain(iterables):
         )
 
 
+class ACloseFacade:
+    """Wrapper to check if an iterator has been closed"""
+
+    def __init__(self, iterable):
+        self.closed = False
+        self.__wrapped__ = iterable
+        self._iterator = a.iter(iterable)
+
+    async def __anext__(self):
+        if self.closed:
+            raise StopAsyncIteration()
+        return await self._iterator.__anext__()
+
+    def __aiter__(self):
+        return self
+
+    async def aclose(self):
+        if hasattr(self._iterator, "aclose"):
+            await self._iterator.aclose()
+        self.closed = True
+
+
+@pytest.mark.parametrize("iterables", chains)
+@sync
+async def test_chain_close_auto(iterables):
+    """Test that `chain` closes exhausted iterators"""
+    closeable_iterables = [ACloseFacade(iterable) for iterable in iterables]
+    assert await a.list(a.chain(*closeable_iterables)) == list(
+        itertools.chain(*iterables)
+    )
+    assert all(iterable.closed for iterable in closeable_iterables)
+
+
+# insert a known filled iterable since chain closes all that are exhausted
+@pytest.mark.parametrize("iterables", [([1], *chain) for chain in chains])
+@pytest.mark.parametrize(
+    "chain_type, must_close",
+    [(lambda iterators: a.chain(*iterators), True), (a.chain.from_iterable, False)],
+)
+@sync
+async def test_chain_close_partial(iterables, chain_type, must_close):
+    """Test that `chain` closes owned iterators"""
+    closeable_iterables = [ACloseFacade(iterable) for iterable in iterables]
+    chain = chain_type(closeable_iterables)
+    assert await a.anext(chain) == next(itertools.chain(*iterables))
+    await chain.aclose()
+    assert all(iterable.closed == must_close for iterable in closeable_iterables[1:])
+    # closed chain must remain closed regardless of iterators
+    assert await a.anext(chain, "sentinel") == "sentinel"
+
+
 compress_cases = [
     (range(20), [idx % 2 for idx in range(20)]),
     ([1] * 5, [True, True, False, True, True]),

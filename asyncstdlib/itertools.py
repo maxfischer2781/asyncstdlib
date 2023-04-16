@@ -148,33 +148,54 @@ class chain(AsyncIterator[T]):
     The resulting iterator consecutively iterates over and yields all values from
     each of the ``iterables``. This is similar to converting all ``iterables`` to
     sequences and concatenating them, but lazily exhausts each iterable.
+
+    The ``chain`` assumes ownership of its ``iterables`` and closes them reliably
+    when the ``chain`` is closed. Pass the ``iterables`` via a :py:class:`tuple` to
+    ``chain.from_iterable`` to avoid closing all iterables but those already processed.
     """
 
-    __slots__ = ("_impl",)
+    __slots__ = ("_iterator", "_owned_iterators")
 
-    def __init__(self, *iterables: AnyIterable[T]):
-        async def impl() -> AsyncIterator[T]:
-            for iterable in iterables:
+    @staticmethod
+    async def _chain_iterator(
+        any_iterables: AnyIterable[AnyIterable[T]],
+    ) -> AsyncGenerator[T, None]:
+        async with ScopedIter(any_iterables) as iterables:
+            async for iterable in iterables:
                 async with ScopedIter(iterable) as iterator:
                     async for item in iterator:
                         yield item
 
-        self._impl = impl()
+    def __init__(
+        self, *iterables: AnyIterable[T], _iterables: AnyIterable[AnyIterable[T]] = ()
+    ):
+        self._iterator = self._chain_iterator(iterables or _iterables)
+        self._owned_iterators = (
+            iterable
+            for iterable in iterables
+            if isinstance(iterable, AsyncIterator) and hasattr(iterable, "aclose")
+        )
 
-    @staticmethod
-    async def from_iterable(iterable: AnyIterable[AnyIterable[T]]) -> AsyncIterator[T]:
+    @classmethod
+    def from_iterable(cls, iterable: AnyIterable[AnyIterable[T]]) -> "chain[T]":
         """
         Alternate constructor for :py:func:`~.chain` that lazily exhausts
-        iterables as well
+        the ``iterable`` of iterables as well
+
+        This is suitable for chaining iterables from a lazy or infinite ``iterable``.
+        In turn, closing the ``chain`` only closes those iterables
+        already fetched from ``iterable``.
         """
-        async with ScopedIter(iterable) as iterables:
-            async for sub_iterable in iterables:
-                async with ScopedIter(sub_iterable) as iterator:
-                    async for item in iterator:
-                        yield item
+        return cls(_iterables=iterable)
 
     def __anext__(self) -> Awaitable[T]:
-        return self._impl.__anext__()
+        return self._iterator.__anext__()
+
+    async def aclose(self) -> None:
+        for iterable in self._owned_iterators:
+            if hasattr(iterable, "aclose"):
+                await iterable.aclose()
+        await self._iterator.aclose()
 
 
 async def compress(
