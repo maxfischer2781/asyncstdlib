@@ -3,14 +3,11 @@ from typing import (
     Any,
     Awaitable,
     Callable,
-    Dict,
-    Hashable,
     NamedTuple,
     Optional,
-    Tuple,
-    Union,
     overload,
 )
+
 
 class CacheInfo(NamedTuple):
     hits: int
@@ -26,15 +23,15 @@ class LRUAsyncCallable(Protocol[AC]):
     __call__: AC
     @overload
     def __get__(
-        self: LRUAsyncCallable[Callable[..., Awaitable[R]]],
+        self: LRUAsyncCallable[AC],
         instance: None,
-        owner: Optional[type],
-    ) -> LRUAsyncCallable[Callable[..., Awaitable[R]]]: ...
+        owner: Optional[type] = ...,
+    ) -> LRUAsyncCallable[AC]: ...
     @overload
     def __get__(
         self: LRUAsyncCallable[Callable[..., Awaitable[R]]],
-        instance: Any,
-        owner: Optional[type],
+        instance: object,
+        owner: Optional[type] = ...,
     ) -> LRUAsyncBoundCallable[Callable[..., Awaitable[R]]]: ...
     @property
     def __wrapped__(self) -> AC: ...
