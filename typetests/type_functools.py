@@ -1,7 +1,17 @@
 from asyncstdlib import lru_cache
 
 
-class LRUMethod:
+@lru_cache()
+async def lru_function(a: int) -> int:
+    return a
+
+
+async def test_cache_parameters() -> None:
+    await lru_function(12)
+    await lru_function("wrong parameter type")  # type: ignore[arg-type]
+
+
+class TestLRUMethod:
     """
     Test that `lru_cache` works on methods
     """
