@@ -1,0 +1,3 @@
+ignore:
+  # type tests are not execute, so there is no code coverage
+  - "typetests"
