@@ -178,6 +178,35 @@ async def test_dropwhile(iterable, predicate):
     )
 
 
+filterfalse_cases = (
+    (lambda x: True, [0, 1] * 5),
+    (lambda x: False, [0, 1] * 5),
+    (lambda x: x, [0, 1] * 5),
+    (lambda x: x < 5, range(20)),
+    (lambda x: x > 5, range(20)),
+)
+
+
+@pytest.mark.parametrize("predicate, iterable", filterfalse_cases)
+@sync
+async def test_filterfalse(predicate, iterable):
+    expected = list(itertools.filterfalse(predicate, iterable))
+    assert await a.list(a.filterfalse(predicate, iterable)) == expected
+    assert await a.list(a.filterfalse(awaitify(predicate), iterable)) == expected
+    assert await a.list(a.filterfalse(predicate, asyncify(iterable))) == expected
+    assert (
+        await a.list(a.filterfalse(awaitify(predicate), asyncify(iterable))) == expected
+    )
+
+
+@pytest.mark.parametrize("predicate, iterable", filterfalse_cases)
+@sync
+async def test_filterfalse_predicate_none(predicate, iterable):
+    expected = list(itertools.filterfalse(None, iterable))
+    assert await a.list(a.filterfalse(None, iterable)) == expected
+    assert await a.list(a.filterfalse(None, asyncify(iterable))) == expected
+
+
 @pytest.mark.parametrize("iterable, predicate", droptakewhile_cases)
 @sync
 async def test_takewhile(iterable, predicate):

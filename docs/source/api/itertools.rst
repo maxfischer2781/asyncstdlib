@@ -43,6 +43,9 @@ Iterator filtering
 .. autofunction:: dropwhile(predicate: (T) → (await) bool, iterable: (async) iter T)
     :async-for: :T
 
+.. autofunction:: filterfalse(predicate: None | (T) → (await) bool, iterable: (async) iter T)
+    :async-for: :T
+
 .. autofunction:: takewhile(predicate: (T) → (await) bool, iterable: (async) iter T)
     :async-for: :T
 

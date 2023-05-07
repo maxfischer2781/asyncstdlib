@@ -242,6 +242,27 @@ async def dropwhile(
             yield item
 
 
+async def filterfalse(
+    predicate: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]], None],
+    iterable: AnyIterable[T],
+) -> AsyncIterator[T]:
+    """
+    Yield items from ``iterable`` for which ``predicate(item)`` is false.
+
+    If ``predicate`` is ``None``, return items which are false.
+
+    Lazily iterates over ``iterable``, yielding only items for which
+    ``predicate`` of the current item is false.
+    """
+    async with ScopedIter(iterable) as async_iter:
+        if predicate is None:
+            predicate = bool
+        predicate = _awaitify(predicate)
+        async for item in async_iter:
+            if not await predicate(item):
+                yield item
+
+
 async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterator[T]:
     """
     An :term:`asynchronous iterator` over items from ``iterable`` in a :py:class:`slice`
