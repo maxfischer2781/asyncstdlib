@@ -44,18 +44,10 @@ only bump the *minor* or *major* version number to match a new Python release.
     * Create a git tag such as ``git tag -a "v3.9.2" -m "description"``
     * Push the commit and tags to github
 
-3. Publish to PyPI
-    – GitHub Action
-        * Create a new `GitHub release`_ from the recent version tag
-    – Manual (legacy)
-        * **You need maintainer access** on the `PyPI asyncstdlib project`_
-        * Check out the tagged version commit
-        * Run ``flit publish``
-
-4. Publish to Conda-Forge
-    * Create *a fork* of the `Conda-Forge asyncstdlib recipe`_
-    * In `./recipe/meta.yaml` adjust the ``version`` and ``sha256`` as the `PyPI release`_
-    * Create a Pull Request based on the fork
+3. Publish the new release:
+    * Create a new `GitHub release`_ from the recent version tag
+    * PyPI will be automatically published to via GitHub actions
+    * Handle the automatic PR at the `Conda-Forge asyncstdlib recipe`_
 
 .. _PyPI: https://pypi.org
 .. _Conda-Forge: https://conda-forge.org
