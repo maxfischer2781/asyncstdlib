@@ -158,8 +158,8 @@ async def test_contextmanager_raise_generatorexit():
 
     # during shutdown, generators may be killed in arbitrary order
     # make sure we do not suppress GeneratorExit
+    context = no_op()
     with pytest.raises(GeneratorExit, match="inner"):
-        context = no_op()
         async with context:
             # simulate cleanup closing the child early
             await context.gen.aclose()
