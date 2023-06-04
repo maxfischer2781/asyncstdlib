@@ -37,7 +37,7 @@ from .itertools import (
 from .asynctools import borrow, scoped_iter, await_each, any_iter, apply, sync
 from .heapq import merge, nlargest, nsmallest
 
-__version__ = "3.10.7"
+__version__ = "3.10.8"
 
 __all__ = [
     "anext",
