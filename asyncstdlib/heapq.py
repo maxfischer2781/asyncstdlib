@@ -99,7 +99,7 @@ class _KeyIter(Generic[LT]):
     def __lt__(self, other: "_KeyIter[LT]") -> bool:
         return self.reverse ^ (self.head_key < other.head_key)
 
-    def __eq__(self, other: "_KeyIter[LT]") -> bool:
+    def __eq__(self, other: "_KeyIter[LT]") -> bool:  # type: ignore[override]
         return not (self.head_key < other.head_key or other.head_key < self.head_key)
 
 
