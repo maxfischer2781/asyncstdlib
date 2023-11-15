@@ -1,5 +1,6 @@
 import itertools
 import sys
+import platform
 
 import pytest
 
@@ -318,14 +319,19 @@ async def test_tee_concurrent_locked():
     sys.version_info < (3, 8),
     reason="async generators only protect against concurrent access since 3.8",
 )
+@pytest.mark.skipif(
+    platform.python_implementation() != "CPython",
+    reason="async generators only protect against concurrent access on CPython",
+)
 @multi_sync
 async def test_tee_concurrent_unlocked():
-    """Test that does not prevent concurrency without a lock"""
+    """Test that tee does not prevent concurrency without a lock"""
     items = list(range(12))
 
+    # concurrency-unsafe iterator that task-switches between yields
     async def iter_values():
         for item in items:
-            # switch to other tasks a few times to guarantees another runs
+            # switch to other tasks a few times to guarantee another runs
             for _ in range(5):
                 await Switch()
             yield item
@@ -333,6 +339,7 @@ async def test_tee_concurrent_unlocked():
     async def test_peer(peer_tee):
         assert await a.list(peer_tee) == items
 
+    # schedule two tasks that read via tee from the same iterator
     this, peer = a.tee(iter_values(), n=2)
     await Schedule(test_peer(peer))
     await Switch()
