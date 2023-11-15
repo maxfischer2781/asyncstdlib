@@ -17,7 +17,7 @@ from typing import (
 )
 from collections import deque
 
-from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable, ADD, AsyncContextManager
+from ._typing import N, T, R, T1, T2, T3, T4, T5, AnyIterable, ADD, AsyncContextManager
 from ._utility import public_module
 from ._core import (
     ScopedIter,
@@ -28,6 +28,18 @@ from ._core import (
 from .builtins import anext, zip, enumerate as aenumerate, iter as aiter
 
 S = TypeVar("S")
+
+
+async def count(start: N = 0, step: N = 1) -> AsyncIterator[N]:
+    """
+    An :term:`asynchronous iterator` which indefinitely returns evenly spaced values.
+
+    Starts with the number ``start``.
+    """
+    value = start
+    while True:
+        yield value
+        value += step
 
 
 async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:

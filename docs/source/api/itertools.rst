@@ -19,6 +19,8 @@ Python's :py:mod:`itertools` for (async) functions and (async) iterables.
 Infinite iterators
 ==================
 
+.. autofunction:: count(start: (N) = 0, step: (N) = 1)
+
 .. autofunction:: cycle(iterable: (async) iter T)
     :async-for: :T
 

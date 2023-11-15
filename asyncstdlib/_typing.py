@@ -40,6 +40,7 @@ __all__ = [
     "R",
     "C",
     "AC",
+    "N",
     "HK",
     "LT",
     "ADD",
@@ -56,6 +57,7 @@ T5 = TypeVar("T5")
 R = TypeVar("R", covariant=True)
 C = TypeVar("C", bound=Callable[..., Any])
 AC = TypeVar("AC", bound=Callable[..., Awaitable[Any]])
+N = TypeVar("N", int, float)
 
 #: Hashable Key
 HK = TypeVar("HK", bound=Hashable)

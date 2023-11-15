@@ -57,6 +57,21 @@ async def test_accumulate_misuse():
         assert await a.list(a.accumulate([]))
 
 
+counts = [
+    (a.count(), range(100)),
+    (a.count(10), [10, 11, 12, 13, 14, 15]),
+    (a.count(step=2), [0, 2, 4, 6, 8]),
+    (a.count(2.5, 0.5), [2.5, 3.0, 3.5, 4.0, 4.5]),
+]
+
+
+@pytest.mark.parametrize("iterator, values", counts)
+@sync
+async def test_count(iterator, values):
+    for value in values:
+        assert await a.anext(iterator) == value
+
+
 @sync
 async def test_cycle():
     async for _ in a.cycle([]):
