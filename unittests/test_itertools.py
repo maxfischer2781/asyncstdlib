@@ -57,6 +57,28 @@ async def test_accumulate_misuse():
         assert await a.list(a.accumulate([]))
 
 
+batched_cases = [
+    (range(10), 2, [(0, 1), (2, 3), (4, 5), (6, 7), (8, 9)]),
+    (range(10), 3, [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)]),
+    (range(10), 17, [tuple(range(10))]),
+    ([], 2, []),
+]
+
+
+@pytest.mark.parametrize("iterable, length, result", batched_cases)
+@sync
+async def test_batched(iterable, length, result):
+    assert await a.list(a.batched(iterable, length)) == result
+    assert await a.list(a.batched(asyncify(iterable), length)) == result
+
+
+@sync
+@pytest.mark.parametrize("length", (0, -1))
+async def test_batched_invalid(length):
+    with pytest.raises(ValueError):
+        await a.list(a.batched(range(10), length))
+
+
 @sync
 async def test_cycle():
     async for _ in a.cycle([]):
