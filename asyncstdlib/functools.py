@@ -11,7 +11,8 @@ from typing import (
 )
 
 from ._typing import T, AC, AnyIterable
-from ._core import ScopedIter, awaitify as _awaitify, Sentinel
+from ._core import awaitify as _awaitify, Sentinel
+from .asynctools import scoped_iter
 from .builtins import anext
 from ._utility import public_module
 
@@ -179,7 +180,7 @@ async def reduce(
     and ``iterable`` contains exactly one item, it is returned without
     calling ``function``.
     """
-    async with ScopedIter(iterable) as item_iter:
+    async with scoped_iter(iterable) as item_iter:
         try:
             value = (
                 initial if initial is not __REDUCE_SENTINEL else await anext(item_iter)

@@ -20,11 +20,10 @@ from collections import deque
 from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable, ADD, AsyncContextManager
 from ._utility import public_module
 from ._core import (
-    ScopedIter,
     awaitify as _awaitify,
     Sentinel,
-    borrow as _borrow,
 )
+from .asynctools import scoped_iter, borrow as _borrow
 from .builtins import anext, zip, enumerate as aenumerate, iter as aiter
 
 S = TypeVar("S")
@@ -45,7 +44,7 @@ async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
     significant memory.
     """
     buffer: List[T] = []
-    async with ScopedIter(iterable) as async_iter:
+    async with scoped_iter(iterable) as async_iter:
         async for item in async_iter:  # type: T
             buffer.append(item)
             yield item
@@ -123,7 +122,7 @@ async def accumulate(
                 current = await function(current, value)
                 yield current
     """
-    async with ScopedIter(iterable) as item_iter:
+    async with scoped_iter(iterable) as item_iter:
         try:
             value = (
                 initial
@@ -160,9 +159,9 @@ class chain(AsyncIterator[T]):
     async def _chain_iterator(
         any_iterables: AnyIterable[AnyIterable[T]],
     ) -> AsyncGenerator[T, None]:
-        async with ScopedIter(any_iterables) as iterables:
+        async with scoped_iter(any_iterables) as iterables:
             async for iterable in iterables:
-                async with ScopedIter(iterable) as iterator:
+                async with scoped_iter(iterable) as iterator:
                     async for item in iterator:
                         yield item
 
@@ -213,7 +212,7 @@ async def compress(
         async def compress(data, selectors):
             return (item async for item, select in zip(data, selectors) if select)
     """
-    async with ScopedIter(data) as data_iter, ScopedIter(selectors) as selectors_iter:
+    async with scoped_iter(data) as data_iter, scoped_iter(selectors) as selectors_iter:
         async for item, keep in zip(data_iter, selectors_iter):
             if keep:
                 yield item
@@ -232,7 +231,7 @@ async def dropwhile(
     yielded immediately as they become available, without evaluating ``predicate``
     for them.
     """
-    async with ScopedIter(iterable) as async_iter:
+    async with scoped_iter(iterable) as async_iter:
         predicate = _awaitify(predicate)
         async for item in async_iter:
             if not await predicate(item):
@@ -254,7 +253,7 @@ async def filterfalse(
     Lazily iterates over ``iterable``, yielding only items for which
     ``predicate`` of the current item is false.
     """
-    async with ScopedIter(iterable) as async_iter:
+    async with scoped_iter(iterable) as async_iter:
         if predicate is None:
             predicate = bool
         predicate = _awaitify(predicate)
@@ -276,7 +275,7 @@ async def islice(iterable: AnyIterable[T], *args: Optional[int]) -> AsyncIterato
     """
     s = slice(*args)
     start, stop, step = s.start or 0, s.stop, s.step or 1
-    async with ScopedIter(iterable) as async_iter:
+    async with scoped_iter(iterable) as async_iter:
         # always consume the first ``start`` items, even if the slice is empty
         if start > 0:
             async for _count, element in aenumerate(_borrow(async_iter), start=1):
@@ -314,7 +313,7 @@ async def starmap(
     ``function(*c)`` can be generalized to ``starmap(function, iter_c)``.
     """
     function = _awaitify(function)
-    async with ScopedIter(iterable) as async_iter:
+    async with scoped_iter(iterable) as async_iter:
         async for args in async_iter:
             yield await function(*args)
 
@@ -332,7 +331,7 @@ async def takewhile(
     ``iterable`` is a single-use iterator, the item is available neither from
     ``iterable`` nor ``takewhile`` and effectively discarded.
     """
-    async with ScopedIter(iterable) as async_iter:
+    async with scoped_iter(iterable) as async_iter:
         predicate = _awaitify(predicate)
         async for item in async_iter:
             if await predicate(item):
@@ -492,7 +491,7 @@ async def pairwise(iterable: AnyIterable[T]) -> AsyncIterator[Tuple[T, T]]:
     is emitted if ``iterable`` has one or zero items; however, if there is one item
     ``pairwise`` will wait for and consume it before finishing.
     """
-    async with ScopedIter(iterable) as async_iter:
+    async with scoped_iter(iterable) as async_iter:
         # any default is fine – we never yield it if there are not at least two items
         prev = await anext(async_iter, None)
         async for current in async_iter:
@@ -682,7 +681,7 @@ async def groupby(  # noqa: F811
     make_key: Callable[[Any], Awaitable[Any]] = (
         _awaitify(key) if key is not None else identity  # type: ignore
     )
-    async with ScopedIter(iterable) as async_iter:
+    async with scoped_iter(iterable) as async_iter:
         # fast-forward mode: advance to the next group
         async def seek_group() -> AsyncIterator[Any]:
             nonlocal current_value, current_key, exhausted
@@ -717,7 +716,7 @@ async def groupby(  # noqa: F811
         try:
             while True:
                 next_group = await seek_group()
-                async with ScopedIter(next_group) as scoped_group:
+                async with scoped_iter(next_group) as scoped_group:
                     yield current_key, scoped_group
         except StopAsyncIteration:
             return

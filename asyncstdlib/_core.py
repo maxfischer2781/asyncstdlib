@@ -2,7 +2,6 @@ from inspect import iscoroutinefunction
 from typing import (
     Any,
     AsyncIterator,
-    AsyncGenerator,
     Iterable,
     AsyncIterable,
     Union,
@@ -10,9 +9,7 @@ from typing import (
     Optional,
     Awaitable,
     Callable,
-    Type,
 )
-from types import TracebackType
 
 from ._typing import T, AnyIterable
 
@@ -51,44 +48,6 @@ def aiter(subject: AnyIterable[T]) -> AsyncIterator[T]:
 async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
     """Helper to provide an async iterator for a regular iterable"""
     for item in iterable:
-        yield item
-
-
-class ScopedIter(Generic[T]):
-    """Context manager that provides and cleans up an iterator for an iterable"""
-
-    __slots__ = ("_iterable", "_iterator")
-
-    def __init__(self, iterable: AnyIterable[T]):
-        self._iterable: Optional[AnyIterable[T]] = iterable
-        self._iterator: Optional[AsyncIterator[T]] = None
-
-    async def __aenter__(self) -> AsyncIterator[T]:
-        assert (
-            self._iterable is not None
-        ), f"{self.__class__.__name__} is not re-entrant"
-        self._iterator = aiter(self._iterable)
-        self._iterable = None
-        return self._iterator
-
-    async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> bool:
-        try:
-            aclose = self._iterator.aclose()  # type: ignore
-        except AttributeError:
-            pass
-        else:
-            await aclose
-        return False
-
-
-async def borrow(iterator: AsyncIterator[T]) -> AsyncGenerator[T, None]:
-    """Borrow an async iterator for iteration, preventing it from being closed"""
-    async for item in iterator:
         yield item
 
 

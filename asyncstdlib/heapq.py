@@ -11,8 +11,9 @@ from typing import (
 )
 import heapq as _heapq
 
+from .asynctools import borrow, scoped_iter
 from .builtins import enumerate as a_enumerate, zip as a_zip
-from ._core import aiter, awaitify, ScopedIter, borrow
+from ._core import aiter, awaitify
 from ._typing import AnyIterable, LT, T, SupportsLT
 
 
@@ -205,7 +206,7 @@ async def _largest(
     ordered: Callable[[SupportsLT], SupportsLT] = (
         ReverseLT if reverse else lambda x: x  # type: ignore
     )
-    async with ScopedIter(iterable) as iterator:
+    async with scoped_iter(iterable) as iterator:
         # assign an ordering to items to solve ties
         order_sign = -1 if reverse else 1
         n_heap = [
