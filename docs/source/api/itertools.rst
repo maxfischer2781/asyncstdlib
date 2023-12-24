@@ -10,6 +10,12 @@ Python's :py:mod:`itertools` for (async) functions and (async) iterables.
 
 .. note::
 
+    Only functions which benefit from an explicit ``async`` implementation are provided.
+    Other functions from ``itertools`` can be turned asynchronous using :py:func:`~asyncstdlib.iter`,
+    e.g. `asyncstdlib.iter(itertools.count(5))`.
+
+.. note::
+
     To avoid leaking resources, all utilities in this module explicitly close their
     iterable arguments when done.
     This can be unexpected for non-exhausting utilities such as :py:func:`~.dropwhile`
