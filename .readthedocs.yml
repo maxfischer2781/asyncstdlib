@@ -6,7 +6,6 @@ build:
     python: "3.11"
 
 python:
-  version: 3
   install:
     - method: pip
       path: .
