@@ -325,7 +325,7 @@ def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
     ...
 
 
-def sync(function: Callable[..., T]) -> Callable[..., Any]:
+def sync(function: Callable[..., Any]) -> Callable[..., Any]:
     r"""
     Wraps a callable to ensure its result can be ``await``\ ed
 
@@ -353,6 +353,11 @@ def sync(function: Callable[..., T]) -> Callable[..., Any]:
 
         if __name__ == "__main__":
             asyncio.run(main())
+
+    .. note::
+
+        This should never be applied as the sole decorator on a function.
+        Define the function as `async def` instead.
     """
     if not callable(function):
         raise TypeError("function argument should be Callable")
@@ -361,7 +366,7 @@ def sync(function: Callable[..., T]) -> Callable[..., Any]:
         return function
 
     @wraps(function)
-    async def async_wrapped(*args: Any, **kwargs: Any) -> T:
+    async def async_wrapped(*args: Any, **kwargs: Any) -> Any:
         result = function(*args, **kwargs)
         if isinstance(result, Awaitable):
             return await result  # type: ignore
