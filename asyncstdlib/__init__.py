@@ -21,6 +21,7 @@ from .functools import reduce, lru_cache, cache, cached_property
 from .contextlib import closing, contextmanager, nullcontext, ExitStack
 from .itertools import (
     accumulate,
+    batched,
     cycle,
     chain,
     compress,
@@ -68,6 +69,7 @@ __all__ = [
     "ExitStack",
     # itertools
     "accumulate",
+    "batched",
     "cycle",
     "chain",
     "compress",

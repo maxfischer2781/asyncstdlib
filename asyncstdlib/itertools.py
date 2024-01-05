@@ -25,7 +25,13 @@ from ._core import (
     Sentinel,
     borrow as _borrow,
 )
-from .builtins import anext, zip, enumerate as aenumerate, iter as aiter
+from .builtins import (
+    anext,
+    zip,
+    enumerate as aenumerate,
+    iter as aiter,
+    tuple as atuple,
+)
 
 S = TypeVar("S")
 
@@ -139,6 +145,25 @@ async def accumulate(
         async for head in item_iter:
             value = await function(value, head)
             yield value
+
+
+async def batched(iterable: AnyIterable[T], n: int) -> AsyncIterator[Tuple[T, ...]]:
+    """
+    Batch the ``iterable`` to tuples of the length ``n``.
+
+    This lazily exhausts ``iterable`` and returns each batch as soon as it's ready.
+    """
+    if n < 1:
+        raise ValueError("n must be at least one")
+    async with ScopedIter(iterable) as item_iter:
+        # TODO: Use walrus when 3.8 is minimal version
+        # while batch := await atuple(islice(item_iter, n)):
+        while True:
+            batch = await atuple(islice(_borrow(item_iter), n))
+            if batch:
+                yield batch
+            else:
+                break
 
 
 class chain(AsyncIterator[T]):

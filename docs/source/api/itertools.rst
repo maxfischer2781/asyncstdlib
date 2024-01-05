@@ -86,6 +86,11 @@ Iterator splitting
 
     .. versionadded:: 3.10.0
 
+.. autofunction:: batched(iterable: (async) iter T, n: int)
+    :async-for: :T
+
+    .. versionadded:: 3.11.0
+
 .. py:function:: groupby(iterable: (async) iter T)
     :async-for: :(T, async iter T)
     :noindex:
