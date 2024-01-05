@@ -114,7 +114,7 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         return f"<{self.__class__.__name__} of {self._iterator!r} at 0x{(id(self)):x}>"
 
 
-def borrow(iterator: AsyncIterator[T]) -> AsyncIterator[T]:
+def borrow(iterator: AsyncIterator[T], /) -> AsyncIterator[T]:
     """
     Borrow an async iterator, preventing to ``aclose`` it
 
@@ -140,7 +140,7 @@ def borrow(iterator: AsyncIterator[T]) -> AsyncIterator[T]:
     return _BorrowedAsyncIterator(iterator)
 
 
-def scoped_iter(iterable: AnyIterable[T]) -> AsyncContextManager[AsyncIterator[T]]:
+def scoped_iter(iterable: AnyIterable[T], /) -> AsyncContextManager[AsyncIterator[T]]:
     """
     Context manager that provides an async iterator for an (async) ``iterable``
 
@@ -182,7 +182,7 @@ def scoped_iter(iterable: AnyIterable[T]) -> AsyncContextManager[AsyncIterator[T
     return _ScopedAsyncIteratorContext(iterator)
 
 
-async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
+async def await_each(awaitables: Iterable[Awaitable[T]], /) -> AsyncIterable[T]:
     """
     Iterate through ``awaitables`` and await each item
 
@@ -217,6 +217,7 @@ async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
 async def apply(
     __func: Callable[[T1], T],
     __arg1: Awaitable[T1],
+    /,
 ) -> T:
     ...
 
@@ -226,6 +227,7 @@ async def apply(
     __func: Callable[[T1, T2], T],
     __arg1: Awaitable[T1],
     __arg2: Awaitable[T2],
+    /,
 ) -> T:
     ...
 
@@ -236,6 +238,7 @@ async def apply(
     __arg1: Awaitable[T1],
     __arg2: Awaitable[T2],
     __arg3: Awaitable[T3],
+    /,
 ) -> T:
     ...
 
@@ -247,6 +250,7 @@ async def apply(
     __arg2: Awaitable[T2],
     __arg3: Awaitable[T3],
     __arg4: Awaitable[T4],
+    /,
 ) -> T:
     ...
 
@@ -259,6 +263,7 @@ async def apply(
     __arg3: Awaitable[T3],
     __arg4: Awaitable[T4],
     __arg5: Awaitable[T5],
+    /,
 ) -> T:
     ...
 
@@ -266,27 +271,15 @@ async def apply(
 @overload
 async def apply(
     __func: Callable[..., T],
-    __arg1: Awaitable[Any],
-    __arg2: Awaitable[Any],
-    __arg3: Awaitable[Any],
-    __arg4: Awaitable[Any],
-    __arg5: Awaitable[Any],
+    /,
     *args: Awaitable[Any],
     **kwargs: Awaitable[Any],
 ) -> T:
     ...
 
 
-@overload
 async def apply(
-    __func: Callable[..., T],
-    **kwargs: Awaitable[Any],
-) -> T:
-    ...
-
-
-async def apply(
-    __func: Callable[..., T], *args: Awaitable[Any], **kwargs: Awaitable[Any]
+    __func: Callable[..., T], /, *args: Awaitable[Any], **kwargs: Awaitable[Any]
 ) -> T:
     """
     Await the arguments and keyword arguments and then apply ``func`` on them
@@ -316,16 +309,16 @@ async def apply(
 
 
 @overload
-def sync(function: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+def sync(function: Callable[..., Awaitable[T]], /) -> Callable[..., Awaitable[T]]:
     ...
 
 
 @overload
-def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+def sync(function: Callable[..., T], /) -> Callable[..., Awaitable[T]]:
     ...
 
 
-def sync(function: Callable[..., Any]) -> Callable[..., Any]:
+def sync(function: Callable[..., Any], /) -> Callable[..., Any]:
     r"""
     Wraps a callable to ensure its result can be ``await``\ ed
 
@@ -381,7 +374,8 @@ async def any_iter(
         Awaitable[AnyIterable[T]],
         AnyIterable[Awaitable[T]],
         AnyIterable[T],
-    ]
+    ],
+    /,
 ) -> AsyncIterator[T]:
     """
     Provide an async iterator for various forms of "asynchronous iterable"
