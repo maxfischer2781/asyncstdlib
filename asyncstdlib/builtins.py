@@ -280,7 +280,7 @@ async def _zip_inner_strict(
         if tried > 0:
             plural = " " if tried == 1 else "s 1-"
             raise ValueError(
-                f"zip() argument {tried+1} is shorter than argument{plural}{tried}"
+                f"zip() argument {tried + 1} is shorter than argument{plural}{tried}"
             ) from None
         # after the first iterable was empty, some later iterable may be not
         sentinel = object()
@@ -288,7 +288,7 @@ async def _zip_inner_strict(
             if await anext(_aiter, sentinel) is not sentinel:
                 plural = " " if tried == 1 else "s 1-"
                 raise ValueError(
-                    f"zip() argument {tried+1} is longer than argument{plural}{tried}"
+                    f"zip() argument {tried + 1} is longer than argument{plural}{tried}"
                 ) from None
         return
 
