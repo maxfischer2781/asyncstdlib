@@ -1,3 +1,12 @@
+"""
+Internal helpers to safely build async abstractions
+
+While some of these helpers have public siblings
+(e.g. :py:class:`~.ScopedIter` and :py:func:`~.asynctools.scoped_iter`)
+they are purposely kept separate.
+Any helpers in this module are *not* bound to maintaining a public interface,
+and offer less convenience to save on overhead.
+"""
 from inspect import iscoroutinefunction
 from typing import (
     Any,
@@ -55,7 +64,12 @@ async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
 
 
 class ScopedIter(Generic[T]):
-    """Context manager that provides and cleans up an iterator for an iterable"""
+    """
+    Context manager that provides and cleans up an iterator for an iterable
+
+    Note that unlike :py:func:`~.asynctools.scoped_iter`, this helper does
+    *not* borrow the iterator automatically. Use :py:func:`~.borrow` if needed.
+    """
 
     __slots__ = ("_iterator",)
 
