@@ -217,7 +217,8 @@ def lru_cache(
     elif callable(maxsize):
         # used as function decorator, first arg is the function to be wrapped
         fast_wrapper = CachedLRUAsyncCallable(cast(AC, maxsize), typed, 128)
-        return update_wrapper(fast_wrapper, maxsize)
+        update_wrapper(fast_wrapper, maxsize)
+        return fast_wrapper
     elif maxsize is not None:
         raise TypeError(
             "first argument to 'lru_cache' must be an int, a callable or None"
@@ -232,7 +233,8 @@ def lru_cache(
             wrapper = UncachedLRUAsyncCallable(function, typed)
         else:
             wrapper = CachedLRUAsyncCallable(function, typed, maxsize)
-        return update_wrapper(wrapper, function)
+        update_wrapper(wrapper, function)
+        return wrapper
 
     return lru_decorator
 
