@@ -79,10 +79,9 @@ class ScopedIter(Generic[T]):
             await aclose
 
 
-async def borrow(iterator: AsyncIterator[T]) -> AsyncGenerator[T, None]:
+def borrow(iterator: AsyncIterator[T]) -> AsyncGenerator[T, None]:
     """Borrow an async iterator for iteration, preventing it from being closed"""
-    async for item in iterator:
-        yield item
+    return (item async for item in iterator)
 
 
 def awaitify(
