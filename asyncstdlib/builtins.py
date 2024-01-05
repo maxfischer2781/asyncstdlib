@@ -271,7 +271,7 @@ async def _zip_inner_strict(
     tried = 0
     try:
         while True:
-            items = []
+            items: _sync_builtins.list[T] = []
             for tried, _aiter in _sync_builtins.enumerate(aiters):  # noqa: B007
                 items.append(await anext(_aiter))
             yield (*items,)
@@ -756,4 +756,4 @@ async def sorted(
         async_key = _awaitify(key)
         keyed_items = [(await async_key(item), item) async for item in aiter(iterable)]
         keyed_items.sort(key=lambda ki: ki[0], reverse=reverse)
-        return [item for key, item in keyed_items]
+        return [item for _, item in keyed_items]
