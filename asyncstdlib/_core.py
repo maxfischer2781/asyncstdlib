@@ -104,8 +104,7 @@ class Awaitify(Generic[T]):
         self._async_call: Optional[Callable[..., Awaitable[T]]] = None
 
     def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T]:
-        async_call = self._async_call
-        if async_call is None:
+        if (async_call := self._async_call) is None:
             value = self.__wrapped__(*args, **kwargs)
             if isinstance(value, Awaitable):
                 self._async_call = self.__wrapped__  # type: ignore
