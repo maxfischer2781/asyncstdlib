@@ -76,15 +76,18 @@ class LRUAsyncCallable(Protocol[AC]):
 
     def cache_parameters(self) -> CacheParameters:
         """Get the parameters of the cache"""
+        ...
 
     def cache_info(self) -> CacheInfo:
         """
         Get the current performance and boundary of the cache
         as a :py:class:`~typing.NamedTuple`
         """
+        ...
 
     def cache_clear(self) -> None:
         """Evict all call argument patterns and their results from the cache"""
+        ...
 
     def cache_discard(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -95,9 +98,11 @@ class LRUAsyncCallable(Protocol[AC]):
         the descriptor must support wrapping descriptors for this method
         to detect implicit arguments such as ``self``.
         """
+        # Maintainers note:
         # "support wrapping descriptors" means that the wrapping descriptor has to use
         # the cache as a descriptor as well, i.e. invoke its ``__get__`` method instead
         # of just passing in `self`/`cls`/... directly.
+        ...
 
 
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
