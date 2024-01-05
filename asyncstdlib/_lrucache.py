@@ -308,11 +308,11 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]
         self.__misses = 0
         self.__typed = typed
 
-    async def __call__(self, *args, **kwargs):  # type: ignore
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:  # type: ignore[reportIncompatibleVariableOverride]
         self.__misses += 1
         return await self.__wrapped__(*args, **kwargs)
 
@@ -346,13 +346,13 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
         self.__cache: Dict[Union[CallKey, int, str], Any] = {}
 
-    async def __call__(self, *args, **kwargs):  # type: ignore
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:  # type: ignore[reportIncompatibleVariableOverride]
         key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
             result = self.__cache[key]
@@ -401,14 +401,14 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool, maxsize: int):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
         self.__maxsize = maxsize
         self.__cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
 
-    async def __call__(self, *args, **kwargs):  # type: ignore
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:  # type: ignore[reportIncompatibleVariableOverride]
         key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
             result = self.__cache[key]
