@@ -172,10 +172,9 @@ def scoped_iter(iterable: AnyIterable[T]) -> AsyncContextManager[AsyncIterator[T
     closing the underlying iterator in favour of the outermost scope. This allows
     passing the scoped iterator to other functions that use :py:func:`scoped_iter`.
     """
-    iterator = aiter(iterable)
     # The iterable cannot be closed.
     # We do not need to take care of it.
-    if not hasattr(iterator, "aclose"):
+    if not hasattr(iterator := aiter(iterable), "aclose"):
         return nullcontext(iterator)
     # `iterator` might be already borrowed. We must not special-case this as:
     # - we cannot unwrap the underlying iterator, as this would give us longer access
