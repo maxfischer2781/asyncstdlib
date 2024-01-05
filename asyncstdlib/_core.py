@@ -57,18 +57,12 @@ async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
 class ScopedIter(Generic[T]):
     """Context manager that provides and cleans up an iterator for an iterable"""
 
-    __slots__ = ("_iterable", "_iterator")
+    __slots__ = ("_iterator",)
 
     def __init__(self, iterable: AnyIterable[T]):
-        self._iterable: Optional[AnyIterable[T]] = iterable
-        self._iterator: Optional[AsyncIterator[T]] = None
+        self._iterator: AsyncIterator[T] = aiter(iterable)
 
     async def __aenter__(self) -> AsyncIterator[T]:
-        assert (
-            self._iterable is not None
-        ), f"{self.__class__.__name__} is not re-entrant"
-        self._iterator = aiter(self._iterable)
-        self._iterable = None
         return self._iterator
 
     async def __aexit__(
@@ -76,14 +70,13 @@ class ScopedIter(Generic[T]):
         exc_type: Optional[Type[BaseException]],
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
-    ) -> bool:
+    ) -> None:
         try:
             aclose = self._iterator.aclose()  # type: ignore
         except AttributeError:
             pass
         else:
             await aclose
-        return False
 
 
 async def borrow(iterator: AsyncIterator[T]) -> AsyncGenerator[T, None]:
