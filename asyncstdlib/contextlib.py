@@ -334,7 +334,7 @@ class ExitStack:
         the exception handled by the stack. The callback is treated as
         :term:`async neutral`, i.e. it may be a synchronous function.
 
-        This method does not change its argument, and can be used as a context manager.
+        This method does not change its argument, and can be used as a decorator.
         """
         self._exit_callbacks.append(
             partial(self._aexit_callback, partial(awaitify(callback), *args, **kwargs))
