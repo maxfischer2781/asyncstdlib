@@ -49,9 +49,13 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         # running aiter(self).aclose closes the underlying iterator.
         self.__anext__ = self._wrapper.__anext__  # type: ignore
         if hasattr(iterator, "asend"):
-            self.asend = iterator.asend
+            self.asend = (
+                iterator.asend  # pyright: ignore[reportUnknownMemberType,reportGeneralTypeIssues]
+            )
         if hasattr(iterator, "athrow"):
-            self.athrow = iterator.athrow
+            self.athrow = (
+                iterator.athrow  # pyright: ignore[reportUnknownMemberType,reportGeneralTypeIssues]
+            )
 
     def __aiter__(self) -> AsyncGenerator[T, S]:
         return self
@@ -411,7 +415,11 @@ async def any_iter(
     iterable = __iter if not isinstance(__iter, Awaitable) else await __iter
     if isinstance(iterable, AsyncIterable):
         async for item in iterable:
-            yield item if not isinstance(item, Awaitable) else await item
+            yield item if not isinstance(
+                item, Awaitable
+            ) else await item  # pyright: ignore[reportGeneralTypeIssues]
     else:
         for item in iterable:
-            yield item if not isinstance(item, Awaitable) else await item
+            yield item if not isinstance(
+                item, Awaitable
+            ) else await item  # pyright: ignore[reportGeneralTypeIssues]
