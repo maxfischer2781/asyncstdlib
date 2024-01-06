@@ -102,8 +102,8 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
     async def __aenter__(self) -> AsyncIterator[T]:
         if self._borrowed_iter is not None:
             raise RuntimeError("scoped_iter is not re-entrant")
-        borrowed_iter = self._borrowed_iter = _ScopedAsyncIterator(self._iterator)
-        return borrowed_iter
+        self._borrowed_iter = _ScopedAsyncIterator(self._iterator)
+        return self._borrowed_iter
 
     async def __aexit__(self, *args: Any) -> bool:
         await self._borrowed_iter._aclose_wrapper()  # type: ignore
@@ -362,7 +362,7 @@ def sync(function: Callable[..., Any], /) -> Callable[..., Any]:
     async def async_wrapped(*args: Any, **kwargs: Any) -> Any:
         result = function(*args, **kwargs)
         if isinstance(result, Awaitable):
-            return await result  # type: ignore
+            return await result  # pyright: ignore[reportUnknownVariableType]
         return result
 
     return async_wrapped
