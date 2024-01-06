@@ -29,21 +29,3 @@ def public_module(
         return thing
 
     return decorator
-
-
-def slot_get(instance: object, name: str) -> Any:
-    """
-    Emulate ``instance.name`` using slot lookup as used for special methods
-
-    This invokes the descriptor protocol, i.e. it calls the attribute's
-    ``__get__`` if available.
-    """
-
-    owner = type(instance)
-    attribute = getattr(owner, name)
-    try:
-        descriptor_get = attribute.__get__
-    except AttributeError:
-        return attribute
-    else:
-        return descriptor_get(instance, owner)
