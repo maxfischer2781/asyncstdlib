@@ -1,4 +1,4 @@
-from typing import TypeVar, Any, Optional, Callable
+from typing import TypeVar, Optional, Callable
 
 from ._typing import Protocol
 
