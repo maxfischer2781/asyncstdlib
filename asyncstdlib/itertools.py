@@ -370,6 +370,8 @@ async def takewhile(
 class NoLock:
     """Dummy lock that provides the proper interface but no protection"""
 
+    __slots__ = ()
+
     async def __aenter__(self) -> None:
         pass
 
@@ -456,6 +458,8 @@ class Tee(Generic[T]):
     - e.g. an :py:class:`asyncio.Lock` instance in an :py:mod:`asyncio` application -
     and access is automatically synchronised.
     """
+
+    __slots__ = ("_iterator", "_buffers", "_children")
 
     def __init__(
         self,
