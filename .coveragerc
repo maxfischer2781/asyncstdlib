@@ -20,3 +20,4 @@ exclude_lines =
     if __name__ == '__main__'
     @overload
     if TYPE_CHECKING
+    ...
