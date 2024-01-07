@@ -13,7 +13,7 @@ import heapq as _heapq
 
 from .builtins import enumerate as a_enumerate, zip as a_zip
 from ._core import aiter, awaitify, ScopedIter, borrow
-from ._typing import AnyIterable, LT, T, SupportsLT
+from ._typing import AnyIterable, LT, T
 
 
 class _KeyIter(Generic[LT]):
