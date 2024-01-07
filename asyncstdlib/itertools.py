@@ -52,7 +52,7 @@ async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
     """
     buffer: List[T] = []
     async with ScopedIter(iterable) as async_iter:
-        async for item in async_iter:  # type: T
+        async for item in async_iter:
             buffer.append(item)
             yield item
     if not buffer:
