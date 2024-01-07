@@ -198,7 +198,7 @@ class chain(AsyncIterator[T]):
     ):
         self._iterator = self._chain_iterator(iterables or _iterables)
         self._owned_iterators = tuple(
-            iterable
+            iterable  # type: ignore[misc]
             for iterable in iterables
             if isinstance(iterable, AsyncIterator) and isinstance(iterable, _ACloseable)
         )
