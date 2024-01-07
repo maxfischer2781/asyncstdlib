@@ -156,14 +156,8 @@ async def batched(iterable: AnyIterable[T], n: int) -> AsyncIterator[Tuple[T, ..
     if n < 1:
         raise ValueError("n must be at least one")
     async with ScopedIter(iterable) as item_iter:
-        # TODO: Use walrus when 3.8 is minimal version
-        # while batch := await atuple(islice(item_iter, n)):
-        while True:
-            batch = await atuple(islice(_borrow(item_iter), n))
-            if batch:
-                yield batch
-            else:
-                break
+        while batch := await atuple(islice(_borrow(item_iter), n)):
+            yield batch
 
 
 class chain(AsyncIterator[T]):
