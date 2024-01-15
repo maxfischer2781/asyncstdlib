@@ -271,7 +271,7 @@ async def _zip_inner_strict(
     tried = 0
     try:
         while True:
-            items = []
+            items: _sync_builtins.list[T] = []
             for tried, _aiter in _sync_builtins.enumerate(aiters):  # noqa: B007
                 items.append(await anext(_aiter))
             yield (*items,)
@@ -280,7 +280,7 @@ async def _zip_inner_strict(
         if tried > 0:
             plural = " " if tried == 1 else "s 1-"
             raise ValueError(
-                f"zip() argument {tried+1} is shorter than argument{plural}{tried}"
+                f"zip() argument {tried + 1} is shorter than argument{plural}{tried}"
             ) from None
         # after the first iterable was empty, some later iterable may be not
         sentinel = object()
@@ -288,7 +288,7 @@ async def _zip_inner_strict(
             if await anext(_aiter, sentinel) is not sentinel:
                 plural = " " if tried == 1 else "s 1-"
                 raise ValueError(
-                    f"zip() argument {tried+1} is longer than argument{plural}{tried}"
+                    f"zip() argument {tried + 1} is longer than argument{plural}{tried}"
                 ) from None
         return
 
@@ -756,4 +756,4 @@ async def sorted(
         async_key = _awaitify(key)
         keyed_items = [(await async_key(item), item) async for item in aiter(iterable)]
         keyed_items.sort(key=lambda ki: ki[0], reverse=reverse)
-        return [item for key, item in keyed_items]
+        return [item for _, item in keyed_items]

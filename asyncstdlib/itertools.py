@@ -14,6 +14,8 @@ from typing import (
     Tuple,
     overload,
     AsyncGenerator,
+    Protocol,
+    runtime_checkable,
 )
 from collections import deque
 
@@ -52,7 +54,7 @@ async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
     """
     buffer: List[T] = []
     async with ScopedIter(iterable) as async_iter:
-        async for item in async_iter:  # type: T
+        async for item in async_iter:
             buffer.append(item)
             yield item
     if not buffer:
@@ -156,14 +158,14 @@ async def batched(iterable: AnyIterable[T], n: int) -> AsyncIterator[Tuple[T, ..
     if n < 1:
         raise ValueError("n must be at least one")
     async with ScopedIter(iterable) as item_iter:
-        # TODO: Use walrus when 3.8 is minimal version
-        # while batch := await atuple(islice(item_iter, n)):
-        while True:
-            batch = await atuple(islice(_borrow(item_iter), n))
-            if batch:
-                yield batch
-            else:
-                break
+        while batch := await atuple(islice(_borrow(item_iter), n)):
+            yield batch
+
+
+@runtime_checkable
+class _ACloseable(Protocol):
+    async def aclose(self) -> None:
+        """Asynchronously close this object"""
 
 
 class chain(AsyncIterator[T]):
@@ -195,10 +197,10 @@ class chain(AsyncIterator[T]):
         self, *iterables: AnyIterable[T], _iterables: AnyIterable[AnyIterable[T]] = ()
     ):
         self._iterator = self._chain_iterator(iterables or _iterables)
-        self._owned_iterators = (
-            iterable
+        self._owned_iterators = tuple(
+            iterable  # type: ignore[misc]
             for iterable in iterables
-            if isinstance(iterable, AsyncIterator) and hasattr(iterable, "aclose")
+            if isinstance(iterable, AsyncIterator) and isinstance(iterable, _ACloseable)
         )
 
     @classmethod
@@ -218,8 +220,7 @@ class chain(AsyncIterator[T]):
 
     async def aclose(self) -> None:
         for iterable in self._owned_iterators:
-            if hasattr(iterable, "aclose"):
-                await iterable.aclose()
+            await iterable.aclose()
         await self._iterator.aclose()
 
 
@@ -369,6 +370,8 @@ async def takewhile(
 class NoLock:
     """Dummy lock that provides the proper interface but no protection"""
 
+    __slots__ = ()
+
     async def __aenter__(self) -> None:
         pass
 
@@ -413,7 +416,7 @@ async def tee_peer(
                 peers.pop(idx)
                 break
         # if we are the last peer, try and close the iterator
-        if not peers and hasattr(iterator, "aclose"):
+        if not peers and isinstance(iterator, _ACloseable):
             await iterator.aclose()
 
 
@@ -455,6 +458,8 @@ class Tee(Generic[T]):
     - e.g. an :py:class:`asyncio.Lock` instance in an :py:mod:`asyncio` application -
     and access is automatically synchronised.
     """
+
+    __slots__ = ("_iterator", "_buffers", "_children")
 
     def __init__(
         self,

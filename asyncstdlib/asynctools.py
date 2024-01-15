@@ -42,26 +42,20 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         # Create an actual async generator wrapper that we can close. Otherwise,
         # if we pass on the original iterator methods we cannot disable them if
         # anyone has a reference to them.
-        self._wrapper: AsyncGenerator[T, S] = self._wrapped_iterator(iterator)
+        self._wrapper: AsyncGenerator[T, None] = (item async for item in iterator)
         # Forward all async iterator/generator methods but __aiter__ and aclose:
         # An async *iterator* (e.g. `async def: yield`) must return
         # itself from __aiter__. If we do not shadow this then
         # running aiter(self).aclose closes the underlying iterator.
         self.__anext__ = self._wrapper.__anext__  # type: ignore
         if hasattr(iterator, "asend"):
-            self.asend = iterator.asend
+            self.asend = (
+                iterator.asend  # pyright: ignore[reportUnknownMemberType,reportGeneralTypeIssues]
+            )
         if hasattr(iterator, "athrow"):
-            self.athrow = iterator.athrow
-
-    # Py3.6 compatibility
-    # Use ``(item async for item in iterator)`` inside
-    # ``__init__`` when no longer needed.
-    @staticmethod
-    async def _wrapped_iterator(
-        iterator: Union[AsyncIterator[T], AsyncGenerator[T, S]]
-    ) -> AsyncGenerator[T, S]:
-        async for item in iterator:
-            yield item
+            self.athrow = (
+                iterator.athrow  # pyright: ignore[reportUnknownMemberType,reportGeneralTypeIssues]
+            )
 
     def __aiter__(self) -> AsyncGenerator[T, S]:
         return self
@@ -112,8 +106,8 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
     async def __aenter__(self) -> AsyncIterator[T]:
         if self._borrowed_iter is not None:
             raise RuntimeError("scoped_iter is not re-entrant")
-        borrowed_iter = self._borrowed_iter = _ScopedAsyncIterator(self._iterator)
-        return borrowed_iter
+        self._borrowed_iter = _ScopedAsyncIterator(self._iterator)
+        return self._borrowed_iter
 
     async def __aexit__(self, *args: Any) -> bool:
         await self._borrowed_iter._aclose_wrapper()  # type: ignore
@@ -124,7 +118,7 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         return f"<{self.__class__.__name__} of {self._iterator!r} at 0x{(id(self)):x}>"
 
 
-def borrow(iterator: AsyncIterator[T]) -> AsyncIterator[T]:
+def borrow(iterator: AsyncIterator[T], /) -> AsyncIterator[T]:
     """
     Borrow an async iterator, preventing to ``aclose`` it
 
@@ -150,7 +144,7 @@ def borrow(iterator: AsyncIterator[T]) -> AsyncIterator[T]:
     return _BorrowedAsyncIterator(iterator)
 
 
-def scoped_iter(iterable: AnyIterable[T]) -> AsyncContextManager[AsyncIterator[T]]:
+def scoped_iter(iterable: AnyIterable[T], /) -> AsyncContextManager[AsyncIterator[T]]:
     """
     Context manager that provides an async iterator for an (async) ``iterable``
 
@@ -182,19 +176,17 @@ def scoped_iter(iterable: AnyIterable[T]) -> AsyncContextManager[AsyncIterator[T
     closing the underlying iterator in favour of the outermost scope. This allows
     passing the scoped iterator to other functions that use :py:func:`scoped_iter`.
     """
-    # The iterable has already been borrowed.
-    # Do not unwrap it to preserve method forwarding.
-    if isinstance(iterable, (_BorrowedAsyncIterator, _ScopedAsyncIterator)):
-        return _ScopedAsyncIteratorContext(iterable)
-    iterator = aiter(iterable)
     # The iterable cannot be closed.
     # We do not need to take care of it.
-    if not hasattr(iterator, "aclose"):
+    if not hasattr(iterator := aiter(iterable), "aclose"):
         return nullcontext(iterator)
+    # `iterator` might be already borrowed. We must not special-case this as:
+    # - we cannot unwrap the underlying iterator, as this would give us longer access
+    # - we still must create a separate scope with its own lifetime
     return _ScopedAsyncIteratorContext(iterator)
 
 
-async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
+async def await_each(awaitables: Iterable[Awaitable[T]], /) -> AsyncIterable[T]:
     """
     Iterate through ``awaitables`` and await each item
 
@@ -229,6 +221,7 @@ async def await_each(awaitables: Iterable[Awaitable[T]]) -> AsyncIterable[T]:
 async def apply(
     __func: Callable[[T1], T],
     __arg1: Awaitable[T1],
+    /,
 ) -> T:
     ...
 
@@ -238,6 +231,7 @@ async def apply(
     __func: Callable[[T1, T2], T],
     __arg1: Awaitable[T1],
     __arg2: Awaitable[T2],
+    /,
 ) -> T:
     ...
 
@@ -248,6 +242,7 @@ async def apply(
     __arg1: Awaitable[T1],
     __arg2: Awaitable[T2],
     __arg3: Awaitable[T3],
+    /,
 ) -> T:
     ...
 
@@ -259,6 +254,7 @@ async def apply(
     __arg2: Awaitable[T2],
     __arg3: Awaitable[T3],
     __arg4: Awaitable[T4],
+    /,
 ) -> T:
     ...
 
@@ -271,6 +267,7 @@ async def apply(
     __arg3: Awaitable[T3],
     __arg4: Awaitable[T4],
     __arg5: Awaitable[T5],
+    /,
 ) -> T:
     ...
 
@@ -278,27 +275,15 @@ async def apply(
 @overload
 async def apply(
     __func: Callable[..., T],
-    __arg1: Awaitable[Any],
-    __arg2: Awaitable[Any],
-    __arg3: Awaitable[Any],
-    __arg4: Awaitable[Any],
-    __arg5: Awaitable[Any],
+    /,
     *args: Awaitable[Any],
     **kwargs: Awaitable[Any],
 ) -> T:
     ...
 
 
-@overload
 async def apply(
-    __func: Callable[..., T],
-    **kwargs: Awaitable[Any],
-) -> T:
-    ...
-
-
-async def apply(
-    __func: Callable[..., T], *args: Awaitable[Any], **kwargs: Awaitable[Any]
+    __func: Callable[..., T], /, *args: Awaitable[Any], **kwargs: Awaitable[Any]
 ) -> T:
     """
     Await the arguments and keyword arguments and then apply ``func`` on them
@@ -328,16 +313,16 @@ async def apply(
 
 
 @overload
-def sync(function: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+def sync(function: Callable[..., Awaitable[T]], /) -> Callable[..., Awaitable[T]]:
     ...
 
 
 @overload
-def sync(function: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+def sync(function: Callable[..., T], /) -> Callable[..., Awaitable[T]]:
     ...
 
 
-def sync(function: Callable[..., T]) -> Callable[..., Any]:
+def sync(function: Callable[..., Any], /) -> Callable[..., Any]:
     r"""
     Wraps a callable to ensure its result can be ``await``\ ed
 
@@ -365,6 +350,11 @@ def sync(function: Callable[..., T]) -> Callable[..., Any]:
 
         if __name__ == "__main__":
             asyncio.run(main())
+
+    .. note::
+
+        This should never be applied as the sole decorator on a function.
+        Define the function as `async def` instead.
     """
     if not callable(function):
         raise TypeError("function argument should be Callable")
@@ -373,10 +363,10 @@ def sync(function: Callable[..., T]) -> Callable[..., Any]:
         return function
 
     @wraps(function)
-    async def async_wrapped(*args: Any, **kwargs: Any) -> T:
+    async def async_wrapped(*args: Any, **kwargs: Any) -> Any:
         result = function(*args, **kwargs)
         if isinstance(result, Awaitable):
-            return await result  # type: ignore
+            return await result  # pyright: ignore[reportUnknownVariableType]
         return result
 
     return async_wrapped
@@ -388,7 +378,8 @@ async def any_iter(
         Awaitable[AnyIterable[T]],
         AnyIterable[Awaitable[T]],
         AnyIterable[T],
-    ]
+    ],
+    /,
 ) -> AsyncIterator[T]:
     """
     Provide an async iterator for various forms of "asynchronous iterable"
@@ -424,7 +415,11 @@ async def any_iter(
     iterable = __iter if not isinstance(__iter, Awaitable) else await __iter
     if isinstance(iterable, AsyncIterable):
         async for item in iterable:
-            yield item if not isinstance(item, Awaitable) else await item
+            yield item if not isinstance(
+                item, Awaitable
+            ) else await item  # pyright: ignore[reportGeneralTypeIssues]
     else:
         for item in iterable:
-            yield item if not isinstance(item, Awaitable) else await item
+            yield item if not isinstance(
+                item, Awaitable
+            ) else await item  # pyright: ignore[reportGeneralTypeIssues]

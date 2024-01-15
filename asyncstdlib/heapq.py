@@ -13,7 +13,7 @@ import heapq as _heapq
 
 from .builtins import enumerate as a_enumerate, zip as a_zip
 from ._core import aiter, awaitify, ScopedIter, borrow
-from ._typing import AnyIterable, LT, T, SupportsLT
+from ._typing import AnyIterable, LT, T
 
 
 class _KeyIter(Generic[LT]):
@@ -27,14 +27,14 @@ class _KeyIter(Generic[LT]):
         reverse: bool,
         head_key: LT,
         key: Callable[[T], Awaitable[LT]],
-    ):
-        pass
+    ) -> None:
+        ...
 
     @overload
     def __init__(
         self, head: LT, tail: AsyncIterator[LT], reverse: bool, head_key: LT, key: None
-    ):
-        pass
+    ) -> None:
+        ...
 
     def __init__(
         self,
@@ -43,7 +43,7 @@ class _KeyIter(Generic[LT]):
         reverse: bool,
         head_key: LT,
         key: Any,
-    ):
+    ) -> None:
         self.head = head
         self.head_key = head_key
         self.tail = tail
@@ -58,14 +58,14 @@ class _KeyIter(Generic[LT]):
         reverse: bool,
         key: Callable[[T], Awaitable[LT]],
     ) -> "AsyncIterator[_KeyIter[LT]]":
-        pass
+        ...
 
     @overload
     @classmethod
     def from_iters(
         cls, iterables: Tuple[AnyIterable[LT], ...], reverse: bool, key: None
     ) -> "AsyncIterator[_KeyIter[LT]]":
-        pass
+        ...
 
     @classmethod
     async def from_iters(
@@ -202,9 +202,7 @@ async def _largest(
     key: Callable[[T], Awaitable[LT]],
     reverse: bool,
 ) -> List[T]:
-    ordered: Callable[[SupportsLT], SupportsLT] = (
-        ReverseLT if reverse else lambda x: x  # type: ignore
-    )
+    ordered: Callable[[LT], LT] = ReverseLT if reverse else lambda x: x  # type: ignore
     async with ScopedIter(iterable) as iterator:
         # assign an ordering to items to solve ties
         order_sign = -1 if reverse else 1

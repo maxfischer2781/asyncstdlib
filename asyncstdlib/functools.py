@@ -10,7 +10,7 @@ from typing import (
     overload,
 )
 
-from ._typing import T, AC, AnyIterable
+from ._typing import T, T1, T2, AC, AnyIterable
 from ._core import ScopedIter, awaitify as _awaitify, Sentinel
 from .builtins import anext
 from ._utility import public_module
@@ -158,6 +158,20 @@ class CachedProperty(Generic[T]):
 
 
 cached_property = CachedProperty
+
+
+@overload
+def reduce(
+    function: Callable[[T1, T2], T1], iterable: AnyIterable[T2], initial: T1
+) -> Coroutine[T1, Any, Any]:
+    ...
+
+
+@overload
+def reduce(
+    function: Callable[[T, T], T], iterable: AnyIterable[T]
+) -> Coroutine[T, Any, Any]:
+    ...
 
 
 async def reduce(

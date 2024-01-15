@@ -76,15 +76,18 @@ class LRUAsyncCallable(Protocol[AC]):
 
     def cache_parameters(self) -> CacheParameters:
         """Get the parameters of the cache"""
+        ...
 
     def cache_info(self) -> CacheInfo:
         """
         Get the current performance and boundary of the cache
         as a :py:class:`~typing.NamedTuple`
         """
+        ...
 
     def cache_clear(self) -> None:
         """Evict all call argument patterns and their results from the cache"""
+        ...
 
     def cache_discard(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -95,9 +98,11 @@ class LRUAsyncCallable(Protocol[AC]):
         the descriptor must support wrapping descriptors for this method
         to detect implicit arguments such as ``self``.
         """
+        # Maintainers note:
         # "support wrapping descriptors" means that the wrapping descriptor has to use
         # the cache as a descriptor as well, i.e. invoke its ``__get__`` method instead
         # of just passing in `self`/`cls`/... directly.
+        ...
 
 
 class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
@@ -212,7 +217,8 @@ def lru_cache(
     elif callable(maxsize):
         # used as function decorator, first arg is the function to be wrapped
         fast_wrapper = CachedLRUAsyncCallable(cast(AC, maxsize), typed, 128)
-        return update_wrapper(fast_wrapper, maxsize)
+        update_wrapper(fast_wrapper, maxsize)
+        return fast_wrapper
     elif maxsize is not None:
         raise TypeError(
             "first argument to 'lru_cache' must be an int, a callable or None"
@@ -227,7 +233,8 @@ def lru_cache(
             wrapper = UncachedLRUAsyncCallable(function, typed)
         else:
             wrapper = CachedLRUAsyncCallable(function, typed, maxsize)
-        return update_wrapper(wrapper, function)
+        update_wrapper(wrapper, function)
+        return wrapper
 
     return lru_decorator
 
@@ -301,11 +308,11 @@ class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]
         self.__misses = 0
         self.__typed = typed
 
-    async def __call__(self, *args, **kwargs):  # type: ignore
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:  # type: ignore[reportIncompatibleVariableOverride]
         self.__misses += 1
         return await self.__wrapped__(*args, **kwargs)
 
@@ -339,13 +346,13 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
         self.__cache: Dict[Union[CallKey, int, str], Any] = {}
 
-    async def __call__(self, *args, **kwargs):  # type: ignore
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:  # type: ignore[reportIncompatibleVariableOverride]
         key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
             result = self.__cache[key]
@@ -394,14 +401,14 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool, maxsize: int):
-        self.__wrapped__ = call
+        self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]
         self.__hits = 0
         self.__misses = 0
         self.__typed = typed
         self.__maxsize = maxsize
         self.__cache: OrderedDict[Union[int, str, CallKey], Any] = OrderedDict()
 
-    async def __call__(self, *args, **kwargs):  # type: ignore
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:  # type: ignore[reportIncompatibleVariableOverride]
         key = CallKey.from_call(args, kwargs, typed=self.__typed)
         try:
             result = self.__cache[key]

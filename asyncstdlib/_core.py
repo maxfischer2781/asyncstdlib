@@ -1,3 +1,12 @@
+"""
+Internal helpers to safely build async abstractions
+
+While some of these helpers have public siblings
+(e.g. :py:class:`~.ScopedIter` and :py:func:`~.asynctools.scoped_iter`)
+they are purposely kept separate.
+Any helpers in this module are *not* bound to maintaining a public interface,
+and offer less convenience to save on overhead.
+"""
 from inspect import iscoroutinefunction
 from typing import (
     Any,
@@ -55,20 +64,19 @@ async def _aiter_sync(iterable: Iterable[T]) -> AsyncIterator[T]:
 
 
 class ScopedIter(Generic[T]):
-    """Context manager that provides and cleans up an iterator for an iterable"""
+    """
+    Context manager that provides and cleans up an iterator for an iterable
 
-    __slots__ = ("_iterable", "_iterator")
+    Note that unlike :py:func:`~.asynctools.scoped_iter`, this helper does
+    *not* borrow the iterator automatically. Use :py:func:`~.borrow` if needed.
+    """
+
+    __slots__ = ("_iterator",)
 
     def __init__(self, iterable: AnyIterable[T]):
-        self._iterable: Optional[AnyIterable[T]] = iterable
-        self._iterator: Optional[AsyncIterator[T]] = None
+        self._iterator: AsyncIterator[T] = aiter(iterable)
 
     async def __aenter__(self) -> AsyncIterator[T]:
-        assert (
-            self._iterable is not None
-        ), f"{self.__class__.__name__} is not re-entrant"
-        self._iterator = aiter(self._iterable)
-        self._iterable = None
         return self._iterator
 
     async def __aexit__(
@@ -76,20 +84,18 @@ class ScopedIter(Generic[T]):
         exc_type: Optional[Type[BaseException]],
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
-    ) -> bool:
+    ) -> None:
         try:
             aclose = self._iterator.aclose()  # type: ignore
         except AttributeError:
             pass
         else:
             await aclose
-        return False
 
 
-async def borrow(iterator: AsyncIterator[T]) -> AsyncGenerator[T, None]:
+def borrow(iterator: AsyncIterator[T]) -> AsyncGenerator[T, None]:
     """Borrow an async iterator for iteration, preventing it from being closed"""
-    async for item in iterator:
-        yield item
+    return (item async for item in iterator)
 
 
 def awaitify(
@@ -112,8 +118,7 @@ class Awaitify(Generic[T]):
         self._async_call: Optional[Callable[..., Awaitable[T]]] = None
 
     def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T]:
-        async_call = self._async_call
-        if async_call is None:
+        if (async_call := self._async_call) is None:
             value = self.__wrapped__(*args, **kwargs)
             if isinstance(value, Awaitable):
                 self._async_call = self.__wrapped__  # type: ignore

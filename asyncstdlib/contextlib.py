@@ -17,7 +17,7 @@ import sys
 
 from ._typing import Protocol, AsyncContextManager, ContextManager, T, C
 from ._core import awaitify
-from ._utility import public_module, slot_get as _slot_get
+from ._utility import public_module
 
 
 AnyContextManager = Union[AsyncContextManager[T], ContextManager[T]]
@@ -311,16 +311,18 @@ class ExitStack:
             instead.
         """
         try:
-            aexit = _slot_get(exit, "__aexit__")
+            aexit = exit.__aexit__  # type: ignore
         except AttributeError:
             try:
-                aexit = awaitify(_slot_get(exit, "__exit__"))
+                aexit = awaitify(
+                    exit.__exit__,  # type: ignore
+                )
             except AttributeError:
                 assert callable(
                     exit
                 ), f"Expected (async) context manager or callable, got {exit}"
                 aexit = awaitify(exit)
-        self._exit_callbacks.append(aexit)
+        self._exit_callbacks.append(aexit)  # pyright: ignore[reportUnknownArgumentType]
         return exit
 
     def callback(self, callback: C, *args: Any, **kwargs: Any) -> C:
@@ -334,7 +336,7 @@ class ExitStack:
         the exception handled by the stack. The callback is treated as
         :term:`async neutral`, i.e. it may be a synchronous function.
 
-        This method does not change its argument, and can be used as a context manager.
+        This method does not change its argument, and can be used as a decorator.
         """
         self._exit_callbacks.append(
             partial(self._aexit_callback, partial(awaitify(callback), *args, **kwargs))
@@ -371,14 +373,16 @@ class ExitStack:
         either.
         """
         try:
-            aexit = _slot_get(cm, "__aexit__")
+            aexit = cm.__aexit__  # type: ignore
         except AttributeError:
-            aexit = awaitify(_slot_get(cm, "__exit__"))
-            context_value = _slot_get(cm, "__enter__")()
+            aexit = awaitify(
+                cm.__exit__,  # type: ignore
+            )
+            context_value = cm.__enter__()  # type: ignore
         else:
-            context_value = await _slot_get(cm, "__aenter__")()
-        self._exit_callbacks.append(aexit)
-        return context_value  # type: ignore
+            context_value = await cm.__aenter__()  # type: ignore
+        self._exit_callbacks.append(aexit)  # pyright: ignore[reportUnknownArgumentType]
+        return context_value  # pyright: ignore[reportUnknownVariableType]
 
     async def aclose(self) -> None:
         """
