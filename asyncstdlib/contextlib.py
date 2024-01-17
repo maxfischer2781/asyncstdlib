@@ -438,7 +438,7 @@ class ExitStack:
                     suppress_exc = True
                     reraise_exc = False
                     exc_type = exc_val = tb = None
-            except BaseException as exc:
+            except BaseException as exc:  # noqa: B036
                 # simulate the stack of exceptions by setting the context
                 self._stitch_context(exc, exc_val, unwind_context)
                 reraise_exc = True

@@ -63,7 +63,7 @@ async def test_contextmanager_no_stop():
     async def supress_no_stop():
         try:
             yield
-        except BaseException:
+        except BaseException:  # noqa: B036
             yield
 
     with pytest.raises(RuntimeError):
@@ -136,7 +136,7 @@ async def test_contextmanager_raise_same():
     async def recreate():
         try:
             yield
-        except BaseException as err:
+        except BaseException as err:  # noqa: B036
             raise type(err)("inside") from None
 
     with pytest.raises(KeyError, match="inside"):
@@ -294,7 +294,7 @@ async def test_exit_stack_push():
     async def suppress():
         try:
             yield
-        except BaseException as exc_val:
+        except BaseException as exc_val:  # noqa: B036
             seen.append(exc_val)
 
     async def replace(exc_type, exc_val, tb, new):
