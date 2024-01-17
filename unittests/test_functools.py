@@ -29,7 +29,9 @@ async def test_cached_property():
 
 @sync
 async def test_cache_property_nodict():
-    with pytest.raises(RuntimeError):
+    # note: The exact error is version- and possibly implementation-dependent.
+    #       Some Python version wrap all errors from __set_name__.
+    with pytest.raises(Exception):  # noqa: B017
 
         class Pair:
             __slots__ = "a", "b"
