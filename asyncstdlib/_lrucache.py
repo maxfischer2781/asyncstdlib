@@ -5,6 +5,7 @@ This is loosely based on the CPython 3.8 implementation. In specific,
 several performance hacks are skipped in favour of maintainability,
 especially when they might not apply to PyPy.
 """
+
 from typing import (
     NamedTuple,
     Callable,
@@ -154,15 +155,13 @@ class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
 
 
 @overload
-def lru_cache(maxsize: AC, typed: bool = ...) -> LRUAsyncCallable[AC]:
-    ...
+def lru_cache(maxsize: AC, typed: bool = ...) -> LRUAsyncCallable[AC]: ...
 
 
 @overload
 def lru_cache(
     maxsize: Optional[int] = ..., typed: bool = ...
-) -> Callable[[AC], LRUAsyncCallable[AC]]:
-    ...
+) -> Callable[[AC], LRUAsyncCallable[AC]]: ...
 
 
 @public_module("asyncstdlib.functools")

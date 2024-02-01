@@ -73,21 +73,18 @@ async def add(x: ADD, y: ADD) -> ADD:
 
 
 @overload
-def accumulate(iterable: AnyIterable[ADD]) -> AsyncIterator[ADD]:
-    ...
+def accumulate(iterable: AnyIterable[ADD]) -> AsyncIterator[ADD]: ...
 
 
 @overload
-def accumulate(iterable: AnyIterable[ADD], *, initial: ADD) -> AsyncIterator[ADD]:
-    ...
+def accumulate(iterable: AnyIterable[ADD], *, initial: ADD) -> AsyncIterator[ADD]: ...
 
 
 @overload
 def accumulate(
     iterable: AnyIterable[T],
     function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
-) -> AsyncIterator[T]:
-    ...
+) -> AsyncIterator[T]: ...
 
 
 @overload
@@ -96,8 +93,7 @@ def accumulate(
     function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
     *,
     initial: T,
-) -> AsyncIterator[T]:
-    ...
+) -> AsyncIterator[T]: ...
 
 
 async def accumulate(
@@ -484,12 +480,10 @@ class Tee(Generic[T]):
         return len(self._children)
 
     @overload
-    def __getitem__(self, item: int) -> AsyncIterator[T]:
-        ...
+    def __getitem__(self, item: int) -> AsyncIterator[T]: ...
 
     @overload
-    def __getitem__(self, item: slice) -> Tuple[AsyncIterator[T], ...]:
-        ...
+    def __getitem__(self, item: slice) -> Tuple[AsyncIterator[T], ...]: ...
 
     def __getitem__(
         self, item: Union[int, slice]
@@ -540,8 +534,7 @@ def zip_longest(
     __it1: AnyIterable[T1],
     *,
     fillvalue: S = ...,
-) -> AsyncIterator[Tuple[T1]]:
-    ...
+) -> AsyncIterator[Tuple[T1]]: ...
 
 
 @overload
@@ -550,8 +543,7 @@ def zip_longest(
     __it2: AnyIterable[T2],
     *,
     fillvalue: S = ...,
-) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S]]]:
-    ...
+) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S]]]: ...
 
 
 @overload
@@ -561,8 +553,7 @@ def zip_longest(
     __it3: AnyIterable[T3],
     *,
     fillvalue: S = ...,
-) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S]]]:
-    ...
+) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S]]]: ...
 
 
 @overload
@@ -573,8 +564,7 @@ def zip_longest(
     __it4: AnyIterable[T4],
     *,
     fillvalue: S = ...,
-) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S]]]:
-    ...
+) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S]]]: ...
 
 
 @overload
@@ -588,8 +578,7 @@ def zip_longest(
     fillvalue: S = ...,
 ) -> AsyncIterator[
     Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S], Union[T5, S]]
-]:
-    ...
+]: ...
 
 
 @overload
@@ -601,8 +590,7 @@ def zip_longest(
     __it5: AnyIterable[Any],
     *iterables: AnyIterable[Any],
     fillvalue: S = ...,
-) -> AsyncIterator[Tuple[Any, ...]]:
-    ...
+) -> AsyncIterator[Tuple[Any, ...]]: ...
 
 
 async def zip_longest(
@@ -662,22 +650,19 @@ async def identity(x: T) -> T:
 @overload  # noqa: F811
 def groupby(  # noqa: F811
     iterable: AnyIterable[T],
-) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]:
-    ...
+) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]: ...
 
 
 @overload  # noqa: F811
 def groupby(  # noqa: F811
     iterable: AnyIterable[T], key: None
-) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]:
-    ...
+) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]: ...
 
 
 @overload  # noqa: F811
 def groupby(  # noqa: F811
     iterable: AnyIterable[T], key: Union[Callable[[T], R], Callable[[T], Awaitable[R]]]
-) -> AsyncIterator[Tuple[R, AsyncIterator[T]]]:
-    ...
+) -> AsyncIterator[Tuple[R, AsyncIterator[T]]]: ...
 
 
 async def groupby(  # noqa: F811

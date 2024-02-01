@@ -27,14 +27,12 @@ class _KeyIter(Generic[LT]):
         reverse: bool,
         head_key: LT,
         key: Callable[[T], Awaitable[LT]],
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def __init__(
         self, head: LT, tail: AsyncIterator[LT], reverse: bool, head_key: LT, key: None
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def __init__(
         self,
@@ -57,15 +55,13 @@ class _KeyIter(Generic[LT]):
         iterables: Tuple[AnyIterable[T], ...],
         reverse: bool,
         key: Callable[[T], Awaitable[LT]],
-    ) -> "AsyncIterator[_KeyIter[LT]]":
-        ...
+    ) -> "AsyncIterator[_KeyIter[LT]]": ...
 
     @overload
     @classmethod
     def from_iters(
         cls, iterables: Tuple[AnyIterable[LT], ...], reverse: bool, key: None
-    ) -> "AsyncIterator[_KeyIter[LT]]":
-        ...
+    ) -> "AsyncIterator[_KeyIter[LT]]": ...
 
     @classmethod
     async def from_iters(

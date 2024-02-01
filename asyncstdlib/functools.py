@@ -137,12 +137,10 @@ class CachedProperty(Generic[T]):
         self._name = name
 
     @overload
-    def __get__(self, instance: None, owner: type) -> "CachedProperty[T]":
-        ...
+    def __get__(self, instance: None, owner: type) -> "CachedProperty[T]": ...
 
     @overload
-    def __get__(self, instance: object, owner: Optional[type]) -> Awaitable[T]:
-        ...
+    def __get__(self, instance: object, owner: Optional[type]) -> Awaitable[T]: ...
 
     def __get__(
         self, instance: Optional[object], owner: Optional[type]
@@ -163,15 +161,13 @@ cached_property = CachedProperty
 @overload
 def reduce(
     function: Callable[[T1, T2], T1], iterable: AnyIterable[T2], initial: T1
-) -> Coroutine[T1, Any, Any]:
-    ...
+) -> Coroutine[T1, Any, Any]: ...
 
 
 @overload
 def reduce(
     function: Callable[[T, T], T], iterable: AnyIterable[T]
-) -> Coroutine[T, Any, Any]:
-    ...
+) -> Coroutine[T, Any, Any]: ...
 
 
 async def reduce(

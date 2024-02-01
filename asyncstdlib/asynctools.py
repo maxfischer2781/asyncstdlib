@@ -222,8 +222,7 @@ async def apply(
     __func: Callable[[T1], T],
     __arg1: Awaitable[T1],
     /,
-) -> T:
-    ...
+) -> T: ...
 
 
 @overload
@@ -232,8 +231,7 @@ async def apply(
     __arg1: Awaitable[T1],
     __arg2: Awaitable[T2],
     /,
-) -> T:
-    ...
+) -> T: ...
 
 
 @overload
@@ -243,8 +241,7 @@ async def apply(
     __arg2: Awaitable[T2],
     __arg3: Awaitable[T3],
     /,
-) -> T:
-    ...
+) -> T: ...
 
 
 @overload
@@ -255,8 +252,7 @@ async def apply(
     __arg3: Awaitable[T3],
     __arg4: Awaitable[T4],
     /,
-) -> T:
-    ...
+) -> T: ...
 
 
 @overload
@@ -268,8 +264,7 @@ async def apply(
     __arg4: Awaitable[T4],
     __arg5: Awaitable[T5],
     /,
-) -> T:
-    ...
+) -> T: ...
 
 
 @overload
@@ -278,8 +273,7 @@ async def apply(
     /,
     *args: Awaitable[Any],
     **kwargs: Awaitable[Any],
-) -> T:
-    ...
+) -> T: ...
 
 
 async def apply(
@@ -313,13 +307,11 @@ async def apply(
 
 
 @overload
-def sync(function: Callable[..., Awaitable[T]], /) -> Callable[..., Awaitable[T]]:
-    ...
+def sync(function: Callable[..., Awaitable[T]], /) -> Callable[..., Awaitable[T]]: ...
 
 
 @overload
-def sync(function: Callable[..., T], /) -> Callable[..., Awaitable[T]]:
-    ...
+def sync(function: Callable[..., T], /) -> Callable[..., Awaitable[T]]: ...
 
 
 def sync(function: Callable[..., Any], /) -> Callable[..., Any]:
@@ -415,11 +407,11 @@ async def any_iter(
     iterable = __iter if not isinstance(__iter, Awaitable) else await __iter
     if isinstance(iterable, AsyncIterable):
         async for item in iterable:
-            yield item if not isinstance(
-                item, Awaitable
-            ) else await item  # pyright: ignore[reportGeneralTypeIssues]
+            yield (
+                item if not isinstance(item, Awaitable) else await item
+            )  # pyright: ignore[reportGeneralTypeIssues]
     else:
         for item in iterable:
-            yield item if not isinstance(
-                item, Awaitable
-            ) else await item  # pyright: ignore[reportGeneralTypeIssues]
+            yield (
+                item if not isinstance(item, Awaitable) else await item
+            )  # pyright: ignore[reportGeneralTypeIssues]
