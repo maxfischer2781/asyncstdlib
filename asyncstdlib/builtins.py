@@ -97,7 +97,7 @@ async def acallable_iterator(
         value = await subject()
 
 
-async def all(iterable: AnyIterable[T]) -> bool:
+async def all(iterable: AnyIterable[Any]) -> bool:
     """
     Return :py:data:`True` if none of the elements of the (async) ``iterable`` are false
     """
@@ -108,7 +108,7 @@ async def all(iterable: AnyIterable[T]) -> bool:
     return True
 
 
-async def any(iterable: AnyIterable[T]) -> bool:
+async def any(iterable: AnyIterable[Any]) -> bool:
     """
     Return :py:data:`False` if none of the elements of the (async) ``iterable`` are true
     """
