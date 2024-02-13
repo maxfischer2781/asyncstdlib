@@ -11,11 +11,10 @@ from typing import (
     Optional,
     Dict,
     Any,
-    overload,
 )
 import builtins as _sync_builtins
 
-from ._typing import T, T1, T2, T3, T4, T5, R, HK, LT, ADD, AnyIterable
+from ._typing import T, R, HK, LT, AnyIterable
 from ._core import (
     aiter,
     ScopedIter,
@@ -25,14 +24,6 @@ from ._core import (
 
 
 __ANEXT_DEFAULT = Sentinel("<no default>")
-
-
-@overload
-async def anext(iterator: AsyncIterator[T]) -> T: ...
-
-
-@overload
-async def anext(iterator: AsyncIterator[T], default: T) -> T: ...
 
 
 async def anext(
@@ -61,16 +52,6 @@ async def anext(
 
 
 __ITER_DEFAULT = Sentinel("<no default>")
-
-
-@overload
-def iter(subject: AnyIterable[T]) -> AsyncIterator[T]:
-    pass
-
-
-@overload
-def iter(subject: Callable[[], Awaitable[T]], sentinel: T) -> AsyncIterator[T]:
-    pass
 
 
 def iter(
@@ -136,68 +117,6 @@ async def any(iterable: AnyIterable[T]) -> bool:
             if element:
                 return True
     return False
-
-
-@overload
-def zip(
-    __it1: AnyIterable[T1],
-    *,
-    strict: bool = ...,
-) -> AsyncIterator[Tuple[T1]]: ...
-
-
-@overload
-def zip(
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    *,
-    strict: bool = ...,
-) -> AsyncIterator[Tuple[T1, T2]]: ...
-
-
-@overload
-def zip(
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    *,
-    strict: bool = ...,
-) -> AsyncIterator[Tuple[T1, T2, T3]]: ...
-
-
-@overload
-def zip(
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    __it4: AnyIterable[T4],
-    *,
-    strict: bool = ...,
-) -> AsyncIterator[Tuple[T1, T2, T3, T4]]: ...
-
-
-@overload
-def zip(
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    __it4: AnyIterable[T4],
-    __it5: AnyIterable[T5],
-    *,
-    strict: bool = ...,
-) -> AsyncIterator[Tuple[T1, T2, T3, T4, T5]]: ...
-
-
-@overload
-def zip(
-    __it1: AnyIterable[Any],
-    __it2: AnyIterable[Any],
-    __it3: AnyIterable[Any],
-    __it4: AnyIterable[Any],
-    __it5: AnyIterable[Any],
-    *iterables: AnyIterable[Any],
-    strict: bool = ...,
-) -> AsyncIterator[Tuple[Any, ...]]: ...
 
 
 async def zip(
@@ -285,118 +204,6 @@ async def _zip_inner_strict(
         return
 
 
-@overload
-def map(
-    function: Callable[[T1], Awaitable[R]],
-    __it1: AnyIterable[T1],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1], R],
-    __it1: AnyIterable[T1],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1, T2], Awaitable[R]],
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1, T2], R], __it1: AnyIterable[T1], __it2: AnyIterable[T2]
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1, T2, T3], Awaitable[R]],
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1, T2, T3], R],
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1, T2, T3, T4], Awaitable[R]],
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    __it4: AnyIterable[T4],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1, T2, T3, T4], R],
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    __it4: AnyIterable[T4],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1, T2, T3, T4, T5], Awaitable[R]],
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    __it4: AnyIterable[T4],
-    __it5: AnyIterable[T5],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[[T1, T2, T3, T4, T5], R],
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    __it4: AnyIterable[T4],
-    __it5: AnyIterable[T5],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[..., Awaitable[R]],
-    __it1: AnyIterable[Any],
-    __it2: AnyIterable[Any],
-    __it3: AnyIterable[Any],
-    __it4: AnyIterable[Any],
-    __it5: AnyIterable[Any],
-    *iterable: AnyIterable[Any],
-) -> AsyncIterator[R]: ...
-
-
-@overload
-def map(
-    function: Callable[..., R],
-    __it1: AnyIterable[Any],
-    __it2: AnyIterable[Any],
-    __it3: AnyIterable[Any],
-    __it4: AnyIterable[Any],
-    __it5: AnyIterable[Any],
-    *iterable: AnyIterable[Any],
-) -> AsyncIterator[R]: ...
-
-
 async def map(
     function: Union[Callable[..., R], Callable[..., Awaitable[R]]],
     *iterable: AnyIterable[Any],
@@ -428,26 +235,6 @@ async def map(
 __MIN_MAX_DEFAULT = Sentinel("<no default>")
 
 
-@overload
-async def max(iterable: AnyIterable[LT], *, key: None = ...) -> LT: ...
-
-
-@overload
-async def max(
-    iterable: AnyIterable[LT], *, key: None = ..., default: T
-) -> Union[LT, T]: ...
-
-
-@overload
-async def max(iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ...) -> T1: ...
-
-
-@overload
-async def max(
-    iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ..., default: T2
-) -> Union[T1, T2]: ...
-
-
 async def max(
     iterable: AnyIterable[Any],
     *,
@@ -472,26 +259,6 @@ async def max(
         Use the builtin :py:func:`max` function instead.
     """
     return await _min_max(iterable, key, True, default)
-
-
-@overload
-async def min(iterable: AnyIterable[LT], *, key: None = ...) -> LT: ...
-
-
-@overload
-async def min(
-    iterable: AnyIterable[LT], *, key: None = ..., default: T
-) -> Union[LT, T]: ...
-
-
-@overload
-async def min(iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ...) -> T1: ...
-
-
-@overload
-async def min(
-    iterable: AnyIterable[T1], *, key: Callable[[T1], LT] = ..., default: T2
-) -> Union[T1, T2]: ...
 
 
 async def min(
@@ -594,18 +361,6 @@ async def enumerate(
             count += 1
 
 
-@overload
-async def sum(iterable: AnyIterable[int]) -> int: ...
-
-
-@overload
-async def sum(iterable: AnyIterable[float]) -> float: ...
-
-
-@overload
-async def sum(iterable: AnyIterable[ADD], start: ADD) -> ADD: ...
-
-
 async def sum(iterable: AnyIterable[Any], start: Any = 0) -> Any:
     """
     Sum of ``start`` and all elements in the (async) iterable
@@ -630,21 +385,6 @@ async def tuple(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Tuple[T,
     Create a :py:class:`tuple` from an (async) iterable
     """
     return (*[element async for element in aiter(iterable)],)
-
-
-@overload
-async def dict(  # noqa: F811
-    iterable: Union[Iterable[Tuple[HK, T]], AsyncIterable[Tuple[HK, T]]] = (),
-) -> Dict[HK, T]:
-    pass
-
-
-@overload  # noqa: F811
-async def dict(  # noqa: F811
-    iterable: Union[Iterable[Tuple[HK, T]], AsyncIterable[Tuple[HK, T]]] = (),
-    **kwargs: T,
-) -> Dict[Union[HK, str], T]:
-    pass
 
 
 async def dict(  # noqa: F811
@@ -672,18 +412,6 @@ async def set(iterable: Union[Iterable[T], AsyncIterable[T]] = ()) -> Set[T]:
     This is equivalent to ``{element async for element in iterable}``.
     """
     return {element async for element in aiter(iterable)}
-
-
-@overload
-async def sorted(
-    iterable: AnyIterable[LT], *, key: None = ..., reverse: bool = ...
-) -> List[LT]: ...
-
-
-@overload
-async def sorted(
-    iterable: AnyIterable[T], *, key: Callable[[T], LT], reverse: bool = ...
-) -> List[T]: ...
 
 
 async def sorted(
