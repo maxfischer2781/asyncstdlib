@@ -14,6 +14,7 @@ from typing import (
     Callable,
     Any,
     Awaitable,
+    runtime_checkable,
 )
 
 from typing import Protocol, AsyncContextManager, ContextManager, TypedDict
@@ -68,6 +69,16 @@ ADD = TypeVar("ADD", bound="SupportsAdd")
 class SupportsAdd(Protocol):
     def __add__(self: ADD, other: ADD) -> ADD:
         raise NotImplementedError
+
+
+# await AClose.aclose()
+AClose = TypeVar("AClose", bound="ACloseable")
+
+
+@runtime_checkable
+class ACloseable(Protocol):
+    async def aclose(self) -> None:
+        """Asynchronously close this object"""
 
 
 #: (async) iter T

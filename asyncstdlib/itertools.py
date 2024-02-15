@@ -14,12 +14,22 @@ from typing import (
     Tuple,
     overload,
     AsyncGenerator,
-    Protocol,
-    runtime_checkable,
 )
 from collections import deque
 
-from ._typing import T, R, T1, T2, T3, T4, T5, AnyIterable, ADD, AsyncContextManager
+from ._typing import (
+    ACloseable,
+    T,
+    R,
+    T1,
+    T2,
+    T3,
+    T4,
+    T5,
+    AnyIterable,
+    ADD,
+    AsyncContextManager,
+)
 from ._utility import public_module
 from ._core import (
     ScopedIter,
@@ -158,12 +168,6 @@ async def batched(iterable: AnyIterable[T], n: int) -> AsyncIterator[Tuple[T, ..
             yield batch
 
 
-@runtime_checkable
-class _ACloseable(Protocol):
-    async def aclose(self) -> None:
-        """Asynchronously close this object"""
-
-
 class chain(AsyncIterator[T]):
     """
     An :term:`asynchronous iterator` flattening values from all ``iterables``
@@ -196,7 +200,7 @@ class chain(AsyncIterator[T]):
         self._owned_iterators = tuple(
             iterable  # type: ignore[misc]
             for iterable in iterables
-            if isinstance(iterable, AsyncIterator) and isinstance(iterable, _ACloseable)
+            if isinstance(iterable, AsyncIterator) and isinstance(iterable, ACloseable)
         )
 
     @classmethod
@@ -412,7 +416,7 @@ async def tee_peer(
                 peers.pop(idx)
                 break
         # if we are the last peer, try and close the iterator
-        if not peers and isinstance(iterator, _ACloseable):
+        if not peers and isinstance(iterator, ACloseable):
             await iterator.aclose()
 
 
