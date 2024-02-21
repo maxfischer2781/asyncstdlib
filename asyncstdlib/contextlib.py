@@ -96,7 +96,7 @@ class _AsyncGeneratorContextManager(Generic[T]):
                 if exc_type is GeneratorExit:
                     result = await self.gen.aclose()  # type: ignore
                 else:
-                    result = await self.gen.athrow(exc_type, exc_val, exc_tb)
+                    result = await self.gen.athrow(exc_val)
             except StopAsyncIteration as exc:
                 return exc is not exc_tb
             except RuntimeError as exc:
