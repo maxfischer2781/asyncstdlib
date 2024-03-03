@@ -31,9 +31,7 @@ class LRUAsyncCallable(Protocol[AC]):
     __call__: AC
     @overload
     def __get__(
-        self: LRUAsyncCallable[AC],
-        instance: None,
-        owner: type | None = ...,
+        self: LRUAsyncCallable[AC], instance: None, owner: type | None = ...
     ) -> LRUAsyncCallable[AC]: ...
     @overload
     def __get__(
@@ -52,9 +50,7 @@ class LRUAsyncBoundCallable(Generic[S, P, R]):
     __self__: S
     __call__: Callable[P, Awaitable[R]]
     def __get__(
-        self,
-        instance: S2,
-        owner: type | None = ...,
+        self, instance: S2, owner: type | None = ...
     ) -> LRUAsyncBoundCallable[S2, P, R]: ...
     def __init__(
         self,
