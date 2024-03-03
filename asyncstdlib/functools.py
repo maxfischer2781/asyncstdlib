@@ -15,7 +15,13 @@ from ._core import ScopedIter, awaitify as _awaitify, Sentinel
 from .builtins import anext
 from ._utility import public_module
 
-from ._lrucache import lru_cache, CacheInfo, CacheParameters, LRUAsyncCallable
+from ._lrucache import (
+    lru_cache,
+    CacheInfo,
+    CacheParameters,
+    LRUAsyncCallable,
+    LRUAsyncBoundCallable,
+)
 
 __all__ = [
     "cache",
@@ -23,6 +29,7 @@ __all__ = [
     "CacheInfo",
     "CacheParameters",
     "LRUAsyncCallable",
+    "LRUAsyncBoundCallable",
     "reduce",
     "cached_property",
 ]
