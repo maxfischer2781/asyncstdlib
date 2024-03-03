@@ -3,6 +3,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    Generic,
     NamedTuple,
     overload,
     Protocol,
@@ -47,7 +48,7 @@ class LRUAsyncCallable(Protocol[AC]):
     def cache_clear(self) -> None: ...
     def cache_discard(self, *args: Any, **kwargs: Any) -> None: ...
 
-class LRUAsyncBoundCallable(Protocol[S, P, R]):
+class LRUAsyncBoundCallable(Generic[S, P, R]):
     __self__: S
     __call__: Callable[P, Awaitable[R]]
     def __get__(
