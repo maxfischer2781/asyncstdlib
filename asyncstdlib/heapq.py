@@ -13,7 +13,7 @@ import heapq as _heapq
 
 from .builtins import enumerate as a_enumerate, zip as a_zip
 from ._core import aiter, awaitify, ScopedIter, borrow
-from ._typing import AnyIterable, LT, T
+from ._typing import AnyIterable, ACloseable, LT, T
 
 
 class _KeyIter(Generic[LT]):
@@ -99,29 +99,6 @@ class _KeyIter(Generic[LT]):
         return not (self.head_key < other.head_key or other.head_key < self.head_key)
 
 
-@overload
-def merge(
-    *iterables: AnyIterable[LT], key: None = ..., reverse: bool = ...
-) -> AsyncIterator[LT]:
-    pass
-
-
-@overload
-def merge(
-    *iterables: AnyIterable[T],
-    key: Callable[[T], Awaitable[LT]] = ...,
-    reverse: bool = ...,
-) -> AsyncIterator[T]:
-    pass
-
-
-@overload
-def merge(
-    *iterables: AnyIterable[T], key: Callable[[T], LT] = ..., reverse: bool = ...
-) -> AsyncIterator[T]:
-    pass
-
-
 async def merge(
     *iterables: AnyIterable[Any],
     key: Optional[Callable[[Any], Any]] = None,
@@ -172,7 +149,7 @@ async def merge(
                 yield item
     finally:
         for itr, _ in iter_heap:
-            if hasattr(itr.tail, "aclose"):
+            if isinstance(itr.tail, ACloseable):
                 await itr.tail.aclose()
 
 
@@ -193,7 +170,7 @@ class ReverseLT(Generic[LT]):
 # In other words, during search we maintain opposite sort order than what is requested.
 # We turn the min-heap into a max-sort in the end.
 async def _largest(
-    iterable: AsyncIterator[T],
+    iterable: AnyIterable[T],
     n: int,
     key: Callable[[T], Awaitable[LT]],
     reverse: bool,
@@ -226,7 +203,7 @@ async def _identity(x: T) -> T:
 
 
 async def nlargest(
-    iterable: AsyncIterator[T],
+    iterable: AnyIterable[T],
     n: int,
     key: Optional[Callable[[Any], Awaitable[Any]]] = None,
 ) -> List[T]:
@@ -248,7 +225,7 @@ async def nlargest(
 
 
 async def nsmallest(
-    iterable: AsyncIterator[T],
+    iterable: AnyIterable[T],
     n: int,
     key: Optional[Callable[[Any], Awaitable[Any]]] = None,
 ) -> List[T]:
