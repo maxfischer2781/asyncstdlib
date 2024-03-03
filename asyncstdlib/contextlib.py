@@ -158,7 +158,7 @@ closing = Closing
 
 
 @public_module(__name__, "nullcontext")
-class NullContext(Generic[T]):
+class NullContext(AsyncContextManager[T]):
     """
     Create an :term:`asynchronous context manager` that only returns ``enter_result``
 
@@ -208,15 +208,7 @@ class NullContext(Generic[T]):
 nullcontext = NullContext
 
 
-SE = TypeVar(
-    "SE",
-    bound=Union[
-        AsyncContextManager[Any],
-        ContextManager[Any],
-        Callable[[Any, BaseException, Any], Optional[bool]],
-        Callable[[Any, BaseException, Any], Awaitable[Optional[bool]]],
-    ],
-)
+SE = TypeVar("SE")
 
 
 class ExitStack:
