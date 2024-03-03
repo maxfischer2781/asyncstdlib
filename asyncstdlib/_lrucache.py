@@ -141,7 +141,9 @@ class LRUAsyncBoundCallable(Generic[S, P, R]):  # type: ignore[reportInvalidType
         return self._lru
 
     def __get__(
-        self: "LRUAsyncBoundCallable[S, P, R]", instance: S2, owner: type | None = None
+        self: "LRUAsyncBoundCallable[S, P, R]",
+        instance: S2,
+        owner: Optional[type] = None,
     ) -> "LRUAsyncBoundCallable[S2, P, R]":
         return LRUAsyncBoundCallable(self._lru, instance)
 
