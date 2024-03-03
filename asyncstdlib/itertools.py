@@ -82,30 +82,6 @@ async def add(x: ADD, y: ADD) -> ADD:
     return x + y
 
 
-@overload
-def accumulate(iterable: AnyIterable[ADD]) -> AsyncIterator[ADD]: ...
-
-
-@overload
-def accumulate(iterable: AnyIterable[ADD], *, initial: ADD) -> AsyncIterator[ADD]: ...
-
-
-@overload
-def accumulate(
-    iterable: AnyIterable[T],
-    function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
-) -> AsyncIterator[T]: ...
-
-
-@overload
-def accumulate(
-    iterable: AnyIterable[T],
-    function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
-    *,
-    initial: T,
-) -> AsyncIterator[T]: ...
-
-
 async def accumulate(
     iterable: AnyIterable[Any],
     function: Union[
@@ -225,7 +201,7 @@ class chain(AsyncIterator[T]):
 
 
 async def compress(
-    data: AnyIterable[T], selectors: AnyIterable[bool]
+    data: AnyIterable[T], selectors: AnyIterable[Any]
 ) -> AsyncIterator[T]:
     """
     An :term:`asynchronous iterator` for items of ``data`` with true ``selectors``
@@ -246,8 +222,7 @@ async def compress(
 
 
 async def dropwhile(
-    predicate: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]]],
-    iterable: AnyIterable[T],
+    predicate: Callable[[T], Any], iterable: AnyIterable[T]
 ) -> AsyncIterator[T]:
     """
     Yield items from ``iterable`` after ``predicate(item)`` is no longer true
@@ -275,10 +250,7 @@ async def filterfalse(
     """
     Yield items from ``iterable`` for which ``predicate(item)`` is false.
 
-    If ``predicate`` is ``None``, return items which are false.
-
-    Lazily iterates over ``iterable``, yielding only items for which
-    ``predicate`` of the current item is false.
+    If ``predicate`` is ``None``, yield any items which are false.
     """
     async with ScopedIter(iterable) as async_iter:
         if predicate is None:
@@ -346,8 +318,7 @@ async def starmap(
 
 
 async def takewhile(
-    predicate: Union[Callable[[T], bool], Callable[[T], Awaitable[bool]]],
-    iterable: AnyIterable[T],
+    predicate: Callable[[T], Any], iterable: AnyIterable[T]
 ) -> AsyncIterator[T]:
     """
     Yield items from ``iterable`` as long as ``predicate(item)`` is true
@@ -533,70 +504,6 @@ async def _repeat(value: T) -> AsyncIterator[T]:
         yield value
 
 
-@overload
-def zip_longest(
-    __it1: AnyIterable[T1],
-    *,
-    fillvalue: S = ...,
-) -> AsyncIterator[Tuple[T1]]: ...
-
-
-@overload
-def zip_longest(
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    *,
-    fillvalue: S = ...,
-) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S]]]: ...
-
-
-@overload
-def zip_longest(
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    *,
-    fillvalue: S = ...,
-) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S]]]: ...
-
-
-@overload
-def zip_longest(
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    __it4: AnyIterable[T4],
-    *,
-    fillvalue: S = ...,
-) -> AsyncIterator[Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S]]]: ...
-
-
-@overload
-def zip_longest(
-    __it1: AnyIterable[T1],
-    __it2: AnyIterable[T2],
-    __it3: AnyIterable[T3],
-    __it4: AnyIterable[T4],
-    __it5: AnyIterable[T5],
-    *,
-    fillvalue: S = ...,
-) -> AsyncIterator[
-    Tuple[Union[T1, S], Union[T2, S], Union[T3, S], Union[T4, S], Union[T5, S]]
-]: ...
-
-
-@overload
-def zip_longest(
-    __it1: AnyIterable[Any],
-    __it2: AnyIterable[Any],
-    __it3: AnyIterable[Any],
-    __it4: AnyIterable[Any],
-    __it5: AnyIterable[Any],
-    *iterables: AnyIterable[Any],
-    fillvalue: S = ...,
-) -> AsyncIterator[Tuple[Any, ...]]: ...
-
-
 async def zip_longest(
     *iterables: AnyIterable[Any], fillvalue: Any = None
 ) -> AsyncIterator[Tuple[Any, ...]]:
@@ -621,7 +528,7 @@ async def zip_longest(
     try:
         remaining = len(async_iters)
         while True:
-            values = []
+            values: list[Any] = []
             for index, aiterator in enumerate(async_iters):
                 try:
                     value = await anext(aiterator)
@@ -638,12 +545,8 @@ async def zip_longest(
     finally:
         await fill_iter.aclose()  # type: ignore
         for iterator in async_iters:
-            try:
-                aclose = iterator.aclose()  # type: ignore
-            except AttributeError:
-                pass
-            else:
-                await aclose
+            if isinstance(iterator, ACloseable):
+                await iterator.aclose()
 
 
 async def identity(x: T) -> T:
@@ -651,25 +554,7 @@ async def identity(x: T) -> T:
     return x
 
 
-@overload  # noqa: F811
-def groupby(  # noqa: F811
-    iterable: AnyIterable[T],
-) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]: ...
-
-
-@overload  # noqa: F811
-def groupby(  # noqa: F811
-    iterable: AnyIterable[T], key: None
-) -> AsyncIterator[Tuple[T, AsyncIterator[T]]]: ...
-
-
-@overload  # noqa: F811
-def groupby(  # noqa: F811
-    iterable: AnyIterable[T], key: Union[Callable[[T], R], Callable[[T], Awaitable[R]]]
-) -> AsyncIterator[Tuple[R, AsyncIterator[T]]]: ...
-
-
-async def groupby(  # noqa: F811
+async def groupby(
     iterable: AnyIterable[Any],
     key: Optional[
         Union[Callable[[Any], Any], Callable[[Any], Awaitable[Any]]]
