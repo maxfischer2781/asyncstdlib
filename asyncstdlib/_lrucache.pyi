@@ -28,6 +28,7 @@ S = TypeVar("S")
 S2 = TypeVar("S2")
 
 class LRUAsyncCallable(Protocol[AC]):
+    __slots__: tuple[str, ...]
     __call__: AC
     @overload
     def __get__(
@@ -47,6 +48,7 @@ class LRUAsyncCallable(Protocol[AC]):
     def cache_discard(self, *args: Any, **kwargs: Any) -> None: ...
 
 class LRUAsyncBoundCallable(Generic[S, P, R]):
+    __slots__: tuple[str, ...]
     __self__: S
     __call__: Callable[P, Awaitable[R]]
     def __get__(
