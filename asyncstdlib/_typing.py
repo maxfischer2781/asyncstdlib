@@ -15,9 +15,11 @@ from typing import (
     Any,
     Awaitable,
     runtime_checkable,
+    Protocol,
+    AsyncContextManager,
+    ContextManager,
+    TypedDict,
 )
-
-from typing import Protocol, AsyncContextManager, ContextManager, TypedDict
 
 __all__ = [
     "Protocol",
