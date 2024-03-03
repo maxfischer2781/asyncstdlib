@@ -7,6 +7,7 @@ especially when they might not apply to PyPy.
 """
 
 from typing import (
+    TypeVar,
     NamedTuple,
     Callable,
     Any,
@@ -106,21 +107,27 @@ class LRUAsyncCallable(Protocol[AC]):
         ...
 
 
-class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
+# these are fake and only exist for placeholders
+S = TypeVar("S")
+P = TypeVar("P")
+R = TypeVar("R")
+
+
+class LRUAsyncBoundCallable(Protocol[S, P, R]):  # type: ignore[reportInvalidTypeVarUse]
     """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
 
     __slots__ = ("__weakref__", "_lru", "__self__")
 
-    def __init__(self, lru: LRUAsyncCallable[AC], __self__: object):
+    def __init__(self, lru: LRUAsyncCallable[Any], __self__: object):
         self._lru = lru
         self.__self__ = __self__
 
     @property
-    def __wrapped__(self) -> AC:
+    def __wrapped__(self) -> Any:
         return self._lru.__wrapped__
 
     @property
-    def __func__(self) -> LRUAsyncCallable[AC]:
+    def __func__(self) -> LRUAsyncCallable[Any]:
         return self._lru
 
     def __call__(self, *args, **kwargs):  # type: ignore
