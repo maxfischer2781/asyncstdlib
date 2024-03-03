@@ -1,6 +1,7 @@
 from typing import (
     Any,
     TypeVar,
+    AsyncContextManager,
     AsyncIterator,
     List,
     Awaitable,
@@ -28,7 +29,6 @@ from ._typing import (
     T5,
     AnyIterable,
     ADD,
-    AsyncContextManager,
 )
 from ._utility import public_module
 from ._core import (

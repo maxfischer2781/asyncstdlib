@@ -9,13 +9,14 @@ from typing import (
     Awaitable,
     Deque,
     overload,
+    AsyncContextManager,
 )
 from functools import wraps
 from collections import deque
 from functools import partial
 import sys
 
-from ._typing import AClose, AsyncContextManager, ContextManager, T, C
+from ._typing import AClose, ContextManager, T, C
 from ._core import awaitify
 from ._utility import public_module
 

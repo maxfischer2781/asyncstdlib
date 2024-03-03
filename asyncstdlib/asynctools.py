@@ -2,6 +2,7 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from typing import (
     Union,
+    AsyncContextManager,
     AsyncIterator,
     TypeVar,
     AsyncGenerator,
@@ -14,7 +15,7 @@ from typing import (
     Optional,
 )
 
-from ._typing import AsyncContextManager, T, T1, T2, T3, T4, T5, AnyIterable
+from ._typing import T, T1, T2, T3, T4, T5, AnyIterable
 from ._core import aiter
 from .contextlib import nullcontext
 
