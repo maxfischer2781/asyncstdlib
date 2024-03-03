@@ -18,18 +18,7 @@ from typing import (
 )
 from collections import deque
 
-from ._typing import (
-    ACloseable,
-    T,
-    R,
-    T1,
-    T2,
-    T3,
-    T4,
-    T5,
-    AnyIterable,
-    ADD,
-)
+from ._typing import ACloseable, T, AnyIterable, ADD
 from ._utility import public_module
 from ._core import (
     ScopedIter,
@@ -582,7 +571,7 @@ async def groupby(
     # whether the current group was exhausted and the next begins already
     exhausted = False
     # `current_*`: buffer for key/value the current group peeked beyond its end
-    current_key = current_value = nothing = object()  # type: Any
+    current_key = current_value = nothing = object()
     make_key: Callable[[Any], Awaitable[Any]] = (
         _awaitify(key) if key is not None else identity  # type: ignore
     )
