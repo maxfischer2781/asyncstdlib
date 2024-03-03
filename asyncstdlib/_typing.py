@@ -36,6 +36,8 @@ __all__ = [
     "HK",
     "LT",
     "ADD",
+    "AClose",
+    "ACloseable",
     "AnyIterable",
 ]
 
