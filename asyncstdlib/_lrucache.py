@@ -6,6 +6,7 @@ several performance hacks are skipped in favour of maintainability,
 especially when they might not apply to PyPy.
 """
 
+from __future__ import annotations
 from typing import (
     Generic,
     TypeVar,
