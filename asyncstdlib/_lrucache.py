@@ -75,7 +75,7 @@ class LRUAsyncCallable(Protocol[AC]):
         raise NotImplementedError
 
     def __get__(
-        self: "LRUAsyncCallable[Any]", instance: object, owner: Optional[type] = None
+        self: LRUAsyncCallable[Any], instance: object, owner: Optional[type] = None
     ) -> Any:
         """Descriptor ``__get__`` for caches to bind them on lookup"""
         if instance is None:
@@ -141,10 +141,10 @@ class LRUAsyncBoundCallable(Generic[S, P, R]):  # type: ignore[reportInvalidType
         return self._lru
 
     def __get__(
-        self: "LRUAsyncBoundCallable[S, P, R]",
+        self: LRUAsyncBoundCallable[S, P, R],
         instance: S2,
         owner: Optional[type] = None,
-    ) -> "LRUAsyncBoundCallable[S2, P, R]":
+    ) -> LRUAsyncBoundCallable[S2, P, R]:
         return LRUAsyncBoundCallable(self._lru, instance)
 
     def __call__(self, *args, **kwargs):  # type: ignore
