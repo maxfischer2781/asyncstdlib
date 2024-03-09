@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import (
     TypeVar,
     Generic,
@@ -184,19 +185,19 @@ class NullContext(AsyncContextManager[T]):
     __slots__ = ("enter_result",)
 
     @overload
-    def __init__(self: "NullContext[None]", enter_result: None = ...) -> None: ...
+    def __init__(self: NullContext[None], enter_result: None = ...) -> None: ...
 
     @overload
-    def __init__(self: "NullContext[T]", enter_result: T) -> None: ...
+    def __init__(self: NullContext[T], enter_result: T) -> None: ...
 
     def __init__(self, enter_result: Optional[T] = None):
         self.enter_result = enter_result
 
     @overload
-    async def __aenter__(self: "NullContext[None]") -> None: ...
+    async def __aenter__(self: NullContext[None]) -> None: ...
 
     @overload
-    async def __aenter__(self: "NullContext[T]") -> T: ...
+    async def __aenter__(self: NullContext[T]) -> T: ...
 
     async def __aenter__(self) -> Optional[T]:
         return self.enter_result
