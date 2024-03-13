@@ -6,7 +6,10 @@ several performance hacks are skipped in favour of maintainability,
 especially when they might not apply to PyPy.
 """
 
+from __future__ import annotations
 from typing import (
+    Generic,
+    TypeVar,
     NamedTuple,
     Callable,
     Any,
@@ -72,6 +75,14 @@ class LRUAsyncCallable(Protocol[AC]):
         """The callable wrapped by this cache"""
         raise NotImplementedError
 
+    def __get__(
+        self: LRUAsyncCallable[Any], instance: object, owner: Optional[type] = None
+    ) -> Any:
+        """Descriptor ``__get__`` for caches to bind them on lookup"""
+        if instance is None:
+            return self
+        return LRUAsyncBoundCallable(self, instance)
+
     #: Get the result of ``await __wrapped__(...)`` from the cache or evaluation
     __call__: AC
 
@@ -106,22 +117,36 @@ class LRUAsyncCallable(Protocol[AC]):
         ...
 
 
-class LRUAsyncBoundCallable(LRUAsyncCallable[AC]):
+# these are fake and only exist for placeholders
+S = TypeVar("S")
+S2 = TypeVar("S2")
+P = TypeVar("P")
+R = TypeVar("R")
+
+
+class LRUAsyncBoundCallable(Generic[S, P, R]):  # type: ignore[reportInvalidTypeVarUse]
     """A :py:class:`~.LRUAsyncCallable` that is bound like a method"""
 
     __slots__ = ("__weakref__", "_lru", "__self__")
 
-    def __init__(self, lru: LRUAsyncCallable[AC], __self__: object):
+    def __init__(self, lru: LRUAsyncCallable[Any], __self__: object):
         self._lru = lru
         self.__self__ = __self__
 
     @property
-    def __wrapped__(self) -> AC:
+    def __wrapped__(self) -> Any:
         return self._lru.__wrapped__
 
     @property
-    def __func__(self) -> LRUAsyncCallable[AC]:
+    def __func__(self) -> LRUAsyncCallable[Any]:
         return self._lru
+
+    def __get__(
+        self: LRUAsyncBoundCallable[S, P, R],
+        instance: S2,
+        owner: Optional[type] = None,
+    ) -> LRUAsyncBoundCallable[S2, P, R]:
+        return LRUAsyncBoundCallable(self._lru, instance)
 
     def __call__(self, *args, **kwargs):  # type: ignore
         return self._lru(self.__self__, *args, **kwargs)
@@ -289,22 +314,12 @@ class CallKey:
         return cls(key)
 
 
-def cache__get(
-    self: LRUAsyncCallable[AC], instance: object, owner: Optional[type] = None
-) -> LRUAsyncCallable[AC]:
-    """Descriptor ``__get__`` for caches to bind them on lookup"""
-    if instance is None:
-        return self
-    return LRUAsyncBoundCallable(self, instance)
-
-
 class UncachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     """Wrap the async ``call`` to track accesses as for caching/memoization"""
 
     __slots__ = ("__weakref__", "__dict__", "__wrapped__", "__misses", "__typed")
 
     __wrapped__: AC
-    __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
         self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]
@@ -342,7 +357,6 @@ class MemoizedLRUAsyncCallable(LRUAsyncCallable[AC]):
     )
 
     __wrapped__: AC
-    __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool):
         self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]
@@ -397,7 +411,6 @@ class CachedLRUAsyncCallable(LRUAsyncCallable[AC]):
     )
 
     __wrapped__: AC
-    __get__ = cache__get
 
     def __init__(self, call: AC, typed: bool, maxsize: int):
         self.__wrapped__ = call  # type: ignore[reportIncompatibleMethodOverride]

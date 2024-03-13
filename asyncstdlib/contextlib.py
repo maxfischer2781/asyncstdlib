@@ -8,14 +8,14 @@ from typing import (
     Any,
     Awaitable,
     Deque,
-    overload,
+    AsyncContextManager,
 )
 from functools import wraps
 from collections import deque
 from functools import partial
 import sys
 
-from ._typing import Protocol, AsyncContextManager, ContextManager, T, C
+from ._typing import AClose, ContextManager, T, C
 from ._core import awaitify
 from ._utility import public_module
 
@@ -26,14 +26,6 @@ AnyContextManager = Union[AsyncContextManager[T], ContextManager[T]]
 # typing.AsyncContextManager uses contextlib.AbstractAsyncContextManager if available,
 # and a custom implementation otherwise. No need to replicate it.
 AbstractContextManager = AsyncContextManager
-
-
-class ACloseable(Protocol):
-    async def aclose(self) -> None:
-        """Asynchronously close this object"""
-
-
-AC = TypeVar("AC", bound=ACloseable)
 
 
 def contextmanager(
@@ -126,7 +118,7 @@ class _AsyncGeneratorContextManager(Generic[T]):
 
 
 @public_module(__name__, "closing")
-class Closing(Generic[AC]):
+class Closing(Generic[AClose]):
     """
     Create an :term:`asynchronous context manager` to ``aclose`` some ``thing`` on exit
 
@@ -150,10 +142,10 @@ class Closing(Generic[AC]):
                  is eventually closed and only :term:`borrowed <borrowing>` until then.
     """
 
-    def __init__(self, thing: AC):
+    def __init__(self, thing: AClose):
         self.thing = thing
 
-    async def __aenter__(self) -> AC:
+    async def __aenter__(self) -> AClose:
         return self.thing
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
@@ -165,7 +157,7 @@ closing = Closing
 
 
 @public_module(__name__, "nullcontext")
-class NullContext(Generic[T]):
+class NullContext(AsyncContextManager[T]):
     """
     Create an :term:`asynchronous context manager` that only returns ``enter_result``
 
@@ -190,22 +182,10 @@ class NullContext(Generic[T]):
 
     __slots__ = ("enter_result",)
 
-    @overload
-    def __init__(self: "NullContext[None]", enter_result: None = ...) -> None: ...
-
-    @overload
-    def __init__(self: "NullContext[T]", enter_result: T) -> None: ...
-
-    def __init__(self, enter_result: Optional[T] = None):
+    def __init__(self, enter_result: T = None):
         self.enter_result = enter_result
 
-    @overload
-    async def __aenter__(self: "NullContext[None]") -> None: ...
-
-    @overload
-    async def __aenter__(self: "NullContext[T]") -> T: ...
-
-    async def __aenter__(self) -> Optional[T]:
+    async def __aenter__(self) -> T:
         return self.enter_result
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
@@ -215,15 +195,7 @@ class NullContext(Generic[T]):
 nullcontext = NullContext
 
 
-SE = TypeVar(
-    "SE",
-    bound=Union[
-        AsyncContextManager[Any],
-        ContextManager[Any],
-        Callable[[Any, BaseException, Any], Optional[bool]],
-        Callable[[Any, BaseException, Any], Awaitable[Optional[bool]]],
-    ],
-)
+SE = TypeVar("SE")
 
 
 class ExitStack:

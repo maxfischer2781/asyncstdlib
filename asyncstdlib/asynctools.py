@@ -2,6 +2,7 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from typing import (
     Union,
+    AsyncContextManager,
     AsyncIterator,
     TypeVar,
     AsyncGenerator,
@@ -14,7 +15,7 @@ from typing import (
     Optional,
 )
 
-from ._typing import AsyncContextManager, T, T1, T2, T3, T4, T5, AnyIterable
+from ._typing import T, T1, T2, T3, T4, T5, AnyIterable
 from ._core import aiter
 from .contextlib import nullcontext
 
@@ -50,11 +51,11 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         self.__anext__ = self._wrapper.__anext__  # type: ignore
         if hasattr(iterator, "asend"):
             self.asend = (
-                iterator.asend  # pyright: ignore[reportUnknownMemberType,reportGeneralTypeIssues]
+                iterator.asend  # pyright: ignore[reportUnknownMemberType,reportAttributeAccessIssue]
             )
         if hasattr(iterator, "athrow"):
             self.athrow = (
-                iterator.athrow  # pyright: ignore[reportUnknownMemberType,reportGeneralTypeIssues]
+                iterator.athrow  # pyright: ignore[reportUnknownMemberType,reportAttributeAccessIssue]
             )
 
     def __aiter__(self) -> AsyncGenerator[T, S]:
@@ -409,9 +410,9 @@ async def any_iter(
         async for item in iterable:
             yield (
                 item if not isinstance(item, Awaitable) else await item
-            )  # pyright: ignore[reportGeneralTypeIssues]
+            )  # pyright: ignore[reportReturnType]
     else:
         for item in iterable:
             yield (
                 item if not isinstance(item, Awaitable) else await item
-            )  # pyright: ignore[reportGeneralTypeIssues]
+            )  # pyright: ignore[reportReturnType]

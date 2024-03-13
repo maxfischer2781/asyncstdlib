@@ -444,7 +444,7 @@ async def sorted(
         try:
             return _sync_builtins.sorted(iterable, reverse=reverse)  # type: ignore
         except TypeError:
-            items: "_sync_builtins.list[Any]" = [item async for item in aiter(iterable)]
+            items: _sync_builtins.list[Any] = [item async for item in aiter(iterable)]
             items.sort(reverse=reverse)
             return items
     else:

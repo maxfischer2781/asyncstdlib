@@ -10,12 +10,18 @@ from typing import (
     overload,
 )
 
-from ._typing import T, T1, T2, AC, AnyIterable
+from ._typing import T, AC, AnyIterable
 from ._core import ScopedIter, awaitify as _awaitify, Sentinel
 from .builtins import anext
 from ._utility import public_module
 
-from ._lrucache import lru_cache, CacheInfo, CacheParameters, LRUAsyncCallable
+from ._lrucache import (
+    lru_cache,
+    CacheInfo,
+    CacheParameters,
+    LRUAsyncCallable,
+    LRUAsyncBoundCallable,
+)
 
 __all__ = [
     "cache",
@@ -23,6 +29,7 @@ __all__ = [
     "CacheInfo",
     "CacheParameters",
     "LRUAsyncCallable",
+    "LRUAsyncBoundCallable",
     "reduce",
     "cached_property",
 ]
@@ -36,9 +43,6 @@ def cache(user_function: AC) -> LRUAsyncCallable[AC]:
     with a ``maxsize`` of :py:data:`None`.
     """
     return lru_cache(maxsize=None)(user_function)
-
-
-__REDUCE_SENTINEL = Sentinel("<no default>")
 
 
 class AwaitableValue(Generic[T]):
@@ -147,6 +151,8 @@ class CachedProperty(Generic[T]):
     ) -> Union["CachedProperty[T]", Awaitable[T]]:
         if instance is None:
             return self
+        # __get__ may be called multiple times before it is first awaited to completion
+        # provide a placeholder that acts just like the final value does
         return _RepeatableCoroutine(self._get_attribute, instance)
 
     async def _get_attribute(self, instance: object) -> T:
@@ -158,16 +164,7 @@ class CachedProperty(Generic[T]):
 cached_property = CachedProperty
 
 
-@overload
-def reduce(
-    function: Callable[[T1, T2], T1], iterable: AnyIterable[T2], initial: T1
-) -> Coroutine[T1, Any, Any]: ...
-
-
-@overload
-def reduce(
-    function: Callable[[T, T], T], iterable: AnyIterable[T]
-) -> Coroutine[T, Any, Any]: ...
+__REDUCE_SENTINEL = Sentinel("<no default>")
 
 
 async def reduce(

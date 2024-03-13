@@ -36,6 +36,7 @@ test = [
     "pytest-cov",
     "flake8-2020",
     "mypy; implementation_name=='cpython'",
+    "typing-extensions",
 ]
 doc = ["sphinx", "sphinxcontrib-trio"]
 
