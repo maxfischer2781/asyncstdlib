@@ -18,9 +18,6 @@ import sys
 from ._typing import AClose, ContextManager, AC, T, C
 from ._core import awaitify
 from ._utility import public_module
-import contextlib
-
-contextlib.AsyncContextDecorator
 
 AnyContextManager = Union[AsyncContextManager[T], ContextManager[T]]
 
