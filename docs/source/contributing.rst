@@ -3,12 +3,12 @@ Contribution Guidelines
 =======================
 
 Contributions to ``asyncstdlib`` are highly welcome!
-The place to go is its `GitHub repository`_,
+The place to go is the `asyncstdlib GitHub repository`_
 where you can report bugs, request improvements or propose changes.
 
 We describe below how you can create a pull request and have it merged in.
 
-.. _GitHub repository: https://github.com/maxfischer2781/asyncstdlib
+.. _asyncstdlib GitHub repository: https://github.com/maxfischer2781/asyncstdlib
 
 Discuss First
 =============
