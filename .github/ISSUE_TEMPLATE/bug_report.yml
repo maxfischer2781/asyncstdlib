@@ -1,0 +1,37 @@
+name: Bug Report
+description: Report broken or unexpected features
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for taking the time to help us help you!"
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: "Shortly outline the bug in your own words. A few sentences are enough."
+      placeholder: "When I do X then Y happens. But Z should happen instead!"
+    validations:
+      required: true
+  - type: textarea
+    id: mre
+    attributes:
+      label: Minimal Reproducible Example
+      description: Please create a short example code that demonstrates the bug.
+      render: python
+      value: |
+        import asyncio
+        import asyncstdlib as a
+
+        async def example():
+            # TODO: add code that triggers the bug here
+
+        asyncio.run(example())
+  - type: checkboxes
+    id: self-assign
+    attributes:
+      label: Self Assign
+      description: I already understand the cause and want to submit a bugfix.
+      options:
+        - label: I want to provide code that fixes the issue.
