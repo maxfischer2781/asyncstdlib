@@ -19,7 +19,13 @@ from .builtins import (
     sorted,
 )
 from .functools import reduce, lru_cache, cache, cached_property
-from .contextlib import closing, contextmanager, nullcontext, ExitStack
+from .contextlib import (
+    closing,
+    ContextDecorator,
+    contextmanager,
+    nullcontext,
+    ExitStack,
+)
 from .itertools import (
     accumulate,
     batched,
@@ -65,6 +71,7 @@ __all__ = [
     "cached_property",
     # contextlib
     "closing",
+    "ContextDecorator",
     "contextmanager",
     "nullcontext",
     "ExitStack",
