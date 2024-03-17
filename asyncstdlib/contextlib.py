@@ -33,7 +33,7 @@ AbstractContextManager = AsyncContextManager
 def contextmanager(
     func: Callable[..., AsyncGenerator[T, None]]
 ) -> Callable[..., AsyncContextManager[T]]:
-    """
+    r"""
     Create an asynchronous context manager out of an asynchronous generator function
 
     This is intended as a decorator for an asynchronous generator function.
@@ -44,7 +44,7 @@ def contextmanager(
     .. code-block:: python3
 
         @contextmanager
-        async def Context(*args, **kwargs):
+        async def context(*args, **kwargs):
             # __aenter__
             yield  # context value
             # __aexit__
@@ -52,6 +52,9 @@ def contextmanager(
     Note that if an exception ends the context block, it gets re-raised at the ``yield``
     inside the asynchronous generator (via :py:meth:`~agen.athrow`). In order to handle
     this exception, the ``yield`` should be wrapped in a ``try`` statement.
+
+    The created context manager is a :py:class:`~.ContextDecorator` and can also be used
+    as a decorator. It is automatically entered when a decorated function is ``await``\ ed.
     """
 
     @wraps(func)
@@ -70,7 +73,7 @@ class ContextDecorator(AsyncContextManager[T]):
 
     .. code:: python3
 
-        class DecoratorAndContext(AsyncContextDecorator):
+        class DecoratorAndContext(ContextDecorator):
             async def __aenter__(self) -> Any:
                 print("entering", self)
 
@@ -85,8 +88,8 @@ class ContextDecorator(AsyncContextManager[T]):
 
     Since functions are decorated with an existing context manager instance,
     the same instance is entered and exited on every call. If the context is
-    not safe to be entered multiple times or even concurrently the subclass
-    should implement the method `_recreate_cm(:Self) -> Self` to create a copy.
+    not safe to be entered multiple times or even concurrently it should implement
+    the method ``_recreate_cm(:Self) -> Self`` to create a copy of itself.
     """
 
     __slots__ = ()

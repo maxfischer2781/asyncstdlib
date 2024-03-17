@@ -23,12 +23,18 @@ Context Managers
 
     .. versionadded:: 1.1.0
 
+.. autoclass:: ContextDecorator[T]
+
 .. py:function:: contextmanager(func: (...) → async iter T) (...)
     :async-with: :T
     :noindex:
 
 .. autofunction:: contextmanager(func: (...) → async iter T) -> (...) → async with T
     :decorator:
+
+    .. versionadded:: 3.12.2
+
+        The created context manager is a :py:class:`~.ContextDecorator`.
 
 .. autofunction:: closing(thing: AC)
     :async-with: :AC
