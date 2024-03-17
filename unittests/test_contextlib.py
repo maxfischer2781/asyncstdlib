@@ -33,6 +33,25 @@ async def test_contextmanager():
 
 
 @sync
+async def test_contextmanager_decorator():
+    witness: list[str] = []
+
+    @a.contextmanager
+    async def decorator():
+        witness.append("enter")
+        yield
+        witness.append("exit")
+
+    @decorator()
+    async def func():
+        witness.append("inner")
+
+    for repetition in range(1, 4):
+        await func()
+        assert witness == ["enter", "inner", "exit"] * repetition
+
+
+@sync
 async def test_contextmanager_no_yield():
     """Test that it is an error for a context to not yield"""
 
