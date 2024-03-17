@@ -6,178 +6,73 @@ Contributions to ``asyncstdlib`` are highly welcome!
 The place to go is the `asyncstdlib GitHub repository`_
 where you can report bugs, request improvements or propose changes.
 
-We describe below how you can create a pull request and have it merged in.
+- For bug reports and feature requests simply `open a new issue`_
+  and fill in the appropriate template.
+- Even for content submissions it is highly recommended to make sure an issue
+  exists - this allows you to get early feedback and document the development.
+  You can use whatever tooling you like to create the content,
+  but the next sections give a rough outline on how to proceed.
 
 .. _asyncstdlib GitHub repository: https://github.com/maxfischer2781/asyncstdlib
+.. _open a new issue: https://github.com/maxfischer2781/asyncstdlib/issues/new/choose
 
-Discuss First
-=============
-Before you start writing code, please create `a new issue`_ first and discuss
-what you intend to implement.
-It can well be that somebody else is already working on it, or that
-the suggested interface of your code needs to be changed in order to be
-consistent with the rest of the library *etc*.
+Submitting Content
+==================
 
-.. _a new issue: https://github.com/maxfischer2781/asyncstdlib/issues/new
+To submit concrete content suggestions you *must* use a `GitHub Fork and Pull Request`_.
+This lets you create the content at your own pace yet still receive direct feedback.
+Feel free to start with a *Draft Pull Request* to get feedback early.
 
-Fork
-====
-We develop using `GitHub's forks`_:
+All content goes through mandatory automated and manual review.
+You can run most of the automated review yourself to get faster feedback,
+yet it is also fine to wait for the checks run on GitHub itself.
+Dependencies for automated code and documentation checking is available via
+the extras ``test`` and ``doc``, respectively.
 
-* Create a fork of the repository to your Github account,
-* Clone the forked repository locally,
-* Write code in a branch of your local repository,
-* Push the branch to the remote forked repository, and finally
-* Create the pull request (by using Github UI on your forked repository).
+.. note::
 
-Please see the page on `GitHub's forks`_ for more detailed instruction.
+    Ideally you develop with the repository checked out locally and a separate `Python venv`_.
+    If you have the venv active and the current working directory is the repository root,
+    simply run `python -m pip install -e '.[test,doc]'` to install all dependencies.
 
-Also see this page on `how to update your fork to the upstream repository`_.
+.. _`GitHub Fork and Pull Request`: https://guides.github.com/activities/forking/
+.. _`Python venv`: https://docs.python.org/3/library/venv.html
 
-.. _GitHub's forks: https://guides.github.com/activities/forking/
-.. _how to update your fork to the upstream repository: https://medium.com/@topspinj/how-to-git-rebase-into-a-forked-repo-c9f05e821c8a
+Testing Code
+------------
 
-Development Environment
-=======================
-To set up the development environment on your computer, change to the local
-repository and:
+Code is verified locally using the tools `flake8`, `black`, `pytest` and `mypy`.
+If you do not have your own preferences we recommend the following order:
 
-* Create the virtual environment in ``venv`` directory:
+.. code:: bash
 
-  .. code-block::
+    python -m black asyncstdlib unittests
+    python -m flake8 asyncstdlib unittests
+    python -m pytest
+    python -m mypy --pretty
 
-      python -m venv venv
+This runs tests from simplest to most advanced and should allow you quick development.
+Note that some additional checks are run on GitHub to check test coverage and code health.
 
+Building Docs
+-------------
 
-* Activate the virtual environment, on Windows:
+If you change the documentation, either directly or via significant edits to docstrings,
+you can build the documentation yourself to check if everything renders as expected.
+To do so, trigger a `Sphinx build`_ to generate a HTML version of the docs:
 
-  .. code-block::
+.. code:: bash
 
-      venv\Scripts\activate
+    sphinx-build -M html ./docs ./docs/_build
 
+On success, simply open `./docs/_build/html/index.html` in your favourite browser.
 
-  or on Linux/Mac:
+.. _`Sphinx build`: https://www.sphinx-doc.org/en/master/man/sphinx-build.html
 
-  .. code-block::
+The Review
+----------
 
-      . venv/bin/activate
-
-* Install the test dependencies and documentation dependencies of
-  ``asyncstdlib``:
-
-  .. code-block::
-
-      pip3 install .[test,doc]
-
-Write the Code
-==============
-
-Now you can implement your feature.
-
-Make sure you also write the corresponding unit tests in the
-``unittests/`` directory.
-
-Pre-commit Checks
-=================
-We perform the following battery of pre-commit checks:
-
-* Check the code style with `flake8`_:
-
-  .. code-block::
-
-      python -m flake8
-
-* Check the code formatting with `Black`_:
-
-  .. code-block::
-
-      python -m black --target-version py36 --diff --check asyncstdlib unittests
-
-  You can also automatically format the code with:
-
-  .. code-block::
-
-    python -m black --target-version py36 asyncstdlib unittests
-
-* Run unit tests and measure the code coverage by:
-
-  .. code-block::
-
-      python -m coverage run -m pytest
-
-  The HTML report of the coverage can be generated by:
-
-  .. code-block::
-
-      coverage html
-
-  The report on coverage is stored in the ``htmlcov/`` directory.
-
-  Make sure that your test provide a full coverage of your code.
-
-.. _flake8: https://flake8.pycqa.org/en/latest/
-.. _Black: https://github.com/psf/black
-
-Document
-========
-Once you are finished with the implementation, do not forget to document your
-code in the directory ``docs/source/api/``.
-
-We use `Sphinx`_ to render the documentation to HTML.
-
-.. _Sphinx: https://www.sphinx-doc.org/en/master/
-
-To generate the documentation, change to ``docs/`` and execute, on Windows:
-
-.. code-block::
-
-    make.bat html
-
-or on Linux/Mac:
-
-.. code-block::
-
-    make html
-
-The documentation is available in ``docs/_build/html``.
-
-Commit your Changes
-===================
-Make a single commit for each self-contained change.
-
-Write the the commit messages in `past tense`_ and starting with a lower case.
-Please observe the maximum line length of 72 characters for the body.
-
-Here are a couple of examples of commit messages:
-
-.. code-block::
-
-    added itertools.pairwise
-
-.. code-block::
-
-    documented itertools.pairwise
-
-
-.. _past tense: https://en.wikipedia.org/wiki/Past_tense
-
-Push the commit to your remote fork and create the pull request (see
-the documentation on `Github's forks`_ for more details).
-
-Please put the title of your pull request in `imperative mood`_ and first upper
-case.
-
-.. _imperative mood: https://en.wikipedia.org/wiki/Imperative_mood
-
-Here is an example of a title of the pull request:
-
-.. code-block::
-
-    Add itertools.pairwise
-
-We will review your pull request as soon as possible.
-If changes are requested, please create new commits to address the review
-comments.
-
-Once the pull request is approved, we will finally squash
-the individual commits and merge it into the main branch.
+Once you mark your pull request as ready for review, be prepared for one or more rounds of comments.
+These can range from general commentary, to code suggestions, to inquiries why a specific change was made.
+We strive to give actionable advice, but whenever you have trouble understanding how to proceed -
+please just reply with a comment of your own and ask how to proceed!
