@@ -10,15 +10,18 @@ from typing import (
     Deque,
     AsyncContextManager,
 )
+from abc import abstractmethod
 from functools import wraps
 from collections import deque
 from functools import partial
 import sys
 
-from ._typing import AClose, ContextManager, T, C
+from ._typing import AClose, ContextManager, AC, T, C
 from ._core import awaitify
 from ._utility import public_module
+import contextlib
 
+contextlib.AsyncContextDecorator
 
 AnyContextManager = Union[AsyncContextManager[T], ContextManager[T]]
 
@@ -59,12 +62,61 @@ def contextmanager(
     return helper
 
 
-class _AsyncGeneratorContextManager(Generic[T]):
+class ContextDecorator(AsyncContextManager[T]):
+    """
+    Base class to turn an async context manager into a decorator as well
+
+    Inheriting from this class adds the scaffolding to automatically enter
+    an async context manager on awaiting any callable decorated with it:
+
+    .. code:: python3
+
+        class DecoratorAndContext(AsyncContextDecorator):
+            async def __aenter__(self) -> Any:
+                print("entering", self)
+
+            async def __aexit__(self, *exc):
+                print("exiting", self)
+
+        @DecoratorAndContext()
+        async def func():
+            print("running some function...")
+
+    The context manager can still be used regularly in `async with` statements.
+
+    Since functions are decorated with an existing context manager instance,
+    the same instance is entered and exited on every call. If the context is
+    not safe to be entered multiple times or even concurrently the subclass
+    should implement the method `_recreate_cm(:Self) -> Self` to create a copy.
+    """
+
+    __slots__ = ()
+
+    def _recreate_cm(self):
+        """Return another instance of the context manager that is ready for entering again"""
+        # Default to assuming the CM is reentrant, concurrency safe, ... and just return itself.
+        # Since for the `async` case many CMs have to be this anyway, this should apply most.
+        return self
+
+    def __call__(self, func: AC, /) -> AC:
+        @wraps(func)
+        async def inner(*args: Any, **kwds: Any) -> Any:
+            async with self._recreate_cm():
+                return await func(*args, **kwds)
+
+        return inner  # type: ignore
+
+
+class _AsyncGeneratorContextManager(ContextDecorator[T]):
     def __init__(
         self, func: Callable[..., AsyncGenerator[T, None]], args: Any, kwds: Any
     ):
         self.gen = func(*args, **kwds)
+        self.__recreate_args = func, args, kwds
         self.__doc__ = getattr(func, "__doc__", type(self).__doc__)
+
+    def _recreate_cm(self):
+        return type(self)(*self.__recreate_args)
 
     async def __aenter__(self) -> T:
         try:
