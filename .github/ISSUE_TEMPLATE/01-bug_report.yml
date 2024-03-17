@@ -31,6 +31,6 @@ body:
   - type: checkboxes
     id: self-assign
     attributes:
-      label: Self Assign [Optional]
+      label: Request Assignment [Optional]
       options:
         - label: I already understand the cause and want to submit a bugfix.

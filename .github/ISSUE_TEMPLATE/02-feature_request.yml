@@ -11,12 +11,12 @@ body:
     attributes:
       label: Describe the feature
       description: "Shortly outline the feature in your own words. A few sentences are enough."
-      placeholder: "When I do X then should Y happen. It is important that X/Y can do Z!"
+      placeholder: "When I do X then Y should happen. It is important that X/Y can do Z!"
     validations:
       required: true
   - type: checkboxes
     id: self-assign
     attributes:
-      label: Self Assign [Optional]
+      label: Request Assignment [Optional]
       options:
-        - label: I already understand the feature and want to submit an implementation.
+        - label: I already have a plan and want to submit an implementation.
