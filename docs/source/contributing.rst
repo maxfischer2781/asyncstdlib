@@ -76,3 +76,7 @@ Once you mark your pull request as ready for review, be prepared for one or more
 These can range from general commentary, to code suggestions, to inquiries why a specific change was made.
 We strive to give actionable advice, but whenever you have trouble understanding how to proceed -
 please just reply with a comment of your own and ask how to proceed!
+
+Once all comments are resolved and your pull request was approved, sit back and relax!
+We will merge your pull request in due time and include it in the next release.
+Thanks for contributing!
