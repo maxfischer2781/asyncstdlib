@@ -10,7 +10,6 @@ from typing import (
     Deque,
     AsyncContextManager,
 )
-from abc import abstractmethod
 from functools import wraps
 from collections import deque
 from functools import partial
