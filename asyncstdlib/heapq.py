@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import (
     Generic,
     AsyncIterator,
-    Tuple,
-    List,
     Optional,
     Callable,
     Any,
@@ -53,7 +51,7 @@ class _KeyIter(Generic[LT]):
     @classmethod
     def from_iters(
         cls,
-        iterables: Tuple[AnyIterable[T], ...],
+        iterables: "tuple[AnyIterable[T], ...]",
         reverse: bool,
         key: Callable[[T], Awaitable[LT]],
     ) -> "AsyncIterator[_KeyIter[LT]]": ...
@@ -61,13 +59,13 @@ class _KeyIter(Generic[LT]):
     @overload
     @classmethod
     def from_iters(
-        cls, iterables: Tuple[AnyIterable[LT], ...], reverse: bool, key: None
+        cls, iterables: "tuple[AnyIterable[LT], ...]", reverse: bool, key: None
     ) -> "AsyncIterator[_KeyIter[LT]]": ...
 
     @classmethod
     async def from_iters(
         cls,
-        iterables: Tuple[AnyIterable[Any], ...],
+        iterables: "tuple[AnyIterable[Any], ...]",
         reverse: bool,
         key: Optional[Callable[[Any], Any]],
     ) -> "AsyncIterator[_KeyIter[Any]]":
@@ -124,10 +122,10 @@ async def merge(
     """
     a_key = awaitify(key) if key is not None else None
     # sortable iterators with (reverse) position to ensure stable sort for ties
-    iter_heap: List[Tuple[_KeyIter[Any], int]] = [
+    iter_heap: "list[tuple[_KeyIter[Any], int]]" = [
         (itr, idx if not reverse else -idx)
         async for idx, itr in a_enumerate(
-            _KeyIter.from_iters(iterables, reverse, a_key)
+            _KeyIter[Any].from_iters(iterables, reverse, a_key)
         )
     ]
     try:
@@ -175,7 +173,7 @@ async def _largest(
     n: int,
     key: Callable[[T], Awaitable[LT]],
     reverse: bool,
-) -> List[T]:
+) -> "list[T]":
     ordered: Callable[[LT], LT] = ReverseLT if reverse else lambda x: x  # type: ignore
     async with ScopedIter(iterable) as iterator:
         # assign an ordering to items to solve ties
@@ -207,7 +205,7 @@ async def nlargest(
     iterable: AnyIterable[T],
     n: int,
     key: Optional[Callable[[Any], Awaitable[Any]]] = None,
-) -> List[T]:
+) -> "list[T]":
     """
     Return a sorted list of the ``n`` largest elements from the (async) iterable
 
@@ -229,7 +227,7 @@ async def nsmallest(
     iterable: AnyIterable[T],
     n: int,
     key: Optional[Callable[[Any], Awaitable[Any]]] = None,
-) -> List[T]:
+) -> "list[T]":
     """
     Return a sorted list of the ``n`` smallest elements from the (async) iterable
 
