@@ -28,3 +28,5 @@ jobs:
     - name: Verify with MyPy
       run: |
         mypy --pretty
+    - name: Verify with PyRight
+      uses: jakebailey/pyright-action@v2
