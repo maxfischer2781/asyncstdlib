@@ -1,0 +1,22 @@
+name: Feature Request
+description: Request new or missing features
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for taking the time to help us help you!"
+  - type: textarea
+    id: outline
+    attributes:
+      label: Describe the feature
+      description: "Shortly outline the feature in your own words. A few sentences are enough."
+      placeholder: "When I do X then Y should happen. It is important that X/Y can do Z!"
+    validations:
+      required: true
+  - type: checkboxes
+    id: self-assign
+    attributes:
+      label: Request Assignment [Optional]
+      options:
+        - label: I already have a plan and want to submit an implementation.
