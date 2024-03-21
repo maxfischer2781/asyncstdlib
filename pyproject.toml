@@ -64,6 +64,13 @@ warn_return_any = true
 no_implicit_reexport = true
 strict_equality = true
 
+[tool.pyright]
+include = ["asyncstdlib", "typetests"]
+typeCheckingMode = "strict"
+pythonPlatform = "All"
+pythonVersion = "3.8"
+verboseOutput = true
+
 [tool.pytest.ini_options]
 testpaths = [
     "unittests",
