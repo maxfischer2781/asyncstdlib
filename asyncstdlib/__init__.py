@@ -45,7 +45,7 @@ from .itertools import (
 from .asynctools import borrow, scoped_iter, await_each, any_iter, apply, sync
 from .heapq import merge, nlargest, nsmallest
 
-__version__ = "3.12.1"
+__version__ = "3.12.2"
 
 __all__ = [
     "anext",
