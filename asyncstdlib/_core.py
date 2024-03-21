@@ -114,16 +114,16 @@ class Awaitify(Generic[T]):
 
     __slots__ = "__wrapped__", "_async_call"
 
-    def __init__(self, function: Union[Callable[..., T], Callable[..., Awaitable[T]]]):
+    def __init__(self, function: "Callable[..., Awaitable[T]] | Callable[..., T]"):
         self.__wrapped__ = function
-        self._async_call: Optional[Callable[..., Awaitable[T]]] = None
+        self._async_call: "Callable[..., Awaitable[T]] | None" = None
 
     def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T]:
         if (async_call := self._async_call) is None:
             value = self.__wrapped__(*args, **kwargs)
             if isinstance(value, Awaitable):
                 self._async_call = self.__wrapped__  # type: ignore
-                return value
+                return value  # type: ignore
             else:
                 self._async_call = force_async(self.__wrapped__)  # type: ignore
                 return await_value(value)
