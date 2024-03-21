@@ -3,6 +3,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    Coroutine,
     Generic,
     NamedTuple,
     overload,
@@ -36,6 +37,12 @@ class LRUAsyncCallable(Protocol[AC]):
     ) -> LRUAsyncCallable[AC]: ...
     @overload
     def __get__(
+        self: LRUAsyncCallable[Callable[Concatenate[S, P], Coroutine[Any, Any, R]]],
+        instance: S,
+        owner: type | None = ...,
+    ) -> LRUAsyncBoundCallable[S, P, R]: ...
+    @overload
+    def __get__(
         self: LRUAsyncCallable[Callable[Concatenate[S, P], Awaitable[R]]],
         instance: S,
         owner: type | None = ...,
@@ -51,6 +58,11 @@ class LRUAsyncBoundCallable(Generic[S, P, R]):
     __slots__: tuple[str, ...]
     __self__: S
     __call__: Callable[P, Awaitable[R]]
+    @overload
+    def __get__(
+        self, instance: None, owner: type | None = ...
+    ) -> LRUAsyncBoundCallable[S, P, R]: ...
+    @overload
     def __get__(
         self, instance: S2, owner: type | None = ...
     ) -> LRUAsyncBoundCallable[S2, P, R]: ...
