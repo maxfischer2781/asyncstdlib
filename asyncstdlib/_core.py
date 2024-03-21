@@ -122,7 +122,7 @@ class Awaitify(Generic[T]):
             value = self.__wrapped__(*args, **kwargs)
             if isinstance(value, Awaitable):
                 self._async_call = self.__wrapped__  # type: ignore
-                return value  # type: ignore
+                return value  # pyright: ignore
             else:
                 self._async_call = force_async(self.__wrapped__)  # type: ignore
                 return await_value(value)
