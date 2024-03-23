@@ -41,17 +41,25 @@ the extras ``test`` and ``doc``, respectively.
 Testing Code
 ------------
 
-Code is verified locally using the tools `flake8`, `black`, `pytest` and `mypy`.
-If you do not have your own preferences we recommend the following order:
+Code can be verified locally using the tools `flake8`, `black`, `pytest`, `pyright` and `mypy`.
+You should always verify that the basic checks pass:
 
 .. code:: bash
 
     python -m black asyncstdlib unittests
     python -m flake8 asyncstdlib unittests
     python -m pytest
-    python -m mypy --pretty
 
-This runs tests from simplest to most advanced and should allow you quick development.
+This runs tests from simplest to most advanced and should allow a quick development cycle.
+
+In many cases you can rely on your IDE for type checking.
+For major typing related changes, run the full type checking:
+
+.. code:: bash
+
+    python -m mypy --pretty
+    python -m pyright
+
 Note that some additional checks are run on GitHub to check test coverage and code health.
 
 Building Docs
