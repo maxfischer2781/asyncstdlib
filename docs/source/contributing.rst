@@ -33,8 +33,8 @@ the extras ``test`` and ``doc``, respectively.
 .. note::
 
     Ideally you develop with the repository checked out locally and a separate `Python venv`_.
-    If you have the venv active and the current working directory is the repository root,
-    run `python -m pip install -e '.[test,typetest,doc]'` to install all dependencies.
+    If you have the venv active and are at the repository root,
+    run ``python -m pip install -e '.[test,typetest,doc]'`` to install all dependencies.
 
 .. _`GitHub Fork and Pull Request`: https://guides.github.com/activities/forking/
 .. _`Python venv`: https://docs.python.org/3/library/venv.html
