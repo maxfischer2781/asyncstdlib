@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install .[test]
+        pip install .[test,typetest]
     - name: Lint with flake8
       run: |
         flake8 asyncstdlib unittests
@@ -28,3 +28,5 @@ jobs:
     - name: Verify with MyPy
       run: |
         mypy --pretty
+    - name: Verify with PyRight
+      uses: jakebailey/pyright-action@v2

@@ -8,10 +8,9 @@ from typing import (
     Iterable,
     Callable,
     TypeVar,
-    Self,
     overload,
 )
-from typing_extensions import Literal
+from typing_extensions import Literal, Self
 
 from ._typing import AnyIterable, ADD, T, T1, T2, T3, T4, T5
 

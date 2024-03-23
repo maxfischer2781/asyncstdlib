@@ -77,23 +77,27 @@ def zip(
 def map(
     function: Callable[[T1], Awaitable[R]],
     __it1: AnyIterable[T1],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
     function: Callable[[T1], R],
     __it1: AnyIterable[T1],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
     function: Callable[[T1, T2], Awaitable[R]],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
     function: Callable[[T1, T2], R],
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -101,6 +105,7 @@ def map(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -108,6 +113,7 @@ def map(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -116,6 +122,7 @@ def map(
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -124,6 +131,7 @@ def map(
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -133,6 +141,7 @@ def map(
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
     __it5: AnyIterable[T5],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -142,6 +151,7 @@ def map(
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
     __it5: AnyIterable[T5],
+    /,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -151,6 +161,7 @@ def map(
     __it3: AnyIterable[Any],
     __it4: AnyIterable[Any],
     __it5: AnyIterable[Any],
+    /,
     *iterable: AnyIterable[Any],
 ) -> AsyncIterator[R]: ...
 @overload
@@ -161,6 +172,7 @@ def map(
     __it3: AnyIterable[Any],
     __it4: AnyIterable[Any],
     __it5: AnyIterable[Any],
+    /,
     *iterable: AnyIterable[Any],
 ) -> AsyncIterator[R]: ...
 @overload
