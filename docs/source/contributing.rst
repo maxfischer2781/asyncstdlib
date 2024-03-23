@@ -8,13 +8,14 @@ where you can report bugs, request improvements or propose changes.
 
 - For bug reports and feature requests simply `open a new issue`_
   and fill in the appropriate template.
-- Even for content submissions it is highly recommended to make sure an issue
-  exists - this allows you to get early feedback and document the development.
+- Even for content submissions make sure `an issue exists`_ - this
+  allows you to get early feedback and document the development.
   You can use whatever tooling you like to create the content,
   but the next sections give a rough outline on how to proceed.
 
 .. _asyncstdlib GitHub repository: https://github.com/maxfischer2781/asyncstdlib
 .. _open a new issue: https://github.com/maxfischer2781/asyncstdlib/issues/new/choose
+.. _an issue exists: https://github.com/maxfischer2781/asyncstdlib/issues
 
 Submitting Content
 ==================
