@@ -41,6 +41,7 @@ typetest = [
     "mypy; implementation_name=='cpython'",
     "pyright",
     "typing-extensions",
+    "mypy-typing-asserts",
 ]
 doc = ["sphinx", "sphinxcontrib-trio"]
 
@@ -52,6 +53,7 @@ Source = "https://github.com/maxfischer2781/asyncstdlib"
 include = ["unittests"]
 
 [tool.mypy]
+plugins = ["mypy_typing_asserts.mypy_plugin"]
 files = ["asyncstdlib", "typetests"]
 check_untyped_defs = true
 no_implicit_optional = true

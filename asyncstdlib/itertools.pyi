@@ -63,18 +63,16 @@ class chain(AsyncIterator[T]):
     async def aclose(self) -> None: ...
 
 def compress(data: AnyIterable[T], selectors: AnyIterable[Any]) -> AsyncIterator[T]: ...
-async def dropwhile(
+def dropwhile(
     predicate: Callable[[T], Any], iterable: AnyIterable[T]
 ) -> AsyncIterator[T]: ...
-async def filterfalse(
+def filterfalse(
     predicate: Callable[[T], Any] | None, iterable: AnyIterable[T]
 ) -> AsyncIterator[T]: ...
 @overload
-async def islice(
-    iterable: AnyIterable[T], start: int | None, /
-) -> AsyncIterator[T]: ...
+def islice(iterable: AnyIterable[T], start: int | None, /) -> AsyncIterator[T]: ...
 @overload
-async def islice(
+def islice(
     iterable: AnyIterable[T],
     start: int | None,
     stop: int | None,
@@ -82,34 +80,34 @@ async def islice(
     /,
 ) -> AsyncIterator[T]: ...
 @overload
-async def starmap(
+def starmap(
     function: Callable[[T1], T] | Callable[[T1], Awaitable[T]],
     iterable: AnyIterable[tuple[T1]],
 ) -> AsyncIterator[T]: ...
 @overload
-async def starmap(
+def starmap(
     function: Callable[[T1, T2], T] | Callable[[T1, T2], Awaitable[T]],
     iterable: AnyIterable[tuple[T1, T2]],
 ) -> AsyncIterator[T]: ...
 @overload
-async def starmap(
+def starmap(
     function: Callable[[T1, T2, T3], T] | Callable[[T1, T2, T3], Awaitable[T]],
     iterable: AnyIterable[tuple[T1, T2, T3]],
 ) -> AsyncIterator[T]: ...
 @overload
-async def starmap(
+def starmap(
     function: Callable[[T1, T2, T3, T4], T] | Callable[[T1, T2, T3, T4], Awaitable[T]],
     iterable: AnyIterable[tuple[T1, T2, T3, T4]],
 ) -> AsyncIterator[T]: ...
 @overload
-async def starmap(
+def starmap(
     function: (
         Callable[[T1, T2, T3, T4, T5], T] | Callable[[T1, T2, T3, T4, T5], Awaitable[T]]
     ),
     iterable: AnyIterable[tuple[T1, T2, T3, T4, T5]],
 ) -> AsyncIterator[T]: ...
 @overload
-async def starmap(
+def starmap(
     function: Callable[..., T] | Callable[..., Awaitable[T]],
     iterable: AnyIterable[Iterable[Any]],
 ) -> AsyncIterator[T]: ...
