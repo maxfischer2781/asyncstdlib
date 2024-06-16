@@ -1,3 +1,4 @@
+from typing import Callable, Any
 import sys
 
 import pytest
@@ -7,7 +8,12 @@ import asyncstdlib as a
 from .utility import sync
 
 
-def method_counter(size):
+class Counter:
+    kind: object
+    count: Any
+
+
+def method_counter(size: "int | None") -> "type[Counter]":
     class Counter:
         kind = None
 
@@ -22,7 +28,7 @@ def method_counter(size):
     return Counter
 
 
-def classmethod_counter(size):
+def classmethod_counter(size: "int | None") -> "type[Counter]":
     class Counter:
         _count = 0
         kind = classmethod
@@ -39,34 +45,40 @@ def classmethod_counter(size):
     return Counter
 
 
-def staticmethod_counter(size):
+def staticmethod_counter(size: "int | None") -> "type[Counter]":
     # I'm sorry for writing this test – please don't do this at home!
-    _count = 0
+    count: int = 0
 
     class Counter:
         kind = staticmethod
 
         def __init__(self):
-            nonlocal _count
-            _count = 0
+            nonlocal count
+            count = 0
 
         @staticmethod
         @a.lru_cache(maxsize=size)
         async def count():
-            nonlocal _count
-            _count += 1
-            return _count
+            nonlocal count
+            count += 1
+            return count
 
     return Counter
 
 
-counter_factories = [method_counter, classmethod_counter, staticmethod_counter]
+counter_factories: "list[Callable[[int | None], type[Counter]]]" = [
+    method_counter,
+    classmethod_counter,
+    staticmethod_counter,
+]
 
 
 @pytest.mark.parametrize("size", [0, 3, 10, None])
 @pytest.mark.parametrize("counter_factory", counter_factories)
 @sync
-async def test_method_plain(size, counter_factory):
+async def test_method_plain(
+    size: "int | None", counter_factory: "Callable[[int | None], type[Counter]]"
+):
     """Test caching without resetting"""
 
     counter_type = counter_factory(size)
@@ -81,7 +93,9 @@ async def test_method_plain(size, counter_factory):
 @pytest.mark.parametrize("size", [0, 3, 10, None])
 @pytest.mark.parametrize("counter_factory", counter_factories)
 @sync
-async def test_method_clear(size, counter_factory):
+async def test_method_clear(
+    size: "int | None", counter_factory: "Callable[[int | None], type[Counter]]"
+):
     """Test caching with resetting everything"""
     counter_type = counter_factory(size)
     for _instance in range(4):
@@ -96,7 +110,9 @@ async def test_method_clear(size, counter_factory):
 @pytest.mark.parametrize("size", [0, 3, 10, None])
 @pytest.mark.parametrize("counter_factory", counter_factories)
 @sync
-async def test_method_discard(size, counter_factory):
+async def test_method_discard(
+    size: "int | None", counter_factory: "Callable[[int | None], type[Counter]]"
+):
     """Test caching with resetting specific item"""
     counter_type = counter_factory(size)
     if not (
@@ -116,7 +132,9 @@ async def test_method_discard(size, counter_factory):
 @pytest.mark.parametrize("size", [0, 3, 10, None])
 @pytest.mark.parametrize("counter_factory", counter_factories)
 @sync
-async def test_method_metadata(size, counter_factory):
+async def test_method_metadata(
+    size: "int | None", counter_factory: "Callable[[int | None], type[Counter]]"
+):
     """Test cache metadata on methods"""
     tp = counter_factory(size)
     for instance in range(4):
@@ -138,7 +156,7 @@ async def test_method_metadata(size, counter_factory):
 
 
 @pytest.mark.parametrize("size", [None, 0, 10, 128])
-def test_wrapper_attributes(size):
+def test_wrapper_attributes(size: "int | None"):
     class Bar:
         @a.lru_cache
         async def method(self, int_arg: int):
