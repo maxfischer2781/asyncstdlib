@@ -9,6 +9,8 @@ from .utility import sync
 
 def method_counter(size):
     class Counter:
+        kind = None
+
         def __init__(self):
             self._count = 0
 
@@ -23,6 +25,7 @@ def method_counter(size):
 def classmethod_counter(size):
     class Counter:
         _count = 0
+        kind = classmethod
 
         def __init__(self):
             type(self)._count = 0
@@ -41,6 +44,8 @@ def staticmethod_counter(size):
     _count = 0
 
     class Counter:
+        kind = staticmethod
+
         def __init__(self):
             nonlocal _count
             _count = 0
@@ -94,11 +99,11 @@ async def test_method_clear(size, counter_factory):
 async def test_method_discard(size, counter_factory):
     """Test caching with resetting specific item"""
     counter_type = counter_factory(size)
-    if (
-        sys.version_info < (3, 9)
-        and type(counter_type.__dict__["count"]) is classmethod
+    if not (
+        (3, 9) <= sys.version_info[:2] <= (3, 12)
+        or counter_type.kind is not classmethod
     ):
-        pytest.skip("classmethod does not respect descriptors up to 3.8")
+        pytest.skip("classmethod only respects descriptors between 3.9 and 3.12")
     for _instance in range(4):
         instance = counter_type()
         for reset in range(5):
