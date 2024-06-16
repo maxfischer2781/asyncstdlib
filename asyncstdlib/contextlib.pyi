@@ -66,7 +66,7 @@ class closing(Generic[AClose]):
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
-    ) -> bool: ...
+    ) -> None: ...
 
 class nullcontext(AsyncContextManager[T]):
     enter_result: T
@@ -84,7 +84,7 @@ class nullcontext(AsyncContextManager[T]):
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
-    ) -> bool: ...
+    ) -> None: ...
 
 SE = TypeVar(
     "SE",

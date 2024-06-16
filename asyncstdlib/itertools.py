@@ -335,8 +335,8 @@ class NoLock:
     async def __aenter__(self) -> None:
         pass
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
-        return False
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        return None
 
 
 async def tee_peer(
@@ -460,9 +460,8 @@ class Tee(Generic[T]):
     async def __aenter__(self) -> "Tee[T]":
         return self
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.aclose()
-        return False
 
     async def aclose(self) -> None:
         for child in self._children:
