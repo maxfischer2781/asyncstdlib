@@ -199,9 +199,8 @@ class Closing(Generic[AClose]):
     async def __aenter__(self) -> AClose:
         return self.thing
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.thing.aclose()
-        return False
 
 
 closing = Closing
@@ -239,8 +238,8 @@ class NullContext(AsyncContextManager[T]):
     async def __aenter__(self) -> T:
         return self.enter_result
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
-        return False
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        return None
 
 
 nullcontext = NullContext

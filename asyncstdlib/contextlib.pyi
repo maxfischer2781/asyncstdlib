@@ -66,7 +66,7 @@ class closing(Generic[AClose]):
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
-    ) -> bool: ...
+    ) -> None: ...
 
 class nullcontext(AsyncContextManager[T]):
     enter_result: T
@@ -74,14 +74,17 @@ class nullcontext(AsyncContextManager[T]):
     @overload
     def __init__(self: nullcontext[None], enter_result: None = ...) -> None: ...
     @overload
-    def __init__(self: nullcontext[T], enter_result: T) -> None: ...
+    def __init__(
+        self: nullcontext[T],  # pyright: ignore[reportInvalidTypeVarUse]
+        enter_result: T,
+    ) -> None: ...
     async def __aenter__(self: nullcontext[T]) -> T: ...
     async def __aexit__(
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
-    ) -> bool: ...
+    ) -> None: ...
 
 SE = TypeVar(
     "SE",

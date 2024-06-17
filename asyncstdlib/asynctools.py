@@ -110,10 +110,9 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         self._borrowed_iter = _ScopedAsyncIterator(self._iterator)
         return self._borrowed_iter
 
-    async def __aexit__(self, *args: Any) -> bool:
+    async def __aexit__(self, *args: Any) -> None:
         await self._borrowed_iter._aclose_wrapper()  # type: ignore
         await self._iterator.aclose()  # type: ignore
-        return False
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} of {self._iterator!r} at 0x{(id(self)):x}>"

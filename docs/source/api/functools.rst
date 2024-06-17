@@ -86,6 +86,9 @@ the ``__wrapped__`` callable may be wrapped with a new cache of different size.
         .. versionchanged:: Python3.9
             :py:func:`classmethod` properly wraps caches.
 
+        .. versionchanged:: Python3.13
+            :py:func:`classmethod` no longer wraps caches in a way that supports `cache_discard`.
+
         .. versionadded:: 3.10.4
 
     .. automethod:: cache_info() -> (hits=..., misses=..., maxsize=..., currsize=...)
