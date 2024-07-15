@@ -10,6 +10,7 @@ from typing import (
     Awaitable,
     AsyncIterable,
     Callable,
+    Coroutine,
     Any,
     overload,
     Optional,
@@ -76,7 +77,7 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         if hasattr(self, "athrow"):
             self.athrow = wrapper_iterator.athrow
 
-    def aclose(self) -> Awaitable[None]:
+    def aclose(self) -> Coroutine[Any, Any, None]:
         return self._aclose_wrapper()
 
 
