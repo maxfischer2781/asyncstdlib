@@ -3,8 +3,9 @@ import functools
 import pytest
 
 import asyncstdlib as a
+from asyncstdlib.functools import CachedProperty
 
-from .utility import sync, asyncify, multi_sync, Switch, Schedule
+from .utility import Lock, Schedule, Switch, asyncify, multi_sync, sync
 
 
 @sync
@@ -24,24 +25,23 @@ async def test_cached_property():
     assert (await pair.total) == 3
     del pair.total
     assert (await pair.total) == 4
-    assert type(Pair.total) is a.cached_property
+    assert type(Pair.total) is CachedProperty
 
 
 @sync
 async def test_cache_property_nodict():
-    # note: The exact error is version- and possibly implementation-dependent.
-    #       Some Python version wrap all errors from __set_name__.
-    with pytest.raises(Exception):  # noqa: B017
+    class Foo:
+        __slots__ = ()
 
-        class Pair:
-            __slots__ = "a", "b"
+        def __init__(self):
+            pass  # pragma: no cover
 
-            def __init__(self, a, b):
-                pass  # pragma: no cover
+        @a.cached_property
+        async def bar(self):
+            pass  # pragma: no cover
 
-            @a.cached_property
-            async def total(self):
-                pass  # pragma: no cover
+    with pytest.raises(TypeError):
+        Foo().bar
 
 
 @multi_sync
@@ -64,6 +64,54 @@ async def test_cache_property_order():
     await Schedule(check_increment(5), check_increment(12), check_increment(1337))
     assert (await val.cached) != 0
     assert (await val.cached) == 1337  # last value fetched
+
+
+@multi_sync
+async def test_cache_property_lock_order():
+    class Value:
+        def __init__(self, value):
+            self.value = value
+
+        @a.cached_property(Lock)
+        async def cached(self):
+            value = self.value
+            await Switch()
+            return value
+
+    async def check_cached(to, expected):
+        val.value = to
+        assert (await val.cached) == expected
+
+    val = Value(0)
+    await Schedule(check_cached(5, 5), check_cached(12, 5), check_cached(1337, 5))
+    assert (await val.cached) == 5  # first value fetched
+
+
+@multi_sync
+async def test_cache_property_lock_deletion():
+    class Value:
+        def __init__(self, value):
+            self.value = value
+
+        @a.cached_property(Lock)
+        async def cached(self):
+            value = self.value
+            await Switch()
+            return value
+
+    async def check_cached(to, expected):
+        val.value = to
+        assert (await val.cached) == expected
+
+    async def delete_attribute(to):
+        val.value = to
+        awaitable = val.cached
+        del val.cached
+        assert (await awaitable) == to
+
+    val = Value(0)
+    await Schedule(check_cached(5, 5), delete_attribute(12), check_cached(1337, 12))
+    assert (await val.cached) == 12  # first value fetch after deletion
 
 
 @sync
