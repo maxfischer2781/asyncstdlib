@@ -120,7 +120,7 @@ class LRUAsyncCallable(Protocol[AC]):
 # these are fake and only exist for placeholders
 S = TypeVar("S")
 S2 = TypeVar("S2")
-P = TypeVar("P")
+P = TypeVar("P")  # actually a ParamSpec, see .pyi
 R = TypeVar("R")
 
 
