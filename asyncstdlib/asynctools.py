@@ -119,7 +119,17 @@ class _ScopedAsyncIteratorContext(AsyncContextManager[AsyncIterator[T]]):
         return f"<{self.__class__.__name__} of {self._iterator!r} at 0x{(id(self)):x}>"
 
 
-def borrow(iterator: AsyncIterator[T], /) -> AsyncIterator[T]:
+@overload
+def borrow(iterator: AsyncGenerator[T, S], /) -> AsyncGenerator[T, S]: ...
+
+
+@overload
+def borrow(iterator: AsyncIterator[T], /) -> AsyncIterator[T]: ...
+
+
+def borrow(
+    iterator: Union[AsyncIterator[T], AsyncGenerator[T, Any]], /
+) -> Union[AsyncIterator[T], AsyncGenerator[T, Any]]:
     """
     Borrow an async iterator, preventing to ``aclose`` it
 
@@ -142,7 +152,7 @@ def borrow(iterator: AsyncIterator[T], /) -> AsyncIterator[T]:
             "borrowing requires an async iterator "
             + f"with __aiter__ and __anext__ method, got {type(iterator).__name__}"
         )
-    return _BorrowedAsyncIterator(iterator)
+    return _BorrowedAsyncIterator[T, Any](iterator)
 
 
 def scoped_iter(iterable: AnyIterable[T], /) -> AsyncContextManager[AsyncIterator[T]]:
