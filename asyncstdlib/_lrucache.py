@@ -81,7 +81,9 @@ class LRUAsyncCallable(Protocol[AC]):
         """Descriptor ``__get__`` for caches to bind them on lookup"""
         if instance is None:
             return self
-        return LRUAsyncBoundCallable(self, instance)
+        return LRUAsyncBoundCallable(
+            self, instance
+        )  # pyright: ignore[reportUnknownVariableType]
 
     #: Get the result of ``await __wrapped__(...)`` from the cache or evaluation
     __call__: AC
