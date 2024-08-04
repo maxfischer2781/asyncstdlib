@@ -16,7 +16,7 @@ Context Managers
     An :term:`abstract base class` for asynchronous context managers
 
     This class can be used to check whether some object is an
-    asynchronous context manager. If a class may inherit from
+    asynchronous context manager. A class may inherit from
     ``AbstractContextManager``, in which case it must implement
     an ``__aenter__`` method; the default ``__aenter__`` returns
     the asynchronous context manager itself.
