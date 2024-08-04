@@ -454,7 +454,7 @@ class Tee(Generic[T]):
     ) -> Union[AsyncIterator[T], Tuple[AsyncIterator[T], ...]]:
         return self._children[item]
 
-    def __iter__(self) -> Iterator[AnyIterable[T]]:
+    def __iter__(self) -> Iterator[AsyncIterator[T]]:
         yield from self._children
 
     async def __aenter__(self) -> "Tee[T]":

@@ -56,6 +56,16 @@ async def test_tee() -> None:
         assert_type(x, int)
 
 
+async def test_tee_iter() -> None:
+    x1, x2 = itertools.tee([1], n=2)
+    assert_type(x1, AsyncIterator[int])
+    assert_type(x2, AsyncIterator[int])
+
+    for xi in itertools.tee([1], n=2):
+        async for x in xi:
+            assert_type(x, int)
+
+
 async def test_pairwise() -> None:
     async for x in itertools.pairwise([1]):
         assert_type(x, "tuple[int, int]")

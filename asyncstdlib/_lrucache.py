@@ -81,7 +81,9 @@ class LRUAsyncCallable(Protocol[AC]):
         """Descriptor ``__get__`` for caches to bind them on lookup"""
         if instance is None:
             return self
-        return LRUAsyncBoundCallable(self, instance)
+        return LRUAsyncBoundCallable(
+            self, instance
+        )  # pyright: ignore[reportUnknownVariableType]
 
     #: Get the result of ``await __wrapped__(...)`` from the cache or evaluation
     __call__: AC
@@ -120,7 +122,7 @@ class LRUAsyncCallable(Protocol[AC]):
 # these are fake and only exist for placeholders
 S = TypeVar("S")
 S2 = TypeVar("S2")
-P = TypeVar("P")
+P = TypeVar("P")  # actually a ParamSpec, see .pyi
 R = TypeVar("R")
 
 
