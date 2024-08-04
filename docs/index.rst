@@ -57,6 +57,7 @@ The missing ``async`` toolbox
    :hidden:
 
    source/devel/contributing
+   source/devel/testloop
    source/devel/publishing
 
 The ``asyncstdlib`` library re-implements functions and classes of the Python

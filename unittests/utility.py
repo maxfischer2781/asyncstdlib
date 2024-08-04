@@ -50,7 +50,7 @@ class PingPong:
 
     The coroutine yields to the event loop but is resumed
     immediately, without running others in the meantime.
-    This is mainly useful for debugging the event loop.
+    This is mainly useful for ensuring the event loop is used.
     """
 
     def __await__(self) -> "Generator[PingPong, Any, Any]":
@@ -68,7 +68,8 @@ def sync(test_case: Callable[..., Coroutine[None, Any, Any]]) -> Callable[..., N
     Mark an ``async def`` test case to be run synchronously
 
     This emulates a primitive "event loop" which only responds
-    to the :py:class:`PingPong` by sending it back.
+    to the :py:class:`PingPong` by sending it back. This loop
+    is appropriate for tests that do not check concurrency.
     """
 
     @wraps(test_case)
@@ -145,14 +146,21 @@ class Lock:
 
 
 def multi_sync(
-    test_case: Callable[..., Coroutine[None, Any, Any]]
+    test_case: Callable[..., Coroutine[None, Any, Any]], /
 ) -> Callable[..., None]:
     """
     Mark an ``async def`` test case to be run synchronously with children
 
-    This emulates a primitive "event loop" which only responds
+    This provides a primitive "event loop" which only responds
     to the :py:class:`PingPong`, :py:class:`Schedule`, :py:class:`Switch`
-    and :py:class:`Lock`.
+    and :py:class:`Lock`. This loop is appropriate for tests that need
+    to check concurrency.
+
+    It should be applied as a decorator on an ``async def`` function, which
+    is then turned into a synchronous callable that will run the ``async def``
+    function and all tasks it spawns.
+    Other decorators, most prominently :py:func:`pytest.mark.parametrize`,
+    can be applied around it.
     """
 
     @wraps(test_case)
