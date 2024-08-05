@@ -35,17 +35,17 @@ Attribute Caches
 
 This type of cache tracks ``await``\ ing an attribute.
 
-.. py:function:: cached_property(getter: (Self) → await T, /)
+.. py:function:: cached_property(getter: (Self) → await T, /) -> await T
     :decorator:
 
-.. autofunction:: cached_property(asynccontextmanager_type: Type[AsyncContextManager], /)((Self) → await T)
+.. autofunction:: cached_property(context_type: Type[AsyncContextManager], /)((Self) → await T) -> await T
     :decorator:
     :noindex:
 
     .. versionadded:: 1.1.0
-    .. versionadded:: 3.13.0
+    .. versionadded:: 3.12.5
 
-        The ``asynccontextmanager_type`` decorator parameter.
+        The ``context_type`` decorator parameter.
 
 
 Callable Caches
