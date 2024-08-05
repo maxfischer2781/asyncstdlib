@@ -233,7 +233,7 @@ def cached_property(
     If the attribute is accessed by multiple tasks before a cached value has
     been produced, the getter can be run more than once. The final cached value
     is determined by the last getter coroutine to return. To enforce that the
-    getter is executed at most once, provide a ``lock`` type - e.g. the
+    getter is executed at most once, provide an additional lock type - e.g. the
     :py:class:`asyncio.Lock` class in an :py:mod:`asyncio` application - and
     access is automatically synchronised.
 
