@@ -12,6 +12,7 @@ from typing import (
 )
 from functools import wraps
 from collections import deque
+from random import randint
 
 
 T = TypeVar("T")
@@ -116,10 +117,23 @@ class Switch:
     all other runnable coroutines of the event loop.
     This is similar to the common ``sleep(0)`` function
     of regular event loop frameworks.
+
+    If a single argument is given, this specifies how many
+    turns should be skipped. The default corresponds to `0`.
+    If two arguments are given, this is interpreted as an
+    inclusive interval to randomly select the skip count.
     """
+
+    def __init__(self, skip: int = 0, limit: int = 0, /) -> None:
+        if limit <= 0:
+            self._idle_count = skip
+        else:
+            self._idle_count = randint(skip, limit)
 
     def __await__(self):
         yield self
+        for _ in range(self._idle_count):
+            yield self
 
 
 class Lock:

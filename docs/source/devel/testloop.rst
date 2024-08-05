@@ -27,6 +27,12 @@ Async commands
 
 .. autoclass:: Schedule(*await Any)
 
-.. autoclass:: Switch
+.. py:class::  Switch(skip: int, /)
+    :no-index:
+
+.. py:class::  Switch(min: int, max: int, /)
+    :no-index:
+
+.. autoclass:: Switch()
 
 .. autoclass:: Lock

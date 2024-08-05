@@ -322,8 +322,7 @@ async def test_tee_concurrent_locked():
     async def iter_values():
         for item in items:
             # switch to other tasks a few times to guarantees another runs
-            for _ in range(5):
-                await Switch()
+            await Switch(5)
             yield item
 
     async def test_peer(peer_tee):
@@ -354,8 +353,7 @@ async def test_tee_concurrent_unlocked():
     async def iter_values():
         for item in items:
             # switch to other tasks a few times to guarantee another runs
-            for _ in range(5):
-                await Switch()
+            await Switch(5)
             yield item
 
     async def test_peer(peer_tee):
