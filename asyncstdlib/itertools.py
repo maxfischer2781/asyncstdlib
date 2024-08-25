@@ -577,7 +577,7 @@ class _GroupByState(Generic[R, T_co]):
             await self.step()
 
     def consume_value(self) -> T_co:
-        """Return the current value, after removing it from the current state"""
+        """Return the current value after removing it from the current state"""
         value, self._current_value = self._current_value, self._sentinel
         return value
 
@@ -600,21 +600,21 @@ class _Grouper(AsyncIterator[T_co], Generic[R, T_co]):
 
     async def __anext__(self) -> T_co:
         state = self._state
+        # the groupby already advanced to another group
         if state.current_group is not self:
             raise StopAsyncIteration
-
         await state.maybe_step()
+        # the step advanced the iterator to another group
         if self._target_key != state.current_key:
             raise StopAsyncIteration
-
         return state.consume_value()
 
     async def aclose(self) -> None:
-        """Close the group iterator
+        """
+        Close the group iterator
 
         Note: this does _not_ close the underlying groupby managed iterator;
         closing a single group shouldn't affect other groups in the series.
-
         """
         state = self._state
         if state.current_group is not self:
@@ -662,8 +662,7 @@ class GroupBy(AsyncIterator[Tuple[R, AsyncIterator[T_co]]], Generic[R, T_co]):
 
     async def __anext__(self) -> Tuple[R, AsyncIterator[T_co]]:
         state = self._state
-        # disable the last group to avoid concurrency
-        # issues.
+        # already disable the current group to avoid concurrency issues
         state.current_group = None
         await state.maybe_step()
         try:
