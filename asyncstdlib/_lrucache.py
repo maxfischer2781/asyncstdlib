@@ -28,7 +28,9 @@ from ._typing import Protocol, TypedDict, AC
 from ._utility import public_module
 
 
-@public_module("asyncstdlib.functools")
+@public_module(
+    "asyncstdlib.functools"
+)  # pyright: ignore[reportArgumentType,reportUntypedClassDecorator]
 class CacheInfo(NamedTuple):
     """
     Metadata on the current state of a cache
