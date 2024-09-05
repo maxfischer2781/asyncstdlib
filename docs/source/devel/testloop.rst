@@ -13,12 +13,10 @@ as well as a number of `async` commands specific to the event loop.
 Event Loops
 ===========
 
-There are currently two event loops available for either simplicity or concurrency.
-In case of doubt, prefer :py:func:`~.multi_sync`.
+The test event loop is available via a decorator that should be directly applied
+to an ``async def`` test case.
 
 .. autofunction:: sync(test_case: (...) -> (await) None) -> (...) -> None
-
-.. autofunction:: multi_sync(test_case: (...) -> (await) None) -> (...) -> None
 
 Async commands
 ==============
