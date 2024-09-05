@@ -1,7 +1,6 @@
 from typing import (
     Callable,
     Coroutine,
-    Generator,
     Iterable,
     AsyncIterator,
     TypeVar,
@@ -43,25 +42,6 @@ def awaitify(call: Callable[..., T]) -> Callable[..., Awaitable[T]]:
         return call(*args, **kwargs)
 
     return await_wrapper
-
-
-class PingPong:
-    """
-    Signal to the event loop which gets returned unchanged
-
-    The coroutine yields to the event loop but is resumed
-    immediately, without running others in the meantime.
-    This is mainly useful for ensuring the event loop is used.
-    """
-
-    def __await__(self) -> "Generator[PingPong, Any, Any]":
-        return (yield self)
-
-
-async def inside_loop() -> bool:
-    """Test whether there is an active event loop available"""
-    signal = PingPong()
-    return await signal is signal
 
 
 class Schedule:
@@ -136,9 +116,7 @@ def sync(test_case: Callable[..., Coroutine[None, Any, Any]], /) -> Callable[...
     Mark an ``async def`` test case to be run synchronously with children
 
     This provides a primitive "event loop" which only responds
-    to the :py:class:`PingPong`, :py:class:`Schedule`, :py:class:`Switch`
-    and :py:class:`Lock`. This loop is appropriate for tests that need
-    to check concurrency.
+    to :py:class:`Schedule`, :py:class:`Switch` and :py:class:`Lock`.
 
     It should be applied as a decorator on an ``async def`` function, which
     is then turned into a synchronous callable that will run the ``async def``
@@ -159,9 +137,7 @@ def sync(test_case: Callable[..., Coroutine[None, Any, Any]], /) -> Callable[...
                 result = e.args[0] if e.args else None
                 assert result is None, f"got '{result!r}' expected 'None'"
             else:
-                if isinstance(event, PingPong):
-                    run_queue.appendleft((coro, event))
-                elif isinstance(event, Schedule):
+                if isinstance(event, Schedule):
                     run_queue.extend((new_coro, None) for new_coro in event.coros)
                     run_queue.append((coro, event))
                 elif isinstance(event, Switch):

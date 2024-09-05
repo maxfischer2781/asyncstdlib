@@ -21,8 +21,6 @@ to an ``async def`` test case.
 Async commands
 ==============
 
-.. autoclass:: PingPong
-
 .. autoclass:: Schedule(*await Any)
 
 .. py:class::  Switch(skip: int, /)
