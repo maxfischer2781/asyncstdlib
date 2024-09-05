@@ -6,7 +6,7 @@ import pytest
 
 import asyncstdlib as a
 
-from .utility import sync, asyncify, awaitify, multi_sync, Schedule, Switch, Lock
+from .utility import sync, asyncify, awaitify, Schedule, Switch, Lock
 
 
 @sync
@@ -314,7 +314,7 @@ async def test_tee():
             assert await a.list(iterator) == iterable
 
 
-@multi_sync
+@sync
 async def test_tee_concurrent_locked():
     """Test that properly uses a lock for synchronisation"""
     items = [1, 2, 3, -5, 12, 78, -1, 111]
@@ -344,7 +344,7 @@ async def test_tee_concurrent_locked():
     platform.python_implementation() != "CPython",
     reason="async generators only protect against concurrent access on CPython",
 )
-@multi_sync
+@sync
 async def test_tee_concurrent_unlocked():
     """Test that tee does not prevent concurrency without a lock"""
     items = list(range(12))

@@ -64,34 +64,6 @@ async def inside_loop() -> bool:
     return await signal is signal
 
 
-def sync(test_case: Callable[..., Coroutine[None, Any, Any]]) -> Callable[..., None]:
-    """
-    Mark an ``async def`` test case to be run synchronously
-
-    This emulates a primitive "event loop" which only responds
-    to the :py:class:`PingPong` by sending it back. This loop
-    is appropriate for tests that do not check concurrency.
-    """
-
-    @wraps(test_case)
-    def run_sync(*args: Any, **kwargs: Any) -> None:
-        coro = test_case(*args, **kwargs)
-        try:
-            event = None
-            while True:
-                event = coro.send(event)
-                if not isinstance(event, PingPong):  # pragma: no cover
-                    raise RuntimeError(
-                        f"test case {test_case} yielded an unexpected event {event}"
-                    )
-        except StopIteration as e:
-            result = e.args[0] if e.args else None
-            assert result is None, f"got '{result!r}' expected 'None'"
-        return result
-
-    return run_sync
-
-
 class Schedule:
     r"""
     Signal to the event loop to adopt and run new coroutines
@@ -159,9 +131,7 @@ class Lock:
         self._owned = False
 
 
-def multi_sync(
-    test_case: Callable[..., Coroutine[None, Any, Any]], /
-) -> Callable[..., None]:
+def sync(test_case: Callable[..., Coroutine[None, Any, Any]], /) -> Callable[..., None]:
     """
     Mark an ``async def`` test case to be run synchronously with children
 
