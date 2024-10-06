@@ -332,7 +332,7 @@ class ExitStack:
         if hasattr(exit, "__aexit__"):
             aexit = exit.__aexit__  # type: ignore
         elif hasattr(exit, "__exit__"):
-            aexit = exit.__aexit__  # type: ignore
+            aexit = awaitify(exit.__exit__)  # type: ignore
         elif callable(exit):
             aexit = awaitify(exit)  # type: ignore
         else:
