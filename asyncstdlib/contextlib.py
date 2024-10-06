@@ -328,18 +328,15 @@ class ExitStack:
             If a context manager must also be entered, use :py:meth:`~.enter_context`
             instead.
         """
-        try:
+        aexit: Callable[..., Awaitable[Union[None, bool]]]
+        if hasattr(exit, "__aexit__"):
             aexit = exit.__aexit__  # type: ignore
-        except AttributeError:
-            try:
-                aexit = awaitify(
-                    exit.__exit__,  # type: ignore
-                )
-            except AttributeError:
-                assert callable(
-                    exit
-                ), f"Expected (async) context manager or callable, got {exit}"
-                aexit = awaitify(exit)
+        elif hasattr(exit, "__exit__"):
+            aexit = exit.__aexit__  # type: ignore
+        elif callable(exit):
+            aexit = awaitify(exit)  # type: ignore
+        else:
+            raise TypeError(f"Expected (async) context manager or callable, got {exit}")
         self._exit_callbacks.append(aexit)  # pyright: ignore[reportUnknownArgumentType]
         return exit
 
