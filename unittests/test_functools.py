@@ -5,7 +5,7 @@ import pytest
 import asyncstdlib as a
 from asyncstdlib.functools import CachedProperty
 
-from .utility import Lock, Schedule, Switch, asyncify, multi_sync, sync
+from .utility import Lock, Schedule, Switch, asyncify, sync
 
 
 @sync
@@ -44,7 +44,7 @@ async def test_cache_property_nodict():
         Foo().bar
 
 
-@multi_sync
+@sync
 async def test_cache_property_order():
     class Value:
         def __init__(self, value):
@@ -66,7 +66,7 @@ async def test_cache_property_order():
     assert (await val.cached) == 1337  # last value fetched
 
 
-@multi_sync
+@sync
 async def test_cache_property_lock_order():
     class Value:
         def __init__(self, value):
@@ -87,7 +87,7 @@ async def test_cache_property_lock_order():
     assert (await val.cached) == 5  # first value fetched
 
 
-@multi_sync
+@sync
 async def test_cache_property_lock_deletion():
     class Value:
         def __init__(self, value):
@@ -300,7 +300,7 @@ async def test_lru_cache_misuse():
 
 
 @pytest.mark.parametrize("size", [16, None])
-@multi_sync
+@sync
 async def test_lru_cache_concurrent(size):
     current = 0
 

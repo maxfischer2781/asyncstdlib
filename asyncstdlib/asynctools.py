@@ -35,7 +35,7 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
     __slots__ = "__wrapped__", "__anext__", "asend", "athrow", "_wrapper"
 
     # Type checker does not understand `__slot__` definitions
-    __anext__: Callable[[Any], Awaitable[T]]
+    __anext__: Callable[[Any], Coroutine[Any, Any, T]]
     asend: Any
     athrow: Any
 

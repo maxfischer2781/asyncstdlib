@@ -11,65 +11,48 @@ from typing import (
 )
 from functools import wraps
 from collections import deque
+from random import randint
 
 
 T = TypeVar("T")
 
 
 async def asyncify(iterable: Iterable[T]) -> AsyncIterator[T]:
-    """Convert an iterable to async iterable"""
+    """
+    Convert an iterable into an async iterable
+
+    This is intended to sequence literals like lists to `async` iterators
+    in order to force usage of `async` code paths. There is no functional
+    or other advantage otherwise.
+    """
     for value in iterable:
         yield value
 
 
 def awaitify(call: Callable[..., T]) -> Callable[..., Awaitable[T]]:
-    async def await_wrapper(*args, **kwargs):
+    """
+    Convert a callable (`foo()`) into an async callable (`await foo()`)
+
+    This is intended to convert `lambda` expressions to `async` functions
+    in order to force usage of `async` code paths. There is no functional
+    or other advantage otherwise.
+    """
+
+    async def await_wrapper(*args: Any, **kwargs: Any) -> T:
         return call(*args, **kwargs)
 
     return await_wrapper
 
 
-class PingPong:
-    """Signal to the event loop which gets returned unchanged"""
-
-    def __await__(self):
-        return (yield self)
-
-
-async def inside_loop():
-    """Test whether there is an active event loop available"""
-    signal = PingPong()
-    return await signal is signal
-
-
-def sync(test_case: Callable[..., Coroutine[T, Any, Any]]) -> Callable[..., T]:
-    """
-    Mark an ``async def`` test case to be run synchronously
-
-    This emulates a primitive "event loop" which only responds
-    to the :py:class:`PingPong` by sending it back.
-    """
-
-    @wraps(test_case)
-    def run_sync(*args: Any, **kwargs: Any) -> T:
-        coro = test_case(*args, **kwargs)
-        try:
-            event = None
-            while True:
-                event = coro.send(event)
-                if not isinstance(event, PingPong):  # pragma: no cover
-                    raise RuntimeError(
-                        f"test case {test_case} yielded an unexpected event {event}"
-                    )
-        except StopIteration as e:
-            result = e.args[0] if e.args else None
-        return result
-
-    return run_sync
-
-
 class Schedule:
-    """Signal to the event loop to adopt and run a new coroutine"""
+    r"""
+    Signal to the event loop to adopt and run new coroutines
+
+    :param coros: The coroutines to start running
+
+    In order to communicate with the event loop and start the coroutines,
+    the :py:class:`Schedule` must be `await`\ ed.
+    """
 
     def __init__(self, *coros: Coroutine[Any, Any, Any]):
         self.coros = coros
@@ -79,13 +62,35 @@ class Schedule:
 
 
 class Switch:
-    """Signal to the event loop to run another coroutine"""
+    """
+    Signal to the event loop to run another coroutine
+
+    Pauses the coroutine but immediately continues after
+    all other runnable coroutines of the event loop.
+    This is similar to the common ``sleep(0)`` function
+    of regular event loop frameworks.
+
+    If a single argument is given, this specifies how many
+    turns should be skipped. The default corresponds to `0`.
+    If two arguments are given, this is interpreted as an
+    inclusive interval to randomly select the skip count.
+    """
+
+    def __init__(self, skip: int = 0, limit: int = 0, /) -> None:
+        if limit <= 0:
+            self._idle_count = skip
+        else:
+            self._idle_count = randint(skip, limit)
 
     def __await__(self):
         yield self
+        for _ in range(self._idle_count):
+            yield self
 
 
 class Lock:
+    """Simple lock for exclusive access"""
+
     def __init__(self):
         self._owned = False
         self._waiting: list[object] = []
@@ -95,10 +100,10 @@ class Lock:
             # wait until it is our turn to take the lock
             token = object()
             self._waiting.append(token)
+            # a spin-lock should be fine since tests are short anyways
             while self._owned or self._waiting[0] is not token:
                 await Switch()
-            # take the lock and remove our wait claim
-            self._owned = True
+            # we will take the lock now, remove our wait claim
             self._waiting.pop(0)
         self._owned = True
 
@@ -106,13 +111,18 @@ class Lock:
         self._owned = False
 
 
-def multi_sync(test_case: Callable[..., Coroutine[T, Any, Any]]) -> Callable[..., T]:
+def sync(test_case: Callable[..., Coroutine[None, Any, Any]], /) -> Callable[..., None]:
     """
     Mark an ``async def`` test case to be run synchronously with children
 
-    This emulates a primitive "event loop" which only responds
-    to the :py:class:`PingPong`, :py:class:`Schedule`, :py:class:`Switch`
-    and :py:class:`Lock`.
+    This provides a primitive "event loop" which only responds
+    to :py:class:`Schedule`, :py:class:`Switch` and :py:class:`Lock`.
+
+    It should be applied as a decorator on an ``async def`` function, which
+    is then turned into a synchronous callable that will run the ``async def``
+    function and all tasks it spawns.
+    Other decorators, most prominently :py:func:`pytest.mark.parametrize`,
+    can be applied around it.
     """
 
     @wraps(test_case)
@@ -127,9 +137,7 @@ def multi_sync(test_case: Callable[..., Coroutine[T, Any, Any]]) -> Callable[...
                 result = e.args[0] if e.args else None
                 assert result is None, f"got '{result!r}' expected 'None'"
             else:
-                if isinstance(event, PingPong):
-                    run_queue.appendleft((coro, event))
-                elif isinstance(event, Schedule):
+                if isinstance(event, Schedule):
                     run_queue.extend((new_coro, None) for new_coro in event.coros)
                     run_queue.append((coro, event))
                 elif isinstance(event, Switch):

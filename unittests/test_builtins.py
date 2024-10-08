@@ -4,7 +4,7 @@ import pytest
 
 import asyncstdlib as a
 
-from .utility import sync, asyncify, awaitify, inside_loop
+from .utility import sync, asyncify, awaitify
 
 
 def hide_coroutine(corofunc):
@@ -83,8 +83,7 @@ async def test_zip_close_immediately():
                     yield 1
             finally:
                 nonlocal closed
-                if await inside_loop():
-                    closed = True
+                closed = True
 
     zip_iter = a.zip(asyncify(range(-5, 0)), SomeIterable())
     async for va, vb in zip_iter:
