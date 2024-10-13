@@ -141,7 +141,7 @@ async def batched(
                     batch.append(await anext(item_iter))
             except StopAsyncIteration:
                 if strict and len(batch) < n:
-                    raise ValueError("batched(): incomplete batch")
+                    raise ValueError("batched(): incomplete batch") from None
             if batch:
                 yield tuple(batch)
             else:
