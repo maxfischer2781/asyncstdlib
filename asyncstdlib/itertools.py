@@ -134,11 +134,19 @@ async def batched(
     """
     if n < 1:
         raise ValueError("n must be at least one")
-    if strict:
-        raise NotImplemented("batched(..., strict=True)")
     async with ScopedIter(iterable) as item_iter:
-        while batch := await atuple(islice(_borrow(item_iter), n)):
-            yield batch
+        while True:
+            batch: list[T] = []
+            try:
+                for _ in range(n):
+                    batch.append(await anext(item_iter))
+            except StopAsyncIteration:
+                if strict and len(batch) < n:
+                    raise ValueError("batched(): incomplete batch")
+            if batch:
+                yield tuple(batch)
+            else:
+                break
 
 
 class chain(AsyncIterator[T]):
