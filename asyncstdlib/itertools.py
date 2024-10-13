@@ -32,7 +32,6 @@ from .builtins import (
     zip,
     enumerate as aenumerate,
     iter as aiter,
-    tuple as atuple,
 )
 
 S = TypeVar("S")
