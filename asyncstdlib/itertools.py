@@ -128,9 +128,9 @@ async def batched(
     """
     Batch the ``iterable`` to tuples of the length ``n``.
 
-    This lazily exhausts ``iterable`` and returns each batch as soon as it's ready.
-    If ``strict`` is :py:data:`True` then each batch is checked for correct size:
-    :py:exc:`ValueError` is raised if the last batch is smaller than ``n``.
+    This lazily exhausts ``iterable`` and returns each batch as soon as it is ready.
+    If ``strict`` is :py:data:`True` and the last batch is smaller than ``n``,
+    :py:exc:`ValueError` is raised.
     """
     if n < 1:
         raise ValueError("n must be at least one")
