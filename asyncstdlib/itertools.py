@@ -122,14 +122,20 @@ async def accumulate(
             yield value
 
 
-async def batched(iterable: AnyIterable[T], n: int) -> AsyncIterator[Tuple[T, ...]]:
+async def batched(
+    iterable: AnyIterable[T], n: int, strict: bool = False
+) -> AsyncIterator[Tuple[T, ...]]:
     """
     Batch the ``iterable`` to tuples of the length ``n``.
 
     This lazily exhausts ``iterable`` and returns each batch as soon as it's ready.
+    If ``strict`` is :py:data:`True` then each batch is checked for correct size:
+    :py:exc:`ValueError` is raised if the last batch is smaller than ``n``.
     """
     if n < 1:
         raise ValueError("n must be at least one")
+    if strict:
+        raise NotImplemented("batched(..., strict=True)")
     async with ScopedIter(iterable) as item_iter:
         while batch := await atuple(islice(_borrow(item_iter), n)):
             yield batch
