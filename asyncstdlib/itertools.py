@@ -134,18 +134,18 @@ async def batched(
     if n < 1:
         raise ValueError("n must be at least one")
     async with ScopedIter(iterable) as item_iter:
-        while True:
-            batch: list[T] = []
-            try:
+        batch: list[T] = []
+        try:
+            while True:
+                batch.clear()
                 for _ in range(n):
                     batch.append(await anext(item_iter))
-            except StopAsyncIteration:
-                if strict and batch and len(batch) < n:
-                    raise ValueError("batched(): incomplete batch") from None
-            if batch:
                 yield tuple(batch)
-            else:
-                break
+        except StopAsyncIteration:
+            if batch:
+                if strict and len(batch) < n:
+                    raise ValueError("batched(): incomplete batch") from None
+                yield tuple(batch)
 
 
 class chain(AsyncIterator[T]):
