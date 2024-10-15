@@ -80,6 +80,19 @@ async def test_batched_invalid(length):
 
 
 @sync
+@pytest.mark.parametrize("values", ([1, 2, 3, 4], [1, 2, 3, 4, 5], [1]))
+async def test_batched_strict(values: "list[int]"):
+    for n in range(1, len(values) + 1):
+        batches = a.batched(values, n, strict=True)
+        if len(values) % n == 0:
+            assert values == list(await a.reduce(lambda a, b: a + b, batches))
+        else:
+            assert await a.anext(batches)
+            with pytest.raises(ValueError):
+                await a.list(batches)
+
+
+@sync
 async def test_cycle():
     async for _ in a.cycle([]):
         assert False
