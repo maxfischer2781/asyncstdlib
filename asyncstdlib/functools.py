@@ -7,7 +7,6 @@ from typing import (
     Generic,
     Generator,
     Optional,
-    Coroutine,
     AsyncContextManager,
     Type,
     cast,
@@ -98,7 +97,6 @@ class _FutureCachedPropertyValue(Generic[R, T]):
 
         If the instance (no longer) has this attribute, it was deleted and the
         process is restarted by delegating to the descriptor.
-
         """
         try:
             return self._instance.__dict__[self._name]
