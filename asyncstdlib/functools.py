@@ -138,6 +138,7 @@ class CachedProperty(Generic[T, R]):
         self.func = self.__wrapped__ = getter
         self.attrname = None
         self.__doc__ = getter.__doc__
+        self.__module__ = getter.__module__
         self._asynccontextmanager_type = asynccontextmanager_type
 
     def __set_name__(self, owner: Any, name: str) -> None:
