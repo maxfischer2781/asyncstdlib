@@ -135,7 +135,7 @@ class CachedProperty(Generic[T, R]):
         getter: Callable[[T], Awaitable[R]],
         asynccontextmanager_type: Type[AsyncContextManager[Any]] = nullcontext,
     ):
-        self.func = getter
+        self.func = self.__wrapped__ = getter
         self.attrname = None
         self.__doc__ = getter.__doc__
         self._asynccontextmanager_type = asynccontextmanager_type
