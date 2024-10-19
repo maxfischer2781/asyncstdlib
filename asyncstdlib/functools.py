@@ -66,25 +66,25 @@ class AwaitableValue(Generic[R]):
         return f"{self.__class__.__name__}({self.value!r})"
 
 
-class _FutureCachedValue(Generic[R, T]):
-    """A placeholder object to control concurrent access to a cached awaitable value.
+class _FutureCachedPropertyValue(Generic[R, T]):
+    """
+    A placeholder object to control concurrent access to a cached awaitable value
 
     When given a lock to coordinate access, only the first task to await on a
     cached property triggers the underlying coroutine. Once a value has been
     produced, all tasks are unblocked and given the same, single value.
-
     """
 
-    __slots__ = ("_get_attribute", "_instance", "_name", "_lock")
+    __slots__ = ("_func", "_instance", "_name", "_lock")
 
     def __init__(
         self,
-        get_attribute: Callable[[T], Coroutine[Any, Any, R]],
+        func: Callable[[T], Awaitable[R]],
         instance: T,
         name: str,
         lock: AsyncContextManager[Any],
     ):
-        self._get_attribute = get_attribute
+        self._func = func
         self._instance = instance
         self._name = name
         self._lock = lock
@@ -116,11 +116,16 @@ class _FutureCachedValue(Generic[R, T]):
                     # the instance attribute is still this placeholder, and we
                     # hold the lock. Start the getter to store the value on the
                     # instance and return the value.
-                    return await self._get_attribute(self._instance)
+                    return await self._get_attribute()
 
         # another task produced a value, or the instance.__dict__ object was
         # deleted in the interim.
         return await stored
+
+    async def _get_attribute(self) -> R:
+        value = await self._func(self._instance)
+        self._instance.__dict__[self._name] = AwaitableValue(value)
+        return value
 
     def __repr__(self) -> str:
         return (
@@ -176,18 +181,11 @@ class CachedProperty(Generic[T, R]):
         # on this instance. It takes care of coordinating between different
         # tasks awaiting on the placeholder until the cached value has been
         # produced.
-        wrapper = _FutureCachedValue(
-            self._get_attribute, instance, name, self._asynccontextmanager_type()
+        wrapper = _FutureCachedPropertyValue(
+            self.func, instance, name, self._asynccontextmanager_type()
         )
         cache[name] = wrapper
         return wrapper
-
-    async def _get_attribute(self, instance: T) -> R:
-        value = await self.func(instance)
-        name = self.attrname
-        assert name is not None  # enforced in __get__
-        instance.__dict__[name] = AwaitableValue(value)
-        return value
 
 
 def cached_property(
