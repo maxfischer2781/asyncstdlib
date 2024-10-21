@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 dynamic = ["version", "description"]
 name = "asyncstdlib"
 authors = [
-    {name = "Max Fischer", email = "maxfischer2781@gmail.com"},
+    {name = "Max Kühn", email = "maxfischer2781@gmail.com"},
 ]
 readme = "README.rst"
 classifiers = [
