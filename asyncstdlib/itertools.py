@@ -32,7 +32,6 @@ from .builtins import (
     zip,
     enumerate as aenumerate,
     iter as aiter,
-    tuple as atuple,
 )
 
 S = TypeVar("S")
@@ -122,17 +121,31 @@ async def accumulate(
             yield value
 
 
-async def batched(iterable: AnyIterable[T], n: int) -> AsyncIterator[Tuple[T, ...]]:
+async def batched(
+    iterable: AnyIterable[T], n: int, strict: bool = False
+) -> AsyncIterator[Tuple[T, ...]]:
     """
     Batch the ``iterable`` to tuples of the length ``n``.
 
-    This lazily exhausts ``iterable`` and returns each batch as soon as it's ready.
+    This lazily exhausts ``iterable`` and returns each batch as soon as it is ready.
+    If ``strict`` is :py:data:`True` and the last batch is smaller than ``n``,
+    :py:exc:`ValueError` is raised.
     """
     if n < 1:
         raise ValueError("n must be at least one")
     async with ScopedIter(iterable) as item_iter:
-        while batch := await atuple(islice(_borrow(item_iter), n)):
-            yield batch
+        batch: list[T] = []
+        try:
+            while True:
+                batch.clear()
+                for _ in range(n):
+                    batch.append(await anext(item_iter))
+                yield tuple(batch)
+        except StopAsyncIteration:
+            if batch:
+                if strict and len(batch) < n:
+                    raise ValueError("batched(): incomplete batch") from None
+                yield tuple(batch)
 
 
 class chain(AsyncIterator[T]):

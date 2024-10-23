@@ -25,7 +25,7 @@ from asyncstdlib import __version__
 # -- Project information -----------------------------------------------------
 
 project = "asyncstdlib"
-author = "Max Fischer"
+author = "Max Kühn"
 copyright = f"2019-2024 {author}"
 
 # The short X.Y version
