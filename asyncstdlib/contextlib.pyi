@@ -55,7 +55,7 @@ class ContextDecorator(AsyncContextManager[T], metaclass=ABCMeta):
 P = ParamSpec("P")
 
 def contextmanager(
-    func: Callable[P, AsyncGenerator[T, None]]
+    func: Callable[P, AsyncGenerator[T, None]],
 ) -> Callable[P, ContextDecorator[T]]: ...
 
 class closing(Generic[AClose]):

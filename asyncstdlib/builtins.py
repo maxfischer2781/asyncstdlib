@@ -164,7 +164,7 @@ async def zip(
 
 
 async def _zip_inner(
-    aiters: Tuple[AsyncIterator[T], ...]
+    aiters: Tuple[AsyncIterator[T], ...],
 ) -> AsyncIterator[Tuple[T, ...]]:
     """Direct zip transposing tuple-of-iterators to iterator-of-tuples"""
     try:
@@ -175,7 +175,7 @@ async def _zip_inner(
 
 
 async def _zip_inner_strict(
-    aiters: Tuple[AsyncIterator[T], ...]
+    aiters: Tuple[AsyncIterator[T], ...],
 ) -> AsyncIterator[Tuple[T, ...]]:
     """Length aware zip checking that all iterators are equal length"""
     # track index of the last iterator we tried to anext
