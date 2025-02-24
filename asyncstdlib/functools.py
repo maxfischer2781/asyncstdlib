@@ -270,7 +270,9 @@ def cached_property(
 
         return decorator
 
-    if not iscoroutinefunction(type_or_getter):
+    if not iscoroutinefunction(
+        type_or_getter  # pyright: ignore[reportUnknownArgumentType]
+    ):
         raise ValueError("cached_property can only be used with a coroutine function")
 
     return CachedProperty(type_or_getter)

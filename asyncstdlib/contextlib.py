@@ -28,7 +28,7 @@ AbstractContextManager = AsyncContextManager
 
 
 def contextmanager(
-    func: Callable[..., AsyncGenerator[T, None]]
+    func: Callable[..., AsyncGenerator[T, None]],
 ) -> Callable[..., AsyncContextManager[T]]:
     r"""
     Create an asynchronous context manager out of an asynchronous generator function
