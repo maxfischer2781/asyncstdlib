@@ -9,6 +9,7 @@ from typing import (
     overload,
     Protocol,
 )
+from types import CoroutineType
 from typing_extensions import ParamSpec, Concatenate
 
 from ._typing import AC, TypedDict
@@ -38,6 +39,12 @@ class LRUAsyncCallable(Protocol[AC]):
     @overload
     def __get__(
         self: LRUAsyncCallable[Callable[Concatenate[S, P], Coroutine[Any, Any, R]]],
+        instance: S,
+        owner: type | None = ...,
+    ) -> LRUAsyncBoundCallable[S, P, R]: ...
+    @overload
+    def __get__(
+        self: LRUAsyncCallable[Callable[Concatenate[S, P], CoroutineType[Any, Any, R]]],
         instance: S,
         owner: type | None = ...,
     ) -> LRUAsyncBoundCallable[S, P, R]: ...

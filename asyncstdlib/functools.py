@@ -254,7 +254,9 @@ def cached_property(
         Instances on which a value is to be cached must have a
         ``__dict__`` attribute that is a mutable mapping.
     """
-    if isinstance(type_or_getter, type) and issubclass(
+    if iscoroutinefunction(type_or_getter):
+        return CachedProperty(type_or_getter)
+    elif isinstance(type_or_getter, type) and issubclass(
         type_or_getter, AsyncContextManager
     ):
 
@@ -269,13 +271,8 @@ def cached_property(
             )
 
         return decorator
-
-    if not iscoroutinefunction(
-        type_or_getter  # pyright: ignore[reportUnknownArgumentType]
-    ):
+    else:
         raise ValueError("cached_property can only be used with a coroutine function")
-
-    return CachedProperty(type_or_getter)
 
 
 __REDUCE_SENTINEL = Sentinel("<no default>")
