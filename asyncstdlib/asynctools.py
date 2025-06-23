@@ -49,7 +49,7 @@ class _BorrowedAsyncIterator(AsyncGenerator[T, S]):
         # An async *iterator* (e.g. `async def: yield`) must return
         # itself from __aiter__. If we do not shadow this then
         # running aiter(self).aclose closes the underlying iterator.
-        self.__anext__ = self._wrapper.__anext__  # type: ignore
+        self.__anext__ = self._wrapper.__anext__
         if hasattr(iterator, "asend"):
             self.asend = (
                 iterator.asend  # pyright: ignore[reportUnknownMemberType,reportAttributeAccessIssue]
