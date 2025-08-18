@@ -24,7 +24,6 @@ from ._utility import public_module
 from ._core import (
     ScopedIter,
     awaitify as _awaitify,
-    Sentinel,
     borrow as _borrow,
 )
 from .builtins import (
