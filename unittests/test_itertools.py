@@ -34,6 +34,7 @@ async def test_accumulate():
 
 @sync
 async def test_accumulate_default():
+    """Test the default function of accumulate"""
     for itertype in (asyncify, list):
         assert await a.list(a.accumulate(itertype([0, 1]))) == list(
             itertools.accumulate([0, 1])
@@ -53,6 +54,7 @@ async def test_accumulate_default():
 
 @sync
 async def test_accumulate_misuse():
+    """Test wrong arguments to accumulate"""
     with pytest.raises(TypeError):
         assert await a.list(a.accumulate([]))
 
