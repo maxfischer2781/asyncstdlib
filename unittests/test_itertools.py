@@ -59,6 +59,16 @@ async def test_accumulate_misuse():
         assert await a.list(a.accumulate([]))
 
 
+@sync
+async def test_accumulate_initial():
+    """Test the `initial` argument to accumulate"""
+    assert (
+        await a.list(a.accumulate(asyncify([1, 2, 3]), initial=None))
+        == await a.list(a.accumulate(asyncify([1, 2, 3])))
+        == list(itertools.accumulate([1, 2, 3], initial=None))
+    )
+
+
 batched_cases = [
     (range(10), 2, [(0, 1), (2, 3), (4, 5), (6, 7), (8, 9)]),
     (range(10), 3, [(0, 1, 2), (3, 4, 5), (6, 7, 8), (9,)]),
