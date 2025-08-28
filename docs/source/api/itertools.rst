@@ -68,6 +68,10 @@ Iterator transforming
 .. autofunction:: accumulate(iterable: (async) iter T, function: (T, T) → (await) T = add [, initial: T])
     :async-for: :T
 
+    .. versionchanged:: 3.13.2
+
+        ``initial=None`` means no initial value is assumed.
+
 .. autofunction:: starmap(function: (*A) → (await) T, iterable: (async) iter (A, ...))
     :async-for: :T
 

@@ -24,7 +24,6 @@ from ._utility import public_module
 from ._core import (
     ScopedIter,
     awaitify as _awaitify,
-    Sentinel,
     borrow as _borrow,
 )
 from .builtins import (
@@ -64,9 +63,6 @@ async def cycle(iterable: AnyIterable[T]) -> AsyncIterator[T]:
             yield item
 
 
-__ACCUMULATE_SENTINEL = Sentinel("<no default>")
-
-
 async def add(x: ADD, y: ADD) -> ADD:
     """The default reduction of :py:func:`~.accumulate`"""
     return x + y
@@ -78,7 +74,7 @@ async def accumulate(
         Callable[[Any, Any], Any], Callable[[Any, Any], Awaitable[Any]]
     ] = add,
     *,
-    initial: Any = __ACCUMULATE_SENTINEL,
+    initial: Any = None,
 ) -> AsyncIterator[Any]:
     """
     An :term:`asynchronous iterator` on the running reduction of ``iterable``
@@ -105,11 +101,7 @@ async def accumulate(
     """
     async with ScopedIter(iterable) as item_iter:
         try:
-            value = (
-                initial
-                if initial is not __ACCUMULATE_SENTINEL
-                else await anext(item_iter)
-            )
+            value = initial if initial is not None else await anext(item_iter)
         except StopAsyncIteration:
             raise TypeError(
                 "accumulate() of empty sequence with no initial value"
