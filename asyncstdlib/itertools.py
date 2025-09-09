@@ -433,7 +433,7 @@ class Tee(Generic[T]):
     and access is automatically synchronised.
     """
 
-    __slots__ = ("_iterator", "_buffer", "_children")
+    __slots__ = ("_children",)
 
     def __init__(
         self,
@@ -442,13 +442,13 @@ class Tee(Generic[T]):
         *,
         lock: Optional[AsyncContextManager[Any]] = None,
     ):
-        self._iterator = aiter(iterable)
-        self._buffer: _TeeNode[T] = []
+        iterator = aiter(iterable)
+        buffer: _TeeNode[T] = []
         peers: set[int] = set()
         self._children = tuple(
             TeePeer(
-                self._iterator,
-                self._buffer,
+                iterator,
+                buffer,
                 lock if lock is not None else NoLock(),
                 peers,
             )
