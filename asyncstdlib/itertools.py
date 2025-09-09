@@ -349,20 +349,20 @@ class NoLock:
 _get_tee_index = _count().__next__
 
 
-Node: TypeAlias = "list[T | Node[T]]"
+_TeeNode: TypeAlias = "list[T | _TeeNode[T]]"
 
 
 class TeePeer(Generic[T]):
     def __init__(
         self,
         iterator: AsyncIterator[T],
-        buffer: "Node[T]",
+        buffer: "_TeeNode[T]",
         lock: AsyncContextManager[Any],
         tee_peers: "set[int]",
     ) -> None:
         self.iterator = iterator
         self.lock = lock
-        self.buffer: Node[T] = buffer
+        self.buffer: _TeeNode[T] = buffer
         self.tee_peers = tee_peers
         self.tee_idx = _get_tee_index()
         self.tee_peers.add(self.tee_idx)
@@ -443,7 +443,7 @@ class Tee(Generic[T]):
         lock: Optional[AsyncContextManager[Any]] = None,
     ):
         self._iterator = aiter(iterable)
-        self._buffer: Node[T] = []
+        self._buffer: _TeeNode[T] = []
         peers: set[int] = set()
         self._children = tuple(
             TeePeer(
