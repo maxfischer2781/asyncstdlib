@@ -380,10 +380,24 @@ class TeePeer(Generic[T]):
             async with self._lock:
                 # Check if another peer produced an item while we were waiting for the lock
                 if not next_node:
-                    next_node[:] = await self._iterator.__anext__(), []
+                    await self._extend_buffer(next_node)
+        if not next_node:
+            raise StopAsyncIteration()
         # for any other TeePeer, the node is already some [value, [...]]
         value, self._buffer = next_node  # type: ignore
         return value
+
+    async def _extend_buffer(self, next_node: "_TeeNode[T]") -> None:
+        """Extend the buffer by fetching a new item from the iterable"""
+        try:
+            next_value = await self._iterator.__anext__()
+        except StopAsyncIteration:
+            return
+        # another peer may have filled the buffer while we waited
+        # seek the last node that needs to be filled
+        while next_node:
+            _, next_node = next_node  # type: ignore
+        next_node[:] = next_value, []
 
     async def aclose(self) -> None:
         self._tee_peers.discard(self._tee_idx)
