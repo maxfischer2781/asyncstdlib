@@ -360,38 +360,38 @@ class TeePeer(Generic[T]):
         lock: AsyncContextManager[Any],
         tee_peers: "set[int]",
     ) -> None:
-        self.iterator = iterator
-        self.lock = lock
-        self.buffer: _TeeNode[T] = buffer
-        self.tee_peers = tee_peers
-        self.tee_idx = _get_tee_index()
-        self.tee_peers.add(self.tee_idx)
+        self._iterator = iterator
+        self._lock = lock
+        self._buffer: _TeeNode[T] = buffer
+        self._tee_peers = tee_peers
+        self._tee_idx = _get_tee_index()
+        self._tee_peers.add(self._tee_idx)
 
     def __aiter__(self):
         return self
 
     async def __anext__(self) -> T:
         # the buffer is a singly-linked list as [value, [value, [...]]] | []
-        next_node = self.buffer
+        next_node = self._buffer
         value: T
         # for any most advanced TeePeer, the node is just []
         # fetch the next value so we can mutate the node to [value, [...]]
         if not next_node:
-            async with self.lock:
+            async with self._lock:
                 # Check if another peer produced an item while we were waiting for the lock
                 if not next_node:
-                    next_node[:] = await self.iterator.__anext__(), []
+                    next_node[:] = await self._iterator.__anext__(), []
         # for any other TeePeer, the node is already some [value, [...]]
-        value, self.buffer = next_node  # type: ignore
+        value, self._buffer = next_node  # type: ignore
         return value
 
     async def aclose(self) -> None:
-        self.tee_peers.discard(self.tee_idx)
-        if not self.tee_peers and isinstance(self.iterator, ACloseable):
-            await self.iterator.aclose()
+        self._tee_peers.discard(self._tee_idx)
+        if not self._tee_peers and isinstance(self._iterator, ACloseable):
+            await self._iterator.aclose()
 
     def __del__(self) -> None:
-        self.tee_peers.discard(self.tee_idx)
+        self._tee_peers.discard(self._tee_idx)
 
 
 @public_module(__name__, "tee")
