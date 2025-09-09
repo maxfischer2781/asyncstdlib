@@ -31,7 +31,7 @@ from .builtins import (
     enumerate as aenumerate,
     iter as aiter,
 )
-from itertools import count as _count
+from itertools import count as _counter
 
 S = TypeVar("S")
 T_co = TypeVar("T_co", covariant=True)
@@ -346,7 +346,7 @@ class NoLock:
         return None
 
 
-_get_tee_index = _count().__next__
+_get_tee_index = _counter().__next__
 
 
 _TeeNode: TypeAlias = "list[T | _TeeNode[T]]"
