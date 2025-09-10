@@ -395,7 +395,7 @@ class TeePeer(Generic[T]):
             if not next_node:
                 raise
         else:
-            # seek the last node that needs to be filled
+            # skip nodes that were filled in the meantime
             while next_node:
                 _, next_node = next_node  # type: ignore
             next_node[:] = next_value, []
