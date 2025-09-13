@@ -418,7 +418,7 @@ class Tee(Generic[T]):
     the same items in the same order.
     All child iterators may advance separately but share the same items
     from ``iterable`` -- when the most advanced iterator retrieves an item,
-    it is buffered until the least advanced iterator has yielded it as well.
+    it is buffered until all other iterators have yielded it as well.
     A ``tee`` works lazily and can handle an infinite ``iterable``, provided
     that all iterators advance.
 
@@ -428,10 +428,6 @@ class Tee(Generic[T]):
             previous, current = a.tee(sensor_data, n=2)
             await a.anext(previous)  # advance one iterator
             return a.map(operator.sub, previous, current)
-
-    ``tee`` must internally buffer each item until the last iterator has yielded it;
-    if the most and least advanced iterator differ by most data,
-    using a :py:class:`list` is more efficient (but not lazy).
 
     If ``iterable`` is an iterator and read elsewhere, ``tee`` will generally *not*
     provide these items. However, a ``tee`` of a ``tee`` shares its buffer with parent,
