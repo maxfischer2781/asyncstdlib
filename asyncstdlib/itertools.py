@@ -411,7 +411,7 @@ class TeePeer(Generic[T]):
 
 @public_module(__name__, "tee")
 class Tee(Generic[T]):
-    """
+    r"""
     Create ``n`` separate asynchronous iterators over ``iterable``
 
     This splits a single ``iterable`` into multiple iterators, each providing
@@ -433,8 +433,9 @@ class Tee(Generic[T]):
     if the most and least advanced iterator differ by most data,
     using a :py:class:`list` is more efficient (but not lazy).
 
-    If ``iterable`` is an iterator and read elsewhere, ``tee`` will *not*
-    provide these items.
+    If ``iterable`` is an iterator and read elsewhere, ``tee`` will generally *not*
+    provide these items. However, a ``tee`` of a ``tee`` shares its buffer with parent,
+    sibling and child ``tee``\ s so that each sees the same items.
 
     If the underlying iterable is concurrency safe (``anext`` may be awaited
     concurrently) the resulting iterators are concurrency safe as well. Otherwise,
