@@ -429,16 +429,12 @@ class Tee(Generic[T]):
             await a.anext(previous)  # advance one iterator
             return a.map(operator.sub, previous, current)
 
-    Unlike :py:func:`itertools.tee`, :py:func:`~.tee` returns a custom type instead
-    of a :py:class:`tuple`. Like a tuple, it can be indexed, iterated and unpacked
-    to get the child iterators. In addition, its :py:meth:`~.tee.aclose` method
-    immediately closes all children, and it can be used in an ``async with`` context
-    for the same effect.
+    ``tee`` must internally buffer each item until the last iterator has yielded it;
+    if the most and least advanced iterator differ by most data,
+    using a :py:class:`list` is more efficient (but not lazy).
 
     If ``iterable`` is an iterator and read elsewhere, ``tee`` will *not*
-    provide these items. Also, ``tee`` must internally buffer each item until the
-    last iterator has yielded it; if the most and least advanced iterator differ
-    by most data, using a :py:class:`list` is more efficient (but not lazy).
+    provide these items.
 
     If the underlying iterable is concurrency safe (``anext`` may be awaited
     concurrently) the resulting iterators are concurrency safe as well. Otherwise,
@@ -446,6 +442,12 @@ class Tee(Generic[T]):
     To enforce sequential use of ``anext``, provide a ``lock``
     - e.g. an :py:class:`asyncio.Lock` instance in an :py:mod:`asyncio` application -
     and access is automatically synchronised.
+
+    Unlike :py:func:`itertools.tee`, :py:func:`~.tee` returns a custom type instead
+    of a :py:class:`tuple`. Like a tuple, it can be indexed, iterated and unpacked
+    to get the child iterators. In addition, its :py:meth:`~.tee.aclose` method
+    immediately closes all children, and it can be used in an ``async with`` context
+    for the same effect.
     """
 
     __slots__ = ("_children",)
