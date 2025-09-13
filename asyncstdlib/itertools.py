@@ -457,9 +457,16 @@ class Tee(Generic[T]):
         *,
         lock: Optional[AsyncContextManager[Any]] = None,
     ):
-        iterator = aiter(iterable)
-        buffer: _TeeNode[T] = []
-        peers: set[int] = set()
+        buffer: _TeeNode[T]
+        peers: set[int]
+        if not isinstance(iterable, TeePeer):
+            iterator = aiter(iterable)
+            buffer = []
+            peers = set()
+        else:
+            iterator = iterable._iterator  # pyright: ignore[reportPrivateUsage]
+            buffer = iterable._buffer  # pyright: ignore[reportPrivateUsage]
+            peers = iterable._tee_peers  # pyright: ignore[reportPrivateUsage]
         self._children = tuple(
             TeePeer(
                 iterator,
