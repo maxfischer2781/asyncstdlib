@@ -85,6 +85,10 @@ Iterator splitting
 
         The ``lock`` keyword parameter.
 
+    .. versionchanged:: 3.13.2
+
+        ``tee``\ s share their buffer with parents, siblings and children.
+
 .. autofunction:: pairwise(iterable: (async) iter T)
     :async-for: :(T, T)
 
