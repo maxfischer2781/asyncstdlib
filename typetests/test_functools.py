@@ -1,7 +1,7 @@
-from asyncstdlib import lru_cache
+from asyncstdlib import functools
 
 
-@lru_cache()
+@functools.lru_cache()
 async def lru_function(a: int) -> int:
     return a
 
@@ -16,7 +16,7 @@ class TestLRUMethod:
     Test that `lru_cache` works on methods
     """
 
-    @lru_cache()
+    @functools.lru_cache()
     async def cached(self, a: int = 0) -> int:
         return a
 
@@ -26,3 +26,12 @@ class TestLRUMethod:
     async def test_method_parameters(self) -> int:
         await self.cached("wrong parameter type")  # type: ignore[arg-type]
         return await self.cached(12)
+
+
+async def aadd(a: int, b: int) -> int:
+    return a + b
+
+
+async def test_reduce():
+    await functools.reduce(aadd, [1, 2, 3, 4])
+    await functools.reduce(aadd, [1, 2, 3, 4], initial=1)
