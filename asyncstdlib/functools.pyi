@@ -34,6 +34,14 @@ def cached_property(
 ) -> Callable[[Callable[[T], Awaitable[R]]], CachedProperty[T, R]]: ...
 @overload
 async def reduce(
+    function: Callable[[T1, T2], Awaitable[T1]], iterable: AnyIterable[T2], initial: T1
+) -> T1: ...
+@overload
+async def reduce(
+    function: Callable[[T, T], Awaitable[T]], iterable: AnyIterable[T]
+) -> T: ...
+@overload
+async def reduce(
     function: Callable[[T1, T2], T1], iterable: AnyIterable[T2], initial: T1
 ) -> T1: ...
 @overload
