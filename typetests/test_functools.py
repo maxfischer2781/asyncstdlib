@@ -32,6 +32,6 @@ async def aadd(a: int, b: int) -> int:
     return a + b
 
 
-async def test_reduce():
+async def test_reduce() -> None:
     await functools.reduce(aadd, [1, 2, 3, 4])
     await functools.reduce(aadd, [1, 2, 3, 4], initial=1)
