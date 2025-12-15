@@ -257,7 +257,7 @@ def cached_property(
     if iscoroutinefunction(type_or_getter):
         return CachedProperty(type_or_getter)
     elif isinstance(type_or_getter, type) and issubclass(
-        type_or_getter, AsyncContextManager
+        type_or_getter, AsyncContextManager  # pyright: ignore[reportGeneralTypeIssues]
     ):
 
         def decorator(
