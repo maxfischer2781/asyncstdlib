@@ -58,7 +58,8 @@ HK = TypeVar("HK", bound=Hashable)
 
 # bool(...)
 class SupportsBool(Protocol):
-    def __bool__(self) -> bool: ...
+    def __bool__(self) -> bool:
+        raise NotImplementedError
 
 
 # LT < LT
