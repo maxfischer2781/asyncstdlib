@@ -55,7 +55,7 @@ __ITER_DEFAULT = Sentinel("<no default>")
 
 
 def iter(
-    subject: Union[AnyIterable[T], Callable[[], Awaitable[T]]],
+    subject: Union[AnyIterable[T], Callable[[], Awaitable[T]], Callable[[], T]],
     sentinel: Union[Sentinel, T] = __ITER_DEFAULT,
 ) -> AsyncIterator[T]:
     """
@@ -84,13 +84,12 @@ def iter(
         raise TypeError("iter(v, w): v must be callable")
     else:
         assert not isinstance(sentinel, Sentinel)
-        return acallable_iterator(subject, sentinel)
+        return acallable_iterator(_awaitify(subject), sentinel)
 
 
 async def acallable_iterator(
     subject: Callable[[], Awaitable[T]], sentinel: T
 ) -> AsyncIterator[T]:
-    subject = _awaitify(subject)
     value = await subject()
     while value != sentinel:
         yield value
@@ -306,7 +305,7 @@ async def _min_max(
             raise ValueError(f"{name}() arg is an empty sequence")
         elif key is None:
             async for item in item_iter:
-                if invert ^ (item < best):
+                if invert ^ bool(item < best):
                     best = item
         else:
             key = _awaitify(key)

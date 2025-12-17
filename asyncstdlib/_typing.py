@@ -55,12 +55,19 @@ AC = TypeVar("AC", bound=Callable[..., Awaitable[Any]])
 #: Hashable Key
 HK = TypeVar("HK", bound=Hashable)
 
+
+# bool(...)
+class SupportsBool(Protocol):
+    def __bool__(self) -> bool:
+        raise NotImplementedError
+
+
 # LT < LT
 LT = TypeVar("LT", bound="SupportsLT")
 
 
 class SupportsLT(Protocol):
-    def __lt__(self: LT, other: LT) -> bool:
+    def __lt__(self, __other: Any) -> SupportsBool:
         raise NotImplementedError
 
 
@@ -69,7 +76,7 @@ ADD = TypeVar("ADD", bound="SupportsAdd")
 
 
 class SupportsAdd(Protocol):
-    def __add__(self: ADD, other: ADD, /) -> ADD:
+    def __add__(self, __other: Any, /) -> Any:
         raise NotImplementedError
 
 
