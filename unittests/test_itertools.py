@@ -1,3 +1,4 @@
+from typing import AsyncIterator
 import itertools
 import sys
 import platform
@@ -341,7 +342,7 @@ async def test_tee():
 
 @sync
 async def test_tee_concurrent_locked():
-    """Test that properly uses a lock for synchronisation"""
+    """Test that tee properly uses a lock for synchronisation"""
     items = [1, 2, 3, -5, 12, 78, -1, 111]
 
     async def iter_values():
@@ -391,6 +392,41 @@ async def test_tee_concurrent_unlocked():
     # underlying generator raises RuntimeError when `__anext__` is interleaved
     with pytest.raises(RuntimeError):
         await test_peer(this)
+
+
+@pytest.mark.parametrize("size", [2, 3, 5, 9, 12])
+@sync
+async def test_tee_concurrent_ordering(size: int):
+    """Test that tee respects concurrent ordering for all peers"""
+
+    class ConcurrentInvertedIterable:
+        """Helper that concurrently iterates with earlier items taking longer"""
+
+        def __init__(self, count: int) -> None:
+            self.count = count
+            self._counter = itertools.count()
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            value = next(self._counter)
+            if value >= self.count:
+                raise StopAsyncIteration()
+            await Switch(self.count - value)
+            return value
+
+    async def test_peer(peer_tee: AsyncIterator[int]):
+        # consume items from the tee with a delay so that slower items can arrive
+        seen_items: list[int] = []
+        async for item in peer_tee:
+            seen_items.append(item)
+            await Switch()
+        assert seen_items == expected_items
+
+    expected_items = list(range(size)[::-1])
+    peers = a.tee(ConcurrentInvertedIterable(size), n=size)
+    await Schedule(*map(test_peer, peers))
 
 
 @sync
