@@ -1,3 +1,4 @@
+from typing import AsyncIterator
 import itertools
 import sys
 import platform
@@ -341,7 +342,7 @@ async def test_tee():
 
 @sync
 async def test_tee_concurrent_locked():
-    """Test that properly uses a lock for synchronisation"""
+    """Test that tee properly uses a lock for synchronisation"""
     items = [1, 2, 3, -5, 12, 78, -1, 111]
 
     async def iter_values():
@@ -356,6 +357,52 @@ async def test_tee_concurrent_locked():
     head_peer, *peers = a.tee(iter_values(), n=len(items) // 2, lock=Lock())
     await Schedule(*map(test_peer, peers))
     await Switch()
+    results = [item async for item in head_peer]
+    assert results == items
+
+
+@pytest.mark.parametrize("concurrency", (1, 2, 4, 7))
+@sync
+async def test_tee_share(concurrency: int) -> None:
+    """Test that related tees share their buffer and see all items"""
+    items = [1, 2, 3, -5, 12, 78, -1, 111]
+
+    async def tee_test(tee_state: AsyncIterator[int]) -> None:
+        """Asynchronously check that `tee_state` includes all `items`"""
+        for expected in items:
+            assert expected == await a.anext(tee_state)
+            await Switch(0, concurrency)
+
+    # create tees that are multiple times removed from an initial iterator
+    item_iter = a.iter(items)
+    for tee_peer in a.tee(item_iter, n=concurrency):
+        await Schedule(tee_test(a.tee(tee_peer)[0]))
+
+
+@sync
+async def test_tee_share_deep() -> None:
+    """Test that related tees share their buffer and see all items no matter when spawned"""
+    items = [1, 2, 3, -5, 12, 78, -1, 111]
+
+    async def tee_spawn_walker(
+        tee_state: AsyncIterator[int], start_idx: int = 0
+    ) -> None:
+        """Walk and check `tee_state` elements and spawn new walkers on every step"""
+        for idx in range(start_idx, len(items)):
+            await Switch(0, 3)
+            assert await a.anext(tee_state) == items[idx]
+            tee_state, *child_states = a.tee(tee_state, n=3)
+            await Schedule(
+                *(
+                    tee_spawn_walker(child_state, idx + 1)
+                    for child_state in child_states
+                )
+            )
+            await Switch()
+
+    head_peer, *child_peers = a.tee(items, n=3)
+    await Schedule(*(tee_spawn_walker(child, 0) for child in child_peers))
+    await Switch(len(items) // 2)
     results = [item async for item in head_peer]
     assert results == items
 
@@ -391,6 +438,41 @@ async def test_tee_concurrent_unlocked():
     # underlying generator raises RuntimeError when `__anext__` is interleaved
     with pytest.raises(RuntimeError):
         await test_peer(this)
+
+
+@pytest.mark.parametrize("size", [2, 3, 5, 9, 12])
+@sync
+async def test_tee_concurrent_ordering(size: int):
+    """Test that tee respects concurrent ordering for all peers"""
+
+    class ConcurrentInvertedIterable:
+        """Helper that concurrently iterates with earlier items taking longer"""
+
+        def __init__(self, count: int) -> None:
+            self.count = count
+            self._counter = itertools.count()
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            value = next(self._counter)
+            if value >= self.count:
+                raise StopAsyncIteration()
+            await Switch(self.count - value)
+            return value
+
+    async def test_peer(peer_tee: AsyncIterator[int]):
+        # consume items from the tee with a delay so that slower items can arrive
+        seen_items: list[int] = []
+        async for item in peer_tee:
+            seen_items.append(item)
+            await Switch()
+        assert seen_items == expected_items
+
+    expected_items = list(range(size)[::-1])
+    peers = a.tee(ConcurrentInvertedIterable(size), n=size)
+    await Schedule(*map(test_peer, peers))
 
 
 @sync
