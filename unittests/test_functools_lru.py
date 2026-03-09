@@ -2,6 +2,7 @@ from typing import Callable, Any
 import sys
 
 import pytest
+from typing_extensions import get_annotations, Format
 
 import asyncstdlib as a
 
@@ -175,5 +176,5 @@ def test_wrapper_attributes(size: "int | None"):
             if name != "method":
                 continue
             # test direct and literal annotation styles
-            assert Bar.method.__annotations__["int_arg"] in {int, "int"}
-            assert Bar().method.__annotations__["int_arg"] in {int, "int"}
+            assert get_annotations(Bar.method, format=Format.STRING)['int_arg'] == "int"
+            assert get_annotations(Bar().method, format=Format.STRING)['int_arg'] == "int"
