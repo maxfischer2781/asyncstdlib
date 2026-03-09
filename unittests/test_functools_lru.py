@@ -176,5 +176,7 @@ def test_wrapper_attributes(size: "int | None"):
             if name != "method":
                 continue
             # test direct and literal annotation styles
-            assert get_annotations(Bar.method, format=Format.STRING)['int_arg'] == "int"
-            assert get_annotations(Bar().method, format=Format.STRING)['int_arg'] == "int"
+            assert get_annotations(Bar.method, format=Format.STRING)["int_arg"] == "int"
+            assert (
+                get_annotations(Bar().method, format=Format.STRING)["int_arg"] == "int"
+            )
