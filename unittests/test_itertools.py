@@ -361,6 +361,29 @@ async def test_tee_concurrent_locked():
     assert results == items
 
 
+@sync
+async def test_tee_share() -> None:
+    """Test that related tees share their buffer and see all items"""
+    items = [1, 2, 3, -5, 12, 78, -1, 111]
+
+    async def tee_spawn_walker(
+        tee_state: AsyncIterator[int], start_idx: int = 0
+    ) -> None:
+        """Recursively check `tee_state` elements and spawn new walkers on every step"""
+        for idx in range(start_idx, len(items)):
+            await Switch(0, 3)
+            assert await a.anext(tee_state) == items[idx]
+            tee_state, child_state = a.tee(tee_state)
+            await Schedule(tee_spawn_walker(child_state, idx + 1))
+            await Switch()
+
+    head_peer, *child_peers = a.tee(items, n=2)
+    await Schedule(*(tee_spawn_walker(child, 0) for child in child_peers))
+    await Switch(len(items) // 2)
+    results = [item async for item in head_peer]
+    assert results == items
+
+
 # see https://github.com/python/cpython/issues/74956
 @pytest.mark.skipif(
     sys.version_info < (3, 8),
