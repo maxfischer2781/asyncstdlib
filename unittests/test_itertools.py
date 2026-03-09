@@ -369,15 +369,20 @@ async def test_tee_share() -> None:
     async def tee_spawn_walker(
         tee_state: AsyncIterator[int], start_idx: int = 0
     ) -> None:
-        """Recursively check `tee_state` elements and spawn new walkers on every step"""
+        """Walk and check `tee_state` elements and spawn new walkers on every step"""
         for idx in range(start_idx, len(items)):
             await Switch(0, 3)
             assert await a.anext(tee_state) == items[idx]
-            tee_state, child_state = a.tee(tee_state)
-            await Schedule(tee_spawn_walker(child_state, idx + 1))
+            tee_state, *child_states = a.tee(tee_state, n=3)
+            await Schedule(
+                *(
+                    tee_spawn_walker(child_state, idx + 1)
+                    for child_state in child_states
+                )
+            )
             await Switch()
 
-    head_peer, *child_peers = a.tee(items, n=2)
+    head_peer, *child_peers = a.tee(items, n=3)
     await Schedule(*(tee_spawn_walker(child, 0) for child in child_peers))
     await Switch(len(items) // 2)
     results = [item async for item in head_peer]
