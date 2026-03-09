@@ -361,9 +361,27 @@ async def test_tee_concurrent_locked():
     assert results == items
 
 
+@pytest.mark.parametrize("concurrency", (1, 2, 4, 7))
 @sync
-async def test_tee_share() -> None:
+async def test_tee_share(concurrency: int) -> None:
     """Test that related tees share their buffer and see all items"""
+    items = [1, 2, 3, -5, 12, 78, -1, 111]
+
+    async def tee_test(tee_state: AsyncIterator[int]) -> None:
+        """Asynchronously check that `tee_state` includes all `items`"""
+        for expected in items:
+            assert expected == await a.anext(tee_state)
+            await Switch(0, concurrency)
+
+    # create tees that are multiple times removed from an initial iterator
+    item_iter = a.iter(items)
+    for tee_peer in a.tee(item_iter, n=concurrency):
+        await Schedule(tee_test(a.tee(tee_peer)[0]))
+
+
+@sync
+async def test_tee_share_deep() -> None:
+    """Test that related tees share their buffer and see all items no matter when spawned"""
     items = [1, 2, 3, -5, 12, 78, -1, 111]
 
     async def tee_spawn_walker(
