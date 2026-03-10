@@ -7,12 +7,12 @@ import asyncstdlib as a
 
 from .utility import sync, asyncify, awaitify
 
-
 COR = TypeVar("COR", bound=Callable[..., Coroutine[Any, Any, Any]])
 
 
 def hide_coroutine(corofunc: COR) -> COR:
     """Make a coroutine function look like a regular function returning a coroutine"""
+
     def wrapper(*args, **kwargs):  # type: ignore
         return corofunc(*args, **kwargs)
 
@@ -133,6 +133,7 @@ async def test_map_sa():
 async def test_map_strict_unequal(itrs: "tuple[range, ...]"):
     def triple_sum(x: int, y: int, z: int) -> int:
         return x + y + z
+
     # no error without strict
     async for _ in a.map(triple_sum, *itrs):
         pass
