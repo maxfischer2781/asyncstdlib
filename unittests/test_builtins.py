@@ -121,6 +121,20 @@ async def test_map_sa():
     )
 
 
+@sync
+async def test_map_aa():
+    async def map_op(value: int) -> int:
+        return value * 2
+
+    assert [value async for value in a.map(map_op, asyncify(range(5)))] == list(
+        range(0, 10, 2)
+    )
+    assert [
+        value
+        async for value in a.map(hide_coroutine(map_op), asyncify(range(5, 10, 2)))
+    ] == list(range(10, 20, 4))
+
+
 @pytest.mark.parametrize(
     "itrs",
     [
@@ -141,20 +155,6 @@ async def test_map_strict_unequal(itrs: "tuple[range, ...]"):
     with pytest.raises(ValueError):
         async for _ in a.map(triple_sum, *itrs, strict=True):
             pass
-
-
-@sync
-async def test_map_aa():
-    async def map_op(value: int) -> int:
-        return value * 2
-
-    assert [value async for value in a.map(map_op, asyncify(range(5)))] == list(
-        range(0, 10, 2)
-    )
-    assert [
-        value
-        async for value in a.map(hide_coroutine(map_op), asyncify(range(5, 10, 2)))
-    ] == list(range(10, 20, 4))
 
 
 @sync
