@@ -351,7 +351,7 @@ class NoLock:
 _get_tee_index = _counter().__next__
 
 
-_TeeNode: TypeAlias = "list[T | _TeeNode[T]]"
+_TeeNode: "TypeAlias" = "list[T | _TeeNode[T]]"
 
 
 class TeePeer(Generic[T]):
