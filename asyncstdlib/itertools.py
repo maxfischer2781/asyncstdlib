@@ -15,8 +15,10 @@ from typing import (
     cast,
     overload,
     AsyncGenerator,
+    TYPE_CHECKING,
 )
-from typing_extensions import TypeAlias
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
 
 from ._typing import ACloseable, R, T, AnyIterable, ADD
 from ._utility import public_module
