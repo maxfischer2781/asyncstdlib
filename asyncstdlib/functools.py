@@ -1,4 +1,4 @@
-from asyncio import iscoroutinefunction
+from inspect import iscoroutinefunction
 from typing import (
     Callable,
     Awaitable,
