@@ -4,7 +4,6 @@ import asyncstdlib as a
 
 from .utility import sync, asyncify
 
-
 CLOSED = "closed"
 
 

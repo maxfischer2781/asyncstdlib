@@ -21,6 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 license = {"file" = "LICENSE"}
 keywords = ["async", "enumerate", "itertools", "builtins", "functools", "contextlib"]
@@ -80,3 +81,6 @@ verboseOutput = true
 testpaths = [
     "unittests",
 ]
+
+[tool.black]
+target-version = ["py38", "py39","py310", "py311", "py312", "py313", "py314"]

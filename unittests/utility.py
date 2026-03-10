@@ -13,7 +13,6 @@ from functools import wraps
 from collections import deque
 from random import randint
 
-
 T = TypeVar("T")
 
 

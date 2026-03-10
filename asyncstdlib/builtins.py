@@ -22,7 +22,6 @@ from ._core import (
     Sentinel,
 )
 
-
 __ANEXT_DEFAULT = Sentinel("<no default>")
 
 

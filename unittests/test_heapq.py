@@ -7,7 +7,6 @@ import asyncstdlib as a
 
 from .utility import sync, asyncify, awaitify
 
-
 MERGE_SAMPLES = [
     [[1, 2], [3, 4]],
     [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
