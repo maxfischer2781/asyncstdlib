@@ -82,12 +82,14 @@ def map(
     function: Callable[[T1], Awaitable[R]],
     __it1: AnyIterable[T1],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
     function: Callable[[T1], R],
     __it1: AnyIterable[T1],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -95,6 +97,7 @@ def map(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -102,6 +105,7 @@ def map(
     __it1: AnyIterable[T1],
     __it2: AnyIterable[T2],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -110,6 +114,7 @@ def map(
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -118,6 +123,7 @@ def map(
     __it2: AnyIterable[T2],
     __it3: AnyIterable[T3],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -127,6 +133,7 @@ def map(
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -136,6 +143,7 @@ def map(
     __it3: AnyIterable[T3],
     __it4: AnyIterable[T4],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -146,6 +154,7 @@ def map(
     __it4: AnyIterable[T4],
     __it5: AnyIterable[T5],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -156,6 +165,7 @@ def map(
     __it4: AnyIterable[T4],
     __it5: AnyIterable[T5],
     /,
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -167,6 +177,7 @@ def map(
     __it5: AnyIterable[Any],
     /,
     *iterable: AnyIterable[Any],
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 def map(
@@ -178,6 +189,7 @@ def map(
     __it5: AnyIterable[Any],
     /,
     *iterable: AnyIterable[Any],
+    strict: bool = ...,
 ) -> AsyncIterator[R]: ...
 @overload
 async def max(iterable: AnyIterable[LT], *, key: None = ...) -> LT: ...
