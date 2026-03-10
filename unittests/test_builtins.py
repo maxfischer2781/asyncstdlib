@@ -121,6 +121,27 @@ async def test_map_sa():
     )
 
 
+@pytest.mark.parametrize(
+    "itrs",
+    [
+        (range(4), range(5), range(5)),
+        (range(5), range(4), range(5)),
+        (range(5), range(5), range(4)),
+    ],
+)
+@sync
+async def test_map_strict_unequal(itrs: "tuple[range, ...]"):
+    def triple_sum(x: int, y: int, z: int) -> int:
+        return x + y + z
+    # no error without strict
+    async for _ in a.map(triple_sum, *itrs):
+        pass
+    # error with strict
+    with pytest.raises(ValueError):
+        async for _ in a.map(triple_sum, *itrs, strict=True):
+            pass
+
+
 @sync
 async def test_map_aa():
     async def map_op(value: int) -> int:
