@@ -1,4 +1,5 @@
 import random
+from typing import Any, Callable, Coroutine, TypeVar
 
 import pytest
 
@@ -6,12 +7,16 @@ import asyncstdlib as a
 
 from .utility import sync, asyncify, awaitify
 
+COR = TypeVar("COR", bound=Callable[..., Coroutine[Any, Any, Any]])
 
-def hide_coroutine(corofunc):
-    def wrapper(*args, **kwargs):
+
+def hide_coroutine(corofunc: COR) -> COR:
+    """Make a coroutine function look like a regular function returning a coroutine"""
+
+    def wrapper(*args, **kwargs):  # type: ignore
         return corofunc(*args, **kwargs)
 
-    return wrapper
+    return wrapper  # type: ignore
 
 
 @sync
@@ -94,7 +99,7 @@ async def test_zip_close_immediately():
 
 @sync
 async def test_map_as():
-    async def map_op(value):
+    async def map_op(value: int) -> int:
         return value * 2
 
     assert [value async for value in a.map(map_op, range(5))] == list(range(0, 10, 2))
@@ -105,7 +110,7 @@ async def test_map_as():
 
 @sync
 async def test_map_sa():
-    def map_op(value):
+    async def map_op(value: int) -> int:
         return value * 2
 
     assert [value async for value in a.map(map_op, asyncify(range(5)))] == list(
@@ -118,7 +123,7 @@ async def test_map_sa():
 
 @sync
 async def test_map_aa():
-    async def map_op(value):
+    async def map_op(value: int) -> int:
         return value * 2
 
     assert [value async for value in a.map(map_op, asyncify(range(5)))] == list(
@@ -128,6 +133,28 @@ async def test_map_aa():
         value
         async for value in a.map(hide_coroutine(map_op), asyncify(range(5, 10, 2)))
     ] == list(range(10, 20, 4))
+
+
+@pytest.mark.parametrize(
+    "itrs",
+    [
+        (range(4), range(5), range(5)),
+        (range(5), range(4), range(5)),
+        (range(5), range(5), range(4)),
+    ],
+)
+@sync
+async def test_map_strict_unequal(itrs: "tuple[range, ...]"):
+    def triple_sum(x: int, y: int, z: int) -> int:
+        return x + y + z
+
+    # no error without strict
+    async for _ in a.map(triple_sum, *itrs):
+        pass
+    # error with strict
+    with pytest.raises(ValueError):
+        async for _ in a.map(triple_sum, *itrs, strict=True):
+            pass
 
 
 @sync
@@ -142,7 +169,7 @@ async def test_max_default():
 
 @sync
 async def test_max_sa():
-    async def minus(x):
+    async def minus(x: int) -> int:
         return -x
 
     assert await a.max(asyncify((1, 2, 3, 4))) == 4
@@ -167,7 +194,7 @@ async def test_min_default():
 
 @sync
 async def test_min_sa():
-    async def minus(x):
+    async def minus(x: int) -> int:
         return -x
 
     assert await a.min(asyncify((1, 2, 3, 4))) == 1
@@ -180,7 +207,7 @@ async def test_min_sa():
 
 @sync
 async def test_filter_as():
-    async def map_op(value):
+    async def map_op(value: int) -> bool:
         return value % 2 == 0
 
     assert [value async for value in a.filter(map_op, range(5))] == list(range(0, 5, 2))
@@ -194,7 +221,7 @@ async def test_filter_as():
 
 @sync
 async def test_filter_sa():
-    def map_op(value):
+    def map_op(value: int) -> bool:
         return value % 2 == 0
 
     assert [value async for value in a.filter(map_op, asyncify(range(5)))] == list(
@@ -208,7 +235,7 @@ async def test_filter_sa():
 
 @sync
 async def test_filter_aa():
-    async def map_op(value):
+    async def map_op(value: int) -> bool:
         return value % 2 == 0
 
     assert [value async for value in a.filter(map_op, asyncify(range(5)))] == list(
@@ -286,7 +313,7 @@ sortables = [
 @pytest.mark.parametrize("sortable", sortables)
 @pytest.mark.parametrize("reverse", [True, False])
 @sync
-async def test_sorted_direct(sortable, reverse):
+async def test_sorted_direct(sortable: "list[int] | list[float]", reverse: bool):
     assert await a.sorted(sortable, reverse=reverse) == sorted(
         sortable, reverse=reverse
     )
@@ -305,12 +332,12 @@ async def test_sorted_direct(sortable, reverse):
 async def test_sorted_stable():
     values = [-i for i in range(20)]
 
-    def collision_key(x):
+    def collision_key(x: int) -> int:
         return x // 2
 
     # test the test...
     assert sorted(values, key=collision_key) != [
-        item for key, item in sorted([(collision_key(i), i) for i in values])
+        item for _, item in sorted([(collision_key(i), i) for i in values])
     ]
     # test the implementation
     assert await a.sorted(values, key=awaitify(collision_key)) == sorted(

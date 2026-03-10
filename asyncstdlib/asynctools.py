@@ -1,5 +1,5 @@
-from asyncio import iscoroutinefunction
 from functools import wraps
+from inspect import iscoroutinefunction
 from typing import (
     Union,
     AsyncContextManager,
