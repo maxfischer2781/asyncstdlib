@@ -281,6 +281,7 @@ __REDUCE_SENTINEL = Sentinel("<no default>")
 async def reduce(
     function: Union[Callable[[T, T], T], Callable[[T, T], Awaitable[T]]],
     iterable: AnyIterable[T],
+    /,
     initial: T = __REDUCE_SENTINEL,  # type: ignore
 ) -> T:
     """
