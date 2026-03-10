@@ -204,7 +204,9 @@ async def _zip_inner_strict(
 
 async def map(
     function: Union[Callable[..., R], Callable[..., Awaitable[R]]],
-    *iterable: AnyIterable[Any],
+    iterable: AnyIterable[Any],
+    /,
+    *iterables: AnyIterable[Any],
 ) -> AsyncIterator[R]:
     r"""
     An async iterator mapping an (async) function to items from (async) iterables
@@ -224,7 +226,7 @@ async def map(
     Multiple ``iterable`` may be mixed regular and async iterables.
     """
     function = _awaitify(function)
-    async with ScopedIter(zip(*iterable)) as args_iter:
+    async with ScopedIter(zip(iterable, *iterables)) as args_iter:
         async for args in args_iter:
             result = function(*args)
             yield await result
