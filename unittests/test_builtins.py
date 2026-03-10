@@ -1,4 +1,5 @@
 import random
+from typing import Any, Callable, Coroutine, TypeVar
 
 import pytest
 
@@ -7,11 +8,15 @@ import asyncstdlib as a
 from .utility import sync, asyncify, awaitify
 
 
-def hide_coroutine(corofunc):
-    def wrapper(*args, **kwargs):
+COR = TypeVar("COR", bound=Callable[..., Coroutine[Any, Any, Any]])
+
+
+def hide_coroutine(corofunc: COR) -> COR:
+    """Make a coroutine function look like a regular function returning a coroutine"""
+    def wrapper(*args, **kwargs):  # type: ignore
         return corofunc(*args, **kwargs)
 
-    return wrapper
+    return wrapper  # type: ignore
 
 
 @sync
@@ -94,7 +99,7 @@ async def test_zip_close_immediately():
 
 @sync
 async def test_map_as():
-    async def map_op(value):
+    async def map_op(value: int) -> int:
         return value * 2
 
     assert [value async for value in a.map(map_op, range(5))] == list(range(0, 10, 2))
@@ -105,7 +110,7 @@ async def test_map_as():
 
 @sync
 async def test_map_sa():
-    def map_op(value):
+    async def map_op(value: int) -> int:
         return value * 2
 
     assert [value async for value in a.map(map_op, asyncify(range(5)))] == list(
@@ -118,7 +123,7 @@ async def test_map_sa():
 
 @sync
 async def test_map_aa():
-    async def map_op(value):
+    async def map_op(value: int) -> int:
         return value * 2
 
     assert [value async for value in a.map(map_op, asyncify(range(5)))] == list(
