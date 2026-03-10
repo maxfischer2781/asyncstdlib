@@ -215,7 +215,7 @@ async def map(
     :raises ValueError: if the ``iterables`` are not equal length and ``strict`` is set
 
     At each step, ``map`` collects the next item from each iterable and calls
-    ``function`` with all items; if ``function`` provides an awaitable,
+    ``function`` with these items; if ``function`` provides an awaitable,
     it is ``await``\ ed. The result is the next value of ``map``.
     Barring sync/async translation, ``map`` is equivalent to
     ``(await function(*args) async for args in zip(iterables))``.
@@ -229,7 +229,7 @@ async def map(
     exhausted with the others.
 
     The ``function`` may be a regular or async callable.
-    Multiple ``iterable`` may be mixed regular and async iterables.
+    Multiple ``iterables`` may be mixed regular and async iterables.
     """
     function = _awaitify(function)
     async with ScopedIter(zip(iterable, *iterables, strict=strict)) as args_iter:
