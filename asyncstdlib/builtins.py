@@ -204,27 +204,35 @@ async def _zip_inner_strict(
 
 async def map(
     function: Union[Callable[..., R], Callable[..., Awaitable[R]]],
-    *iterable: AnyIterable[Any],
+    iterable: AnyIterable[Any],
+    /,
+    *iterables: AnyIterable[Any],
+    strict: bool = False,
 ) -> AsyncIterator[R]:
     r"""
     An async iterator mapping an (async) function to items from (async) iterables
 
+    :raises ValueError: if the ``iterables`` are not equal length and ``strict`` is set
+
     At each step, ``map`` collects the next item from each iterable and calls
-    ``function`` with all items; if ``function`` provides an awaitable,
+    ``function`` with these items; if ``function`` provides an awaitable,
     it is ``await``\ ed. The result is the next value of ``map``.
     Barring sync/async translation, ``map`` is equivalent to
     ``(await function(*args) async for args in zip(iterables))``.
 
     It is important that ``func`` receives *one* item from *each*  iterable at
-    every step. For *n* ``iterable``, ``func`` must take *n* positional arguments.
-    Similar to :py:func:`~.zip`, ``map`` is exhausted as soon as its
-    *first* argument is exhausted.
+    every step. For *n* ``iterables``, ``func`` must take *n* positional arguments.
+    Similar to :py:func:`~.zip`, ``map`` is exhausted as soon as any of its `iterables`
+    is exhausted.
+    When called with ``strict=True``, all ``iterables`` must be of same length;
+    in this mode ``map`` raises :py:exc:`ValueError` if any ``iterables`` are not
+    exhausted with the others.
 
     The ``function`` may be a regular or async callable.
-    Multiple ``iterable`` may be mixed regular and async iterables.
+    Multiple ``iterables`` may be mixed regular and async iterables.
     """
     function = _awaitify(function)
-    async with ScopedIter(zip(*iterable)) as args_iter:
+    async with ScopedIter(zip(iterable, *iterables, strict=strict)) as args_iter:
         async for args in args_iter:
             result = function(*args)
             yield await result

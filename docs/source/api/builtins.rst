@@ -45,8 +45,12 @@ Iterator transforming
 
         The ``strict`` parameter.
 
-.. autofunction:: map(function: (T, ...) → (await) R, iterable: (async) iter T, ...)
+.. autofunction:: map(function: (T, ...) → (await) R, iterable: (async) iter T, ..., /, strict: bool = True)
     :async-for: :R
+
+    .. versionadded:: 3.14.0
+
+        The ``strict`` parameter.
 
 .. autofunction:: enumerate(iterable: (async) iter T, start=0)
     :async-for: :(int, T)
