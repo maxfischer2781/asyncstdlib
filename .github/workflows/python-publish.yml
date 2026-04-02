@@ -7,6 +7,7 @@
 # documentation.
 
 name: Upload Python Package
+permissions: {}
 
 on:
   release:
@@ -16,6 +17,8 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     environment:
       name: pypi-publish
 

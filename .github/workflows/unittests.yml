@@ -1,4 +1,5 @@
 name: Unit Tests
+permissions: {}
 
 on:
   push:
@@ -9,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version: [
