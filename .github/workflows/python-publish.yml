@@ -16,6 +16,8 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
+    environment:
+      name: pypi-publish
 
     steps:
     - uses: actions/checkout@v6
