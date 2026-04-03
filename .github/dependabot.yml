@@ -6,3 +6,5 @@ updates:
       interval: "weekly"
     reviewers:
       - "maxfischer2781"
+    cooldown:
+      default-days: 7
