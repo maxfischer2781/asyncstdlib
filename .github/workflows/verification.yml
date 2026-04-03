@@ -8,7 +8,7 @@ on:
     - cron: '0 10 * * 3,6'
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     permissions:
       contents: read
