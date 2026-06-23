@@ -8,3 +8,10 @@ updates:
       - "maxfischer2781"
     cooldown:
       default-days: 7
+    groups:
+      minor:
+        update-types:
+          - "minor"
+      patches:
+        update-types:
+          - "patch"
