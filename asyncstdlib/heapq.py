@@ -121,9 +121,9 @@ async def merge(
     The ``iterables`` must be pre-sorted in the same order.
     """
     a_key = awaitify(key) if key is not None else None
-    # sortable iterators with (reverse) position to ensure stable sort for ties
+    # sortable iterators with input position to ensure stable sort for ties
     iter_heap: "list[tuple[_KeyIter[Any], int]]" = [
-        (itr, idx if not reverse else -idx)
+        (itr, idx)
         async for idx, itr in a_enumerate(
             _KeyIter[Any].from_iters(iterables, reverse, a_key)
         )

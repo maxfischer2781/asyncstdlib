@@ -85,3 +85,31 @@ async def test_nlargest_stdlib_key(sample, n):
     assert heapq.nlargest(n, sample, key=lambda x: -x) == await a.nlargest(
         asyncify(sample), n, key=lambda x: -x
     )
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+@pytest.mark.parametrize("async_key", [False, True])
+@sync
+async def test_merge_preserves_equal_key_source_order(reverse, async_key):
+    samples = [
+        [(2, "first-a"), (2, "first-b"), (1, "first-tail")],
+        [],
+        [(2, "second"), (1, "second-tail")],
+        [(2, "third"), (1, "third-tail")],
+    ]
+    samples = [
+        sorted(sample, key=lambda item: item[0], reverse=reverse) for sample in samples
+    ]
+
+    def key(item):
+        return item[0]
+
+    expected = list(heapq.merge(*samples, key=key, reverse=reverse))
+    actual = await a.list(
+        a.merge(
+            *map(asyncify, samples),
+            key=awaitify(key) if async_key else key,
+            reverse=reverse,
+        )
+    )
+    assert actual == expected
