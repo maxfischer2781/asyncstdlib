@@ -343,3 +343,36 @@ async def test_sorted_stable():
     assert await a.sorted(values, key=awaitify(collision_key)) == sorted(
         values, key=collision_key
     )
+
+
+@pytest.mark.parametrize("key_kind", ["none", "sync", "async"])
+@pytest.mark.parametrize("async_input", [False, True])
+@sync
+async def test_max_keeps_first_equal_item(key_kind, async_input):
+    class Record:
+        def __init__(self, priority, label):
+            self.priority = priority
+            self.label = label
+
+        def __lt__(self, other):
+            return self.priority < other.priority
+
+    records = [
+        Record(1, "low"),
+        Record(3, "first"),
+        Record(3, "second"),
+        Record(2, "tail"),
+    ]
+    key = None if key_kind == "none" else lambda item: item.priority
+    expected = max(records, key=key)
+    actual = await a.max(
+        asyncify(records) if async_input else records,
+        key=awaitify(key) if key_kind == "async" else key,
+    )
+    assert actual is expected
+
+
+@pytest.mark.parametrize("values", [[float("nan"), 3.0], [3.0, float("nan"), 2.0]])
+@sync
+async def test_max_does_not_replace_with_unordered_values(values):
+    assert await a.max(asyncify(values)) is max(values)
