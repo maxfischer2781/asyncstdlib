@@ -312,16 +312,14 @@ async def _min_max(
             raise ValueError(f"{name}() arg is an empty sequence")
         elif key is None:
             async for item in item_iter:
-                is_better = best < item if invert else item < best
-                if is_better:
+                if best < item if invert else item < best:
                     best = item
         else:
             key = _awaitify(key)
             best_key = await key(best)
             async for item in item_iter:
                 item_key = await key(item)
-                is_better = best_key < item_key if invert else item_key < best_key
-                if is_better:
+                if best_key < item_key if invert else item_key < best_key:
                     best = item
                     best_key = item_key
     return best

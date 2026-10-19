@@ -345,34 +345,21 @@ async def test_sorted_stable():
     )
 
 
-@pytest.mark.parametrize("key_kind", ["none", "sync", "async"])
+@pytest.mark.parametrize("key", [None, lambda item: item.real])
+@pytest.mark.parametrize("async_key", [False, True])
 @pytest.mark.parametrize("async_input", [False, True])
 @sync
-async def test_max_keeps_first_equal_item(key_kind, async_input):
-    class Record:
-        def __init__(self, priority, label):
-            self.priority = priority
-            self.label = label
-
-        def __lt__(self, other):
-            return self.priority < other.priority
-
-    records = [
-        Record(1, "low"),
-        Record(3, "first"),
-        Record(3, "second"),
-        Record(2, "tail"),
-    ]
-    key = None if key_kind == "none" else lambda item: item.priority
-    expected = max(records, key=key)
-    actual = await a.max(
-        asyncify(records) if async_input else records,
-        key=awaitify(key) if key_kind == "async" else key,
-    )
-    assert actual is expected
+async def test_max_keeps_first_equal_item(key, async_key, async_input):
+    values = [float(value) for value in (1, 3, 3, 2)]
+    iterable = asyncify(values) if async_input else values
+    actual_key = awaitify(key) if async_key and key is not None else key
+    assert await a.max(iterable, key=actual_key) is max(values, key=key)
 
 
-@pytest.mark.parametrize("values", [[float("nan"), 3.0], [3.0, float("nan"), 2.0]])
+@pytest.mark.parametrize(
+    "values",
+    [[float("nan"), 3.0], [3.0, float("nan"), 2.0], [2.0, float("nan"), 3.0]],
+)
 @sync
 async def test_max_does_not_replace_with_unordered_values(values):
     assert await a.max(asyncify(values)) is max(values)
