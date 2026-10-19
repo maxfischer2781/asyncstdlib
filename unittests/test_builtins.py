@@ -343,3 +343,39 @@ async def test_sorted_stable():
     assert await a.sorted(values, key=awaitify(collision_key)) == sorted(
         values, key=collision_key
     )
+
+
+@pytest.mark.parametrize("function", [a.min, a.max])
+@pytest.mark.parametrize("async_input", [False, True])
+@pytest.mark.parametrize("async_key", [False, True])
+@sync
+async def test_extrema_return_empty_default_without_applying_key(
+    function, async_input, async_key
+):
+    fallback = object()
+
+    def priority(record):
+        return record["priority"]
+
+    assert (
+        await function(
+            asyncify([]) if async_input else [],
+            key=awaitify(priority) if async_key else priority,
+            default=fallback,
+        )
+        is fallback
+    )
+
+
+@pytest.mark.parametrize("function", [a.min, a.max])
+@sync
+async def test_extrema_apply_key_to_item_identical_to_default(function):
+    fallback = {"priority": 1}
+    calls = []
+
+    def priority(record):
+        calls.append(record)
+        return record["priority"]
+
+    assert await function([fallback], key=priority, default=fallback) is fallback
+    assert calls == [fallback]
