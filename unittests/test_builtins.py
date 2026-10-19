@@ -343,3 +343,29 @@ async def test_sorted_stable():
     assert await a.sorted(values, key=awaitify(collision_key)) == sorted(
         values, key=collision_key
     )
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+@sync
+async def test_sorted_preserves_comparison_errors(reverse):
+    with pytest.raises(TypeError):
+        await a.sorted(iter([1, "two"]), reverse=reverse)
+
+
+@sync
+async def test_sorted_preserves_iteration_errors():
+    def records():
+        yield 1
+        raise TypeError("source failure")
+
+    with pytest.raises(TypeError, match="source failure"):
+        await a.sorted(records())
+
+
+@sync
+async def test_sorted_supports_indexed_sequences():
+    class Indexed:
+        def __getitem__(self, index):
+            return [3, 1, 2][index]
+
+    assert await a.sorted(Indexed()) == [1, 2, 3]
