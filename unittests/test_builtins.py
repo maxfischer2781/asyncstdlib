@@ -1,4 +1,5 @@
 import random
+from functools import total_ordering
 from typing import Any, Callable, Coroutine, TypeVar
 
 import pytest
@@ -345,15 +346,39 @@ async def test_sorted_stable():
     )
 
 
-@pytest.mark.parametrize("key", [None, lambda item: item.real])
-@pytest.mark.parametrize("async_key", [False, True])
-@pytest.mark.parametrize("async_input", [False, True])
+@total_ordering
+class ComparableRecord:
+    def __init__(self, priority):
+        self.priority = priority
+
+    def __eq__(self, other):
+        if not isinstance(other, ComparableRecord):
+            return NotImplemented
+        return self.priority == other.priority
+
+    def __lt__(self, other):
+        if not isinstance(other, ComparableRecord):
+            return NotImplemented
+        return self.priority < other.priority
+
+
+def record_priority(record):
+    return record.priority
+
+
+@pytest.mark.parametrize(
+    "key, reference_key",
+    [
+        (None, None),
+        (record_priority, record_priority),
+        (awaitify(record_priority), record_priority),
+    ],
+)
+@pytest.mark.parametrize("iterable", [iter, asyncify])
 @sync
-async def test_max_keeps_first_equal_item(key, async_key, async_input):
-    values = [float(value) for value in (1, 3, 3, 2)]
-    iterable = asyncify(values) if async_input else values
-    actual_key = awaitify(key) if async_key and key is not None else key
-    assert await a.max(iterable, key=actual_key) is max(values, key=key)
+async def test_max_keeps_first_equal_item(key, reference_key, iterable):
+    values = [ComparableRecord(value) for value in (1, 3, 3, 2)]
+    assert await a.max(iterable(values), key=key) is max(values, key=reference_key)
 
 
 @pytest.mark.parametrize(
