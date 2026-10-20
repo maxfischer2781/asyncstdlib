@@ -180,6 +180,41 @@ async def test_max_sa():
     assert await a.max(asyncify((4, 2, 3, 1)), key=minus) == 1
 
 
+class Tagged:
+    def __init__(self, value: float, tag: str) -> None:
+        self.value = value
+        self.tag = tag
+
+    def __lt__(self, other: "Tagged"):
+        return self.value < other.value
+
+
+nan = float("nan")
+tagged_order_values = [
+    [Tagged(v, str(v)) for v in range(5)],
+    [Tagged(v, str(v)) for v in range(5)[::-1]],
+    [Tagged(1, "small"), Tagged(2, "first"), Tagged(2, "second")],
+    [Tagged(2, "first"), Tagged(2, "second"), Tagged(1, "small")],
+    [Tagged(2, "first"), Tagged(1, "small"), Tagged(2, "second")],
+    [Tagged(9, "large"), Tagged(2, "first"), Tagged(2, "second")],
+    [Tagged(2, "first"), Tagged(2, "second"), Tagged(9, "large")],
+    [Tagged(2, "first"), Tagged(9, "large"), Tagged(2, "second")],
+    [Tagged(nan, "nan"), Tagged(2, "first"), Tagged(2, "second")],
+    [Tagged(2, "first"), Tagged(2, "second"), Tagged(nan, "nan")],
+    [Tagged(2, "first"), Tagged(nan, "nan"), Tagged(2, "second")],
+]
+
+
+@pytest.mark.parametrize("values", tagged_order_values)
+@sync
+async def test_max_fifo(values: "list[Tagged]") -> None:
+    for itr in (asyncify, iter):
+        assert await a.max(itr(values)) == max(values)
+        assert await a.max(itr(values), key=lambda t: t.value) == max(
+            values, key=lambda t: t.value
+        )
+
+
 @sync
 async def test_min_default():
     assert await a.min((), default=3) == 3
@@ -203,6 +238,16 @@ async def test_min_sa():
     assert await a.min(asyncify((4, 2, 3, 1)), key=lambda x: -x) == 4
     assert await a.min(asyncify((1, 2, 3, 4)), key=minus) == 4
     assert await a.min(asyncify((4, 2, 3, 1)), key=minus) == 4
+
+
+@pytest.mark.parametrize("values", tagged_order_values)
+@sync
+async def test_min_fifo(values: "list[Tagged]") -> None:
+    for itr in (asyncify, iter):
+        assert await a.min(itr(values)) == min(values)
+        assert await a.min(itr(values), key=lambda t: t.value) == min(
+            values, key=lambda t: t.value
+        )
 
 
 @sync
