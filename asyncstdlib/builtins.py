@@ -305,12 +305,14 @@ async def _min_max(
     :param invert: compute ``max`` if ``True`` and ``min`` otherwise
     """
     async with ScopedIter(iterable) as item_iter:
-        best = await anext(item_iter, default=default)
-        # this implies that item_iter is empty and default is __MIN_MAX_DEFAULT
-        if best is __MIN_MAX_DEFAULT:  # type: ignore
+        try:
+            best = await anext(item_iter)
+        except StopAsyncIteration:
+            if default is not __MIN_MAX_DEFAULT:
+                return default
             name = "max" if invert else "min"
             raise ValueError(f"{name}() arg is an empty sequence")
-        elif key is None:
+        if key is None:
             async for item in item_iter:
                 if item < best if not invert else best < item:
                     best = item
