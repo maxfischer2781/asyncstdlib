@@ -188,6 +188,9 @@ class Tagged:
     def __lt__(self, other: "Tagged"):
         return self.value < other.value
 
+    def key(self) -> float:
+        return self.value
+
 
 nan = float("nan")
 tagged_order_values = [
@@ -210,9 +213,7 @@ tagged_order_values = [
 async def test_max_fifo(values: "list[Tagged]") -> None:
     for itr in (asyncify, iter):
         assert await a.max(itr(values)) == max(values)
-        assert await a.max(itr(values), key=lambda t: t.value) == max(
-            values, key=lambda t: t.value
-        )
+        assert await a.max(itr(values), key=Tagged.key) == max(values, key=Tagged.key)
 
 
 @sync
@@ -245,9 +246,7 @@ async def test_min_sa():
 async def test_min_fifo(values: "list[Tagged]") -> None:
     for itr in (asyncify, iter):
         assert await a.min(itr(values)) == min(values)
-        assert await a.min(itr(values), key=lambda t: t.value) == min(
-            values, key=lambda t: t.value
-        )
+        assert await a.min(itr(values), key=Tagged.key) == min(values, key=Tagged.key)
 
 
 @sync
