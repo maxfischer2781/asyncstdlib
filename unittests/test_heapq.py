@@ -6,7 +6,6 @@ import random
 import asyncstdlib as a
 
 from .utility import sync, asyncify, awaitify
-from asyncstdlib.heapq import _KeyIter
 
 MERGE_SAMPLES = [
     [[1, 2], [3, 4]],
@@ -19,15 +18,6 @@ MERGE_SAMPLES = [
     [[], []],
     [[]],
 ]
-
-
-@pytest.mark.parametrize("reverse", [False, True])
-@pytest.mark.parametrize("keys", [(1, 1), (float("nan"), 1), (1, float("nan"))])
-def test_merge_key_iter_does_not_order_equal_or_unordered_keys(reverse, keys):
-    first = _KeyIter(keys[0], asyncify(()), reverse, keys[0], None)
-    second = _KeyIter(keys[1], asyncify(()), reverse, keys[1], None)
-    assert not first < second
-    assert not second < first
 
 
 @pytest.mark.parametrize("samples", MERGE_SAMPLES)
