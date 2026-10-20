@@ -248,7 +248,7 @@ async def max(
     default: Any = __MIN_MAX_DEFAULT,
 ) -> Any:
     """
-    Return the largest item from an (async) iterable or from two or more values
+    Return the largest item from an (async) iterable
 
     :raises ValueError: if ``iterable`` is empty and ``default`` is not set
 
@@ -274,7 +274,7 @@ async def min(
     default: Any = __MIN_MAX_DEFAULT,
 ) -> Any:
     """
-    Return the smallest item from an (async) iterable or from two or more values
+    Return the smallest item from an (async) iterable
 
     :raises ValueError: if ``iterable`` is empty and ``default`` is not set
 
