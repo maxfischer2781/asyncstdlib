@@ -311,7 +311,7 @@ async def _min_max(
             if default is not __MIN_MAX_DEFAULT:
                 return default
             name = "max" if invert else "min"
-            raise ValueError(f"{name}() arg is an empty sequence")
+            raise ValueError(f"{name}() iterable argument is empty") from None
         if key is None:
             async for item in item_iter:
                 if item < best if not invert else best < item:
