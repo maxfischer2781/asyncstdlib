@@ -9,7 +9,7 @@ Test Files
 ==========
 
 Tests MUST be organised into files, with similar tests grouped together.
-Each test file SHOULD be called as per the pattern ``type_<scope>.py``,
+Each test file SHOULD be named as per the pattern ``test_<scope>.py``,
 where ``<scope>`` describes what the tests cover;
 for example, ``test_functools.py`` type-tests the ``functools`` package.
 
