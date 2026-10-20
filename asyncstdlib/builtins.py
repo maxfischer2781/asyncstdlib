@@ -11,10 +11,11 @@ from typing import (
     Optional,
     Dict,
     Any,
+    overload,
 )
 import builtins as _sync_builtins
 
-from ._typing import T, R, HK, LT, AnyIterable
+from ._typing import T, T1, R, HK, LT, AnyIterable
 from ._core import (
     aiter,
     ScopedIter,
@@ -241,6 +242,23 @@ async def map(
 __MIN_MAX_DEFAULT = Sentinel("<no default>")
 
 
+@overload
+async def max(
+    iterable: AnyIterable[T],
+    *,
+    key: Optional[Callable[[T], Any]] = None,
+) -> T: ...
+
+
+@overload
+async def max(
+    iterable: AnyIterable[T],
+    *,
+    key: Optional[Callable[[T], Any]] = None,
+    default: T1,
+) -> Union[T, T1]: ...
+
+
 async def max(
     iterable: AnyIterable[Any],
     *,
@@ -255,7 +273,9 @@ async def max(
     The ``key`` argument specifies a one-argument ordering function like that used
     for :py:meth:`list.sort`. It may be a regular or async callable and defaults to
     the identity function. The ``default`` argument specifies an object to return
-    if the provided ``iterable`` is empty. If the ``iterable`` is empty and
+    if the provided ``iterable`` is empty. It is returned unchanged without
+    applying ``key`` and may have a different type from the iterable items.
+    If the ``iterable`` is empty and
     ``default`` is not provided, a :py:exc:`ValueError` is raised.
 
     .. note::
@@ -265,6 +285,23 @@ async def max(
         Use the builtin :py:func:`max` function instead.
     """
     return await _min_max(iterable, key, True, default)
+
+
+@overload
+async def min(
+    iterable: AnyIterable[T],
+    *,
+    key: Optional[Callable[[T], Any]] = None,
+) -> T: ...
+
+
+@overload
+async def min(
+    iterable: AnyIterable[T],
+    *,
+    key: Optional[Callable[[T], Any]] = None,
+    default: T1,
+) -> Union[T, T1]: ...
 
 
 async def min(
@@ -281,7 +318,9 @@ async def min(
     The ``key`` argument specifies a one-argument ordering function like that used
     for :py:meth:`list.sort`. It may be a regular or async callable and defaults to
     the identity function. The ``default`` argument specifies an object to return
-    if the provided ``iterable`` is empty. If the ``iterable`` is empty and
+    if the provided ``iterable`` is empty. It is returned unchanged without
+    applying ``key`` and may have a different type from the iterable items.
+    If the ``iterable`` is empty and
     ``default`` is not provided, a :py:exc:`ValueError` is raised.
 
     .. note::
@@ -297,8 +336,8 @@ async def _min_max(
     iterable: AnyIterable[LT],
     key: Optional[Callable[[LT], Any]],
     invert: bool,
-    default: LT = __MIN_MAX_DEFAULT,  # type: ignore
-) -> LT:
+    default: T1 = __MIN_MAX_DEFAULT,  # type: ignore
+) -> Union[LT, T1]:
     """
     Implementation of ``min``/``max``
 
