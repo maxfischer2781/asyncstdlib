@@ -20,10 +20,10 @@ Iterator reducing
 .. autofunction:: any(iterable: (async) iter T) -> bool
     :async:
 
-.. autofunction:: max(iterable: (async) iter T, *, key: (T) → Any [, default: D]) -> T | D
+.. autofunction:: max(iterable: (async) iter T, *, key: (T) → (await) Any [, default: D]) -> T | D
     :async:
 
-.. autofunction:: min(iterable: (async) iter T, *, key: (T) → Any [, default: D]) -> T | D
+.. autofunction:: min(iterable: (async) iter T, *, key: (T) → (await) Any [, default: D]) -> T | D
     :async:
 
 .. autofunction:: sum(iterable: (async) iter T, start: T = 0) -> T
