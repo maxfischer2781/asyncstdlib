@@ -294,11 +294,11 @@ async def min(
 
 
 async def _min_max(
-    iterable: AnyIterable[LT],
-    key: Optional[Callable[[LT], Any]],
+    iterable: AnyIterable[Any],
+    key: Optional[Callable[[Any], LT]],
     invert: bool,
-    default: LT = __MIN_MAX_DEFAULT,  # type: ignore
-) -> LT:
+    default: Any = __MIN_MAX_DEFAULT,  # type: ignore
+) -> Any:
     """
     Implementation of ``min``/``max``
 
