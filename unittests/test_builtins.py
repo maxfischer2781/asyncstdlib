@@ -161,6 +161,11 @@ async def test_map_strict_unequal(itrs: "tuple[range, ...]"):
 async def test_max_default():
     assert await a.max((), default=3) == 3
     assert await a.max((), key=lambda x: x, default=3) == 3
+    # default does not override items
+    assert await a.max((3, 2, 1), default=1) == 3
+    # default ignores key
+    assert await a.max([], default=1, key=str.split) == 1
+
     with pytest.raises(ValueError):
         assert await a.max(()) == 3
     with pytest.raises(ValueError):
@@ -222,6 +227,9 @@ async def test_min_default():
     assert await a.min((), key=lambda x: x, default=3) == 3
     # default does not override items
     assert await a.min((3, 2, 1), default=3) == 1
+    # default ignores key
+    assert await a.min([], default=1, key=str.split) == 1
+
     with pytest.raises(ValueError):
         assert await a.min(()) == 3
     with pytest.raises(ValueError):
