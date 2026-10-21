@@ -448,13 +448,9 @@ async def sorted(
         It is guaranteed to be worst-case O(n log n) runtime.
     """
     if key is None:
-        # TODO: is this a worthwhile optimisation?
-        try:
-            return _sync_builtins.sorted(iterable, reverse=reverse)  # type: ignore
-        except TypeError:
-            items: _sync_builtins.list[Any] = [item async for item in aiter(iterable)]
-            items.sort(reverse=reverse)
-            return items
+        items: _sync_builtins.list[Any] = [item async for item in aiter(iterable)]
+        items.sort(reverse=reverse)
+        return items
     else:
         async_key = _awaitify(key)
         keyed_items = [(await async_key(item), item) async for item in aiter(iterable)]
