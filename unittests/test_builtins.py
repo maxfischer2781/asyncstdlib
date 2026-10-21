@@ -395,3 +395,17 @@ async def test_sorted_stable():
     assert await a.sorted(values, key=awaitify(collision_key)) == sorted(
         values, key=collision_key
     )
+
+
+@pytest.mark.parametrize("reverse", [True, False])
+@sync
+async def test_sorted_unsortable(reverse: bool):
+    unsortable = [None, "None"]
+    with pytest.raises(TypeError):
+        await a.sorted(a.iter(unsortable), reverse=reverse)
+    with pytest.raises(TypeError):
+        await a.sorted(iter(unsortable), reverse=reverse)
+    with pytest.raises(TypeError):
+        await a.sorted(a.iter(unsortable), key=lambda x: x, reverse=reverse)
+    with pytest.raises(TypeError):
+        await a.sorted(iter(unsortable), key=lambda x: x, reverse=reverse)
