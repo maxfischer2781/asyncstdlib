@@ -1,5 +1,6 @@
 import heapq
 
+import platform
 import pytest
 import random
 
@@ -60,6 +61,10 @@ NAN_MERGE_SAMPLES: "list[list[list[float]]]" = [
 ]
 
 
+@pytest.mark.skipif(
+    platform.python_implementation() != "CPython",
+    reason="heapq.merge for unordered items is specific to CPython",
+)
 @pytest.mark.parametrize("samples", NAN_MERGE_SAMPLES)
 @pytest.mark.parametrize("reverse", [False, True])
 @sync
