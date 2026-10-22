@@ -57,7 +57,9 @@ async def test_merge_stdlib_key(samples: "list[list[float]]", reverse: bool) -> 
 # Technically, merge requires pre-sorted input which excludes unorder'able items
 # Practically, `float` includes `nan` and data includes `float`
 NAN_MERGE_SAMPLES: "list[list[list[float]]]" = [
-    [[1, 2, float("nan")], [1, 2, float("nan")]]
+    [[1, 2, float("nan")], [1, 2, float("nan")]],
+    [[1, float("nan"), 2], [1, float("nan"), 2]],
+    [[float("nan"), 1, 2], [float("nan"), 1, 2]],
 ]
 
 
