@@ -27,6 +27,9 @@ Tests MUST contain statements to be type-checked:
 Test files MAY contain non-test functions, methods or classes for use inside tests.
 These SHOULD be type-consistent and not require any type assertions or expected errors.
 
+**Note:** For compatibility with older Python versions,
+          `typing_extensions` may be used to provide `assert_type` and `assert_never`.
+
 Test Execution
 ==============
 

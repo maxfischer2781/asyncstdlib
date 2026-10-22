@@ -1,5 +1,6 @@
-from typing import TypeVar, assert_type
+from typing import TypeVar
 from asyncstdlib import builtins
+from typing_extensions import assert_type
 
 T = TypeVar("T")
 
