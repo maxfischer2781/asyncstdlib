@@ -53,6 +53,24 @@ async def test_merge_stdlib_key(samples: "list[list[float]]", reverse: bool) -> 
     ]
 
 
+# Technically, merge requires pre-sorted input which excludes unorder'able items
+# Practically, `float` includes `nan` and data includes `float`
+NAN_MERGE_SAMPLES: "list[list[list[float]]]" = [
+    [[1, 2, float("nan")], [1, 2, float("nan")]]
+]
+
+
+@pytest.mark.parametrize("samples", NAN_MERGE_SAMPLES)
+@pytest.mark.parametrize("reverse", [False, True])
+@sync
+async def test_merge_unordered(samples: "list[list[float]]", reverse: bool) -> None:
+    r"""Compare `heapq.merge` against stdlib implementation given `nan`\ s"""
+    samples = samples if not reverse else [sample[::-1] for sample in samples]
+    assert pytest.approx(list(heapq.merge(*samples, reverse=reverse)), nan_ok=True) == [
+        item async for item in a.merge(*map(asyncify, samples), reverse=reverse)
+    ]
+
+
 MINMAX_SAMPLES = [
     [0, 3, 1, 4, 2, 5],
     [0, -3, 1, -4, -2, 5],
