@@ -98,7 +98,12 @@ class _KeyIter(Generic[LT]):
             else other.head_key < self.head_key
         )
 
+    # needed for tuple comparisons
     def __eq__(self, other: _KeyIter[LT]) -> bool:  # type: ignore[override]
+        # try to respect full ordering interface...
+        if self.head_key.__eq__ is not object.__eq__:
+            return self.head_key == other.head_key
+        # ...but fall back to just using the `<` operator required for sorting
         return not (self.head_key < other.head_key or other.head_key < self.head_key)
 
 
