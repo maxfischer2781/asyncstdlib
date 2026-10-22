@@ -8,13 +8,20 @@ import asyncstdlib as a
 from .utility import sync, asyncify, awaitify
 
 MERGE_SAMPLES = [
+    # pre-sorted
     [[1, 2], [3, 4]],
     [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+    # ragged and shuffled
     [[1, 4, 7], [2, 5, 8], [3, 6, 9]],
     [[1], [2, 3], [4, 5, 6], [7, 8, 9]],
     [[1], [2, 4, 6], [3], [5, 7, 8, 9]],
+    # duplication
+    [[1, 2], [1, 2]],
     [[1, 2, 3, 4] for _ in range(3)],
+    [[-4, -3, -2, 1, 2, 3, 4] for _ in range(3)],
+    # random input
     [sorted(random.random() for _ in range(5)) for _ in range(5)],
+    # degenerate cases
     [[], []],
     [[]],
 ]
