@@ -54,6 +54,31 @@ async def test_merge_stdlib_key(samples: "list[list[float]]", reverse: bool) -> 
     ]
 
 
+PAIR_MERGE_SAMPLES: "list[list[list[tuple[float, int]]]]" = [
+    [[(val, idx) for val in range(5)] for idx in range(3)],
+]
+
+
+@pytest.mark.parametrize("samples", PAIR_MERGE_SAMPLES)
+@pytest.mark.parametrize("reverse", [False, True])
+@sync
+async def test_merge_stdlib_pairs(
+    samples: "list[list[tuple[float, int]]]", reverse: bool
+) -> None:
+    """Compare `heapq.merge` with key against stdlib implementation"""
+
+    def key(pair: "tuple[float, int]") -> float:
+        return pair[0]
+
+    samples = samples if not reverse else [sample[::-1] for sample in samples]
+    assert list(heapq.merge(*samples, key=key, reverse=reverse)) == [
+        item
+        async for item in a.merge(
+            *map(asyncify, samples), key=awaitify(key), reverse=reverse
+        )
+    ]
+
+
 # Technically, merge requires pre-sorted input which excludes unorder'able items
 # Practically, `float` includes `nan` and data includes `float`
 NAN_MERGE_SAMPLES: "list[list[list[float]]]" = [
