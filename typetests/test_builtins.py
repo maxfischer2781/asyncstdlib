@@ -1,5 +1,6 @@
-from typing import TypeVar
+from typing import TypeVar, Union
 from asyncstdlib import builtins
+from typing_extensions import assert_type
 
 T = TypeVar("T")
 
@@ -15,3 +16,13 @@ async def async_identity(v: T) -> T:
 async def test_min_asyncneutral() -> None:
     await builtins.min([1, 2, 3], key=identity)
     await builtins.min([1, 2, 3], key=async_identity)
+
+
+async def test_max_asyncneutral() -> None:
+    await builtins.max([1, 2, 3], key=identity)
+    await builtins.max([1, 2, 3], key=async_identity)
+
+
+async def test_minmax_default() -> None:
+    assert_type(await builtins.min([1, 2], default="str"), Union[int, str])
+    assert_type(await builtins.max([1, 2], default="str"), Union[int, str])
