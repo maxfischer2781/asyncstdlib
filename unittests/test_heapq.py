@@ -71,12 +71,9 @@ async def test_merge_stdlib_pairs(
         return pair[0]
 
     samples = samples if not reverse else [sample[::-1] for sample in samples]
-    assert list(heapq.merge(*samples, key=key, reverse=reverse)) == [
-        item
-        async for item in a.merge(
-            *map(asyncify, samples), key=awaitify(key), reverse=reverse
-        )
-    ]
+    assert list(heapq.merge(*samples, key=key, reverse=reverse)) == await a.list(
+        a.merge(*map(asyncify, samples), key=awaitify(key), reverse=reverse)
+    )
 
 
 # Technically, merge requires pre-sorted input which excludes unorder'able items
