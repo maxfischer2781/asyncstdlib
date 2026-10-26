@@ -54,8 +54,13 @@ async def test_merge_stdlib_key(samples: "list[list[float]]", reverse: bool) -> 
     ]
 
 
-PAIR_MERGE_SAMPLES: "list[list[list[tuple[float, int]]]]" = [
+PAIR_MERGE_SAMPLES: "list[list[list[tuple[float, int | str]]]]" = [
+    [[(1, "first"), (2, "first")], [(1, "second"), (2, "second")]],
+    [[(0, "first"), (1, "first")], [(1, "second"), (2, "second")]],
+    [[(1, "first"), (2, "first")], [(0, "second"), (1, "second")]],
     [[(val, idx) for val in range(5)] for idx in range(3)],
+    [[(val - idx, idx) for val in range(5)] for idx in range(3)],
+    [[(val + idx, idx) for val in range(5)] for idx in range(3)],
 ]
 
 
@@ -65,7 +70,7 @@ PAIR_MERGE_SAMPLES: "list[list[list[tuple[float, int]]]]" = [
 async def test_merge_stdlib_pairs(
     samples: "list[list[tuple[float, int]]]", reverse: bool
 ) -> None:
-    """Compare `heapq.merge` with key against stdlib implementation"""
+    """Compare `heapq.merge` with (key, tag) pairs against stdlib implementation"""
 
     def key(pair: "tuple[float, int]") -> float:
         return pair[0]
