@@ -163,6 +163,9 @@ class ReverseLT(Generic[LT]):
     def __lt__(self, other: ReverseLT[LT]) -> bool:
         return bool(other.key < self.key)
 
+    def __eq__(self, other: ReverseLT[LT]) -> bool:  # type: ignore[override]
+        return self.key is other.key or self.key == other.key
+
 
 # Python's heapq provides a *min*-heap
 # When finding the n largest items, heapq tracks the *minimum* item still large enough.
@@ -177,7 +180,7 @@ async def _largest(
     ordered: Callable[[LT], LT] = ReverseLT if reverse else lambda x: x  # type: ignore
     async with ScopedIter(iterable) as iterator:
         # assign an ordering to items to solve ties
-        order_sign = -1 if reverse else 1
+        order_sign = -1
         n_heap = [
             (ordered(await key(item)), index * order_sign, item)
             async for index, item in a_zip(range(n), borrow(iterator))

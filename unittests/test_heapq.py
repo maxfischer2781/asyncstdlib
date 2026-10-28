@@ -85,3 +85,31 @@ async def test_nlargest_stdlib_key(sample, n):
     assert heapq.nlargest(n, sample, key=lambda x: -x) == await a.nlargest(
         asyncify(sample), n, key=lambda x: -x
     )
+
+
+@pytest.mark.parametrize("name", ["nlargest", "nsmallest"])
+@pytest.mark.parametrize("keys", [[1, 1, 1], [2, 2, 1, 1, 3, 3], [3, 1, 2, 1, 2, 3]])
+@pytest.mark.parametrize("n", [1, 2, 3, 5, 10])
+@pytest.mark.parametrize("async_key", [False, True])
+@sync
+async def test_nlargest_nsmallest_stable_ties(name, keys, n, async_key):
+    # Dict payloads cannot be ordered: ties must use input position, not the item.
+    values = [{"key": key, "position": index} for index, key in enumerate(keys)]
+
+    def key(value):
+        return value["key"]
+
+    expected = getattr(heapq, name)(n, values, key=key)
+    actual = await getattr(a, name)(
+        asyncify(values), n, key=awaitify(key) if async_key else key
+    )
+    assert actual == expected
+
+
+@pytest.mark.parametrize("name", ["nlargest", "nsmallest"])
+@sync
+async def test_nlargest_nsmallest_identical_key(name):
+    key = float("nan")
+    values = [{"position": index} for index in range(3)]
+    expected = getattr(heapq, name)(2, values, key=lambda value: key)
+    assert await getattr(a, name)(values, 2, key=lambda value: key) == expected
