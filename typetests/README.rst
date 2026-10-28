@@ -9,7 +9,7 @@ Test Files
 ==========
 
 Tests MUST be organised into files, with similar tests grouped together.
-Each test file SHOULD be called as per the pattern ``type_<scope>.py``,
+Each test file SHOULD be named as per the pattern ``test_<scope>.py``,
 where ``<scope>`` describes what the tests cover;
 for example, ``test_functools.py`` type-tests the ``functools`` package.
 
@@ -26,6 +26,9 @@ Tests MUST contain statements to be type-checked:
 
 Test files MAY contain non-test functions, methods or classes for use inside tests.
 These SHOULD be type-consistent and not require any type assertions or expected errors.
+
+**Note:** For compatibility with older Python versions,
+          `typing_extensions` may be used to provide `assert_type` and `assert_never`.
 
 Test Execution
 ==============

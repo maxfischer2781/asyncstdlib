@@ -161,6 +161,11 @@ async def test_map_strict_unequal(itrs: "tuple[range, ...]"):
 async def test_max_default():
     assert await a.max((), default=3) == 3
     assert await a.max((), key=lambda x: x, default=3) == 3
+    # default does not override items
+    assert await a.max((3, 2, 1), default=1) == 3
+    # default ignores key
+    assert await a.max([], default=1, key=str.split) == 1
+
     with pytest.raises(ValueError):
         assert await a.max(()) == 3
     with pytest.raises(ValueError):
@@ -180,12 +185,51 @@ async def test_max_sa():
     assert await a.max(asyncify((4, 2, 3, 1)), key=minus) == 1
 
 
+class Tagged:
+    def __init__(self, value: float, tag: str) -> None:
+        self.value = value
+        self.tag = tag
+
+    def __lt__(self, other: "Tagged"):
+        return self.value < other.value
+
+    def key(self) -> float:
+        return self.value
+
+
+nan = float("nan")
+tagged_order_values = [
+    [Tagged(v, str(v)) for v in range(5)],
+    [Tagged(v, str(v)) for v in range(5)[::-1]],
+    [Tagged(1, "small"), Tagged(2, "first"), Tagged(2, "second")],
+    [Tagged(2, "first"), Tagged(2, "second"), Tagged(1, "small")],
+    [Tagged(2, "first"), Tagged(1, "small"), Tagged(2, "second")],
+    [Tagged(9, "large"), Tagged(2, "first"), Tagged(2, "second")],
+    [Tagged(2, "first"), Tagged(2, "second"), Tagged(9, "large")],
+    [Tagged(2, "first"), Tagged(9, "large"), Tagged(2, "second")],
+    [Tagged(nan, "nan"), Tagged(2, "first"), Tagged(2, "second")],
+    [Tagged(2, "first"), Tagged(2, "second"), Tagged(nan, "nan")],
+    [Tagged(2, "first"), Tagged(nan, "nan"), Tagged(2, "second")],
+]
+
+
+@pytest.mark.parametrize("values", tagged_order_values)
+@sync
+async def test_max_fifo(values: "list[Tagged]") -> None:
+    for itr in (asyncify, iter):
+        assert await a.max(itr(values)) == max(values)
+        assert await a.max(itr(values), key=Tagged.key) == max(values, key=Tagged.key)
+
+
 @sync
 async def test_min_default():
     assert await a.min((), default=3) == 3
     assert await a.min((), key=lambda x: x, default=3) == 3
     # default does not override items
     assert await a.min((3, 2, 1), default=3) == 1
+    # default ignores key
+    assert await a.min([], default=1, key=str.split) == 1
+
     with pytest.raises(ValueError):
         assert await a.min(()) == 3
     with pytest.raises(ValueError):
@@ -203,6 +247,14 @@ async def test_min_sa():
     assert await a.min(asyncify((4, 2, 3, 1)), key=lambda x: -x) == 4
     assert await a.min(asyncify((1, 2, 3, 4)), key=minus) == 4
     assert await a.min(asyncify((4, 2, 3, 1)), key=minus) == 4
+
+
+@pytest.mark.parametrize("values", tagged_order_values)
+@sync
+async def test_min_fifo(values: "list[Tagged]") -> None:
+    for itr in (asyncify, iter):
+        assert await a.min(itr(values)) == min(values)
+        assert await a.min(itr(values), key=Tagged.key) == min(values, key=Tagged.key)
 
 
 @sync
@@ -343,3 +395,17 @@ async def test_sorted_stable():
     assert await a.sorted(values, key=awaitify(collision_key)) == sorted(
         values, key=collision_key
     )
+
+
+@pytest.mark.parametrize("reverse", [True, False])
+@sync
+async def test_sorted_unsortable(reverse: bool):
+    unsortable = [None, "None"]
+    with pytest.raises(TypeError):
+        await a.sorted(a.iter(unsortable), reverse=reverse)
+    with pytest.raises(TypeError):
+        await a.sorted(iter(unsortable), reverse=reverse)
+    with pytest.raises(TypeError):
+        await a.sorted(a.iter(unsortable), key=lambda x: x, reverse=reverse)
+    with pytest.raises(TypeError):
+        await a.sorted(iter(unsortable), key=lambda x: x, reverse=reverse)

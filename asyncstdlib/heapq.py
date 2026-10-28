@@ -12,7 +12,7 @@ import heapq as _heapq
 
 from .builtins import enumerate as a_enumerate, zip as a_zip
 from ._core import aiter, awaitify, ScopedIter, borrow
-from ._typing import AnyIterable, ACloseable, LT, T
+from ._typing import AnyIterable, ACloseable, LT, T, SupportsBool
 
 
 class _KeyIter(Generic[LT]):
@@ -91,10 +91,19 @@ class _KeyIter(Generic[LT]):
             self.head_key = await self.key(head) if self.key is not None else head
             return True
 
-    def __lt__(self, other: _KeyIter[LT]) -> bool:
-        return self.reverse ^ bool(self.head_key < other.head_key)
+    def __lt__(self, other: _KeyIter[LT]) -> SupportsBool:
+        return (
+            self.head_key < other.head_key
+            if not self.reverse
+            else other.head_key < self.head_key
+        )
 
+    # needed for tuple comparisons
     def __eq__(self, other: _KeyIter[LT]) -> bool:  # type: ignore[override]
+        # try to respect full ordering interface...
+        if self.head_key.__eq__ is not object.__eq__:
+            return self.head_key == other.head_key
+        # ...but fall back to just using the `<` operator required for sorting
         return not (self.head_key < other.head_key or other.head_key < self.head_key)
 
 
@@ -121,9 +130,9 @@ async def merge(
     The ``iterables`` must be pre-sorted in the same order.
     """
     a_key = awaitify(key) if key is not None else None
-    # sortable iterators with (reverse) position to ensure stable sort for ties
+    # sortable iterators with position to ensure stable sort for ties
     iter_heap: "list[tuple[_KeyIter[Any], int]]" = [
-        (itr, idx if not reverse else -idx)
+        (itr, idx)
         async for idx, itr in a_enumerate(
             _KeyIter[Any].from_iters(iterables, reverse, a_key)
         )

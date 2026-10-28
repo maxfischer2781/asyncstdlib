@@ -248,7 +248,7 @@ async def max(
     default: Any = __MIN_MAX_DEFAULT,
 ) -> Any:
     """
-    Return the largest item from an (async) iterable or from two or more values
+    Return the largest item from an (async) iterable
 
     :raises ValueError: if ``iterable`` is empty and ``default`` is not set
 
@@ -274,7 +274,7 @@ async def min(
     default: Any = __MIN_MAX_DEFAULT,
 ) -> Any:
     """
-    Return the smallest item from an (async) iterable or from two or more values
+    Return the smallest item from an (async) iterable
 
     :raises ValueError: if ``iterable`` is empty and ``default`` is not set
 
@@ -294,32 +294,34 @@ async def min(
 
 
 async def _min_max(
-    iterable: AnyIterable[LT],
-    key: Optional[Callable[[LT], Any]],
+    iterable: AnyIterable[Any],
+    key: Optional[Callable[[Any], Any]],
     invert: bool,
-    default: LT = __MIN_MAX_DEFAULT,  # type: ignore
-) -> LT:
+    default: Any = __MIN_MAX_DEFAULT,  # type: ignore
+) -> Any:
     """
     Implementation of ``min``/``max``
 
     :param invert: compute ``max`` if ``True`` and ``min`` otherwise
     """
     async with ScopedIter(iterable) as item_iter:
-        best = await anext(item_iter, default=default)
-        # this implies that item_iter is empty and default is __MIN_MAX_DEFAULT
-        if best is __MIN_MAX_DEFAULT:  # type: ignore
+        try:
+            best = await anext(item_iter)
+        except StopAsyncIteration:
+            if default is not __MIN_MAX_DEFAULT:
+                return default
             name = "max" if invert else "min"
-            raise ValueError(f"{name}() arg is an empty sequence")
-        elif key is None:
+            raise ValueError(f"{name}() iterable argument is empty") from None
+        if key is None:
             async for item in item_iter:
-                if invert ^ bool(item < best):
+                if item < best if not invert else best < item:
                     best = item
         else:
             key = _awaitify(key)
             best_key = await key(best)
             async for item in item_iter:
                 item_key = await key(item)
-                if invert ^ (item_key < best_key):
+                if item_key < best_key if not invert else best_key < item_key:
                     best = item
                     best_key = item_key
     return best
@@ -446,13 +448,9 @@ async def sorted(
         It is guaranteed to be worst-case O(n log n) runtime.
     """
     if key is None:
-        # TODO: is this a worthwhile optimisation?
-        try:
-            return _sync_builtins.sorted(iterable, reverse=reverse)  # type: ignore
-        except TypeError:
-            items: _sync_builtins.list[Any] = [item async for item in aiter(iterable)]
-            items.sort(reverse=reverse)
-            return items
+        items: _sync_builtins.list[Any] = [item async for item in aiter(iterable)]
+        items.sort(reverse=reverse)
+        return items
     else:
         async_key = _awaitify(key)
         keyed_items = [(await async_key(item), item) async for item in aiter(iterable)]
