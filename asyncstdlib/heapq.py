@@ -11,8 +11,9 @@ from typing import (
 import heapq as _heapq
 
 from .builtins import enumerate as a_enumerate, zip as a_zip
-from ._core import aiter, awaitify, ScopedIter, borrow
-from ._typing import AnyIterable, ACloseable, LT, T, SupportsBool
+from ._core import awaitify, ScopedIter, borrow
+from .contextlib import ExitStack
+from ._typing import AnyIterable, LT, T, SupportsBool
 
 
 class _KeyIter(Generic[LT]):
@@ -54,12 +55,17 @@ class _KeyIter(Generic[LT]):
         iterables: "tuple[AnyIterable[T], ...]",
         reverse: bool,
         key: Callable[[T], Awaitable[LT]],
+        stack: ExitStack,
     ) -> "AsyncIterator[_KeyIter[LT]]": ...
 
     @overload
     @classmethod
     def from_iters(
-        cls, iterables: "tuple[AnyIterable[LT], ...]", reverse: bool, key: None
+        cls,
+        iterables: "tuple[AnyIterable[LT], ...]",
+        reverse: bool,
+        key: None,
+        stack: ExitStack,
     ) -> "AsyncIterator[_KeyIter[LT]]": ...
 
     @classmethod
@@ -68,9 +74,10 @@ class _KeyIter(Generic[LT]):
         iterables: "tuple[AnyIterable[Any], ...]",
         reverse: bool,
         key: Optional[Callable[[Any], Any]],
+        stack: ExitStack,
     ) -> "AsyncIterator[_KeyIter[Any]]":
         for iterable in iterables:
-            iterator = aiter(iterable)
+            iterator = await stack.enter_context(ScopedIter(iterable))
             try:
                 head = await iterator.__anext__()
             except StopAsyncIteration:
@@ -130,14 +137,14 @@ async def merge(
     The ``iterables`` must be pre-sorted in the same order.
     """
     a_key = awaitify(key) if key is not None else None
-    # sortable iterators with position to ensure stable sort for ties
-    iter_heap: "list[tuple[_KeyIter[Any], int]]" = [
-        (itr, idx)
-        async for idx, itr in a_enumerate(
-            _KeyIter[Any].from_iters(iterables, reverse, a_key)
-        )
-    ]
-    try:
+    async with ExitStack() as stack:
+        # sortable iterators with position to ensure stable sort for ties
+        iter_heap: "list[tuple[_KeyIter[Any], int]]" = [
+            (itr, idx)
+            async for idx, itr in a_enumerate(
+                _KeyIter[Any].from_iters(iterables, reverse, a_key, stack)
+            )
+        ]
         _heapq.heapify(iter_heap)
         # there are at least two iterators that need merging
         while len(iter_heap) > 1:
@@ -155,10 +162,6 @@ async def merge(
             yield itr.head
             async for item in itr.tail:
                 yield item
-    finally:
-        for itr, _ in iter_heap:
-            if isinstance(itr.tail, ACloseable):
-                await itr.tail.aclose()
 
 
 class ReverseLT(Generic[LT]):
