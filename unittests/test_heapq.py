@@ -54,6 +54,235 @@ async def test_merge_stdlib_key(samples: "list[list[float]]", reverse: bool) -> 
     ]
 
 
+@sync
+async def test_merge_closes_iterators_when_aiter_fails():
+    closed = []
+
+    async def first():
+        try:
+            yield 1
+            yield 3
+        finally:
+            closed.append("first")
+
+    class FailingIterable:
+        def __aiter__(self):
+            raise RuntimeError("cannot create iterator")
+
+    # Retain the iterator so garbage collection cannot perform merge's cleanup.
+    iterator = first()
+    with pytest.raises(RuntimeError, match="cannot create iterator"):
+        await a.anext(a.merge(iterator, FailingIterable()))
+    assert closed == ["first"]
+
+
+@sync
+async def test_merge_closes_iterators_when_first_item_fails():
+    closed = []
+
+    async def first():
+        try:
+            yield 1
+            yield 3
+        finally:
+            closed.append("first")
+
+    async def failing():
+        try:
+            raise RuntimeError("cannot read first item")
+            yield 2
+        finally:
+            closed.append("failing")
+
+    iterators = [first(), failing()]
+    with pytest.raises(RuntimeError, match="cannot read first item"):
+        await a.anext(a.merge(*iterators))
+    assert closed == ["failing", "first"]
+
+
+@pytest.mark.parametrize("make_key", [lambda key: key, awaitify])
+@sync
+async def test_merge_closes_iterators_when_initial_key_fails(make_key):
+    closed = []
+    started = []
+
+    async def first():
+        try:
+            yield 1
+            yield 3
+        finally:
+            closed.append("first")
+
+    async def second():
+        try:
+            yield 2
+            yield 4
+        finally:
+            closed.append("second")
+
+    async def later():
+        started.append("later")
+        yield 5
+
+    def key(value):
+        # The first iterator is initialized before the second key fails.
+        if value == 2:
+            raise RuntimeError("cannot compute key")
+        return value
+
+    iterators = [first(), second(), later()]
+    with pytest.raises(RuntimeError, match="cannot compute key"):
+        await a.anext(a.merge(*iterators, key=make_key(key)))
+    assert closed == ["second", "first"]
+    assert started == []
+
+
+@sync
+async def test_merge_closes_iterators_on_base_exception():
+    class Interrupted(BaseException):
+        pass
+
+    closed = []
+
+    async def first():
+        try:
+            yield 1
+            raise Interrupted
+        finally:
+            closed.append("first")
+
+    async def second():
+        try:
+            yield 2
+            yield 4
+        finally:
+            closed.append("second")
+
+    iterators = [first(), second()]
+    merged = a.merge(*iterators)
+    assert await a.anext(merged) == 1
+    with pytest.raises(Interrupted):
+        await a.anext(merged)
+    assert closed == ["first", "second"]
+
+
+@sync
+async def test_merge_closes_empty_and_exhausted_iterators():
+    closed = []
+
+    class EmptyIterator:
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            raise StopAsyncIteration
+
+        async def aclose(self):
+            closed.append("empty")
+
+    class SingleItemIterator:
+        def __init__(self):
+            self.values = iter([1])
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            try:
+                return next(self.values)
+            except StopIteration:
+                raise StopAsyncIteration from None
+
+        async def aclose(self):
+            closed.append("single")
+
+    assert await a.list(a.merge(EmptyIterator(), SingleItemIterator(), [2, 3])) == [
+        1,
+        2,
+        3,
+    ]
+    assert closed == ["single", "empty"]
+
+
+@sync
+async def test_merge_closes_iterators_when_closed_early():
+    closed = []
+
+    async def first():
+        try:
+            yield 1
+            yield 3
+        finally:
+            closed.append("first")
+
+    async def second():
+        try:
+            yield 2
+            yield 4
+        finally:
+            closed.append("second")
+
+    iterators = [first(), second()]
+    merged = a.merge(*iterators)
+    assert await a.anext(merged) == 1
+    await merged.aclose()
+    assert closed == ["second", "first"]
+
+
+@sync
+async def test_merge_attempts_all_iterator_cleanup():
+    closed = []
+
+    async def first():
+        try:
+            yield 1
+            yield 4
+        finally:
+            closed.append("first")
+
+    async def second():
+        try:
+            yield 2
+            yield 5
+        finally:
+            closed.append("second")
+            raise RuntimeError("cannot close second iterator")
+
+    async def third():
+        try:
+            yield 3
+            yield 6
+        finally:
+            closed.append("third")
+
+    iterators = [first(), second(), third()]
+    merged = a.merge(*iterators)
+    assert await a.anext(merged) == 1
+    with pytest.raises(RuntimeError, match="cannot close second iterator"):
+        await merged.aclose()
+    assert closed == ["third", "second", "first"]
+
+
+@sync
+async def test_merge_respects_scoped_iterator_ownership():
+    closed = []
+
+    async def source():
+        try:
+            yield 1
+            yield 2
+        finally:
+            closed.append("source")
+
+    async with a.scoped_iter(source()) as iterator:
+        merged = a.merge(iterator)
+        assert await a.anext(merged) == 1
+        await merged.aclose()
+        assert closed == []
+        assert await a.anext(iterator) == 2
+    assert closed == ["source"]
+
+
 PAIR_MERGE_SAMPLES: "list[list[list[tuple[float, int | str]]]]" = [
     [[(1, "first"), (2, "first")], [(1, "second"), (2, "second")]],
     [[(0, "first"), (1, "first")], [(1, "second"), (2, "second")]],
