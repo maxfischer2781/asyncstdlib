@@ -54,7 +54,7 @@ class _KeyIter(Generic[LT]):
         iterables: "tuple[AnyIterable[T], ...]",
         reverse: bool,
         key: Callable[[T], Awaitable[LT]],
-        iterators: "list[AsyncIterator[Any]]",
+        closeables: "list[ACloseable]",
     ) -> "AsyncIterator[_KeyIter[LT]]": ...
 
     @overload
@@ -64,7 +64,7 @@ class _KeyIter(Generic[LT]):
         iterables: "tuple[AnyIterable[LT], ...]",
         reverse: bool,
         key: None,
-        iterators: "list[AsyncIterator[Any]]",
+        closeables: "list[ACloseable]",
     ) -> "AsyncIterator[_KeyIter[LT]]": ...
 
     @classmethod
@@ -73,11 +73,12 @@ class _KeyIter(Generic[LT]):
         iterables: "tuple[AnyIterable[Any], ...]",
         reverse: bool,
         key: Optional[Callable[[Any], Any]],
-        iterators: "list[AsyncIterator[Any]]",
+        closeables: "list[ACloseable]",
     ) -> "AsyncIterator[_KeyIter[Any]]":
         for iterable in iterables:
             iterator = aiter(iterable)
-            iterators.append(iterator)
+            if isinstance(iterator, ACloseable):
+                closeables.append(iterator)
             try:
                 head = await iterator.__anext__()
             except StopAsyncIteration:
@@ -137,13 +138,14 @@ async def merge(
     The ``iterables`` must be pre-sorted in the same order.
     """
     a_key = awaitify(key) if key is not None else None
-    iterators: "list[AsyncIterator[Any]]" = []
+    closeables: "list[ACloseable]" = []
+    active_error: Optional[BaseException] = None
     try:
         # sortable iterators with position to ensure stable sort for ties
         iter_heap: "list[tuple[_KeyIter[Any], int]]" = [
             (itr, idx)
             async for idx, itr in a_enumerate(
-                _KeyIter[Any].from_iters(iterables, reverse, a_key, iterators)
+                _KeyIter[Any].from_iters(iterables, reverse, a_key, closeables)
             )
         ]
         _heapq.heapify(iter_heap)
@@ -163,16 +165,24 @@ async def merge(
             yield itr.head
             async for item in itr.tail:
                 yield item
+    except BaseException as exc:
+        active_error = exc
+        raise
     finally:
-        # Attempt every cleanup, even when another iterator's aclose fails.
+        # Cleanup must not replace an active interruption with an ordinary error.
         close_error: Optional[BaseException] = None
-        for iterator in reversed(iterators):
-            if isinstance(iterator, ACloseable):
-                try:
-                    await iterator.aclose()
-                except BaseException as exc:  # noqa: B036
+        for closeable in closeables:
+            try:
+                await closeable.aclose()
+            except BaseException as exc:  # noqa: B036
+                if close_error is None or isinstance(close_error, Exception):
                     close_error = exc
         if close_error is not None:
+            # GeneratorExit requests closing; failures during closing still matter.
+            if active_error is not None and not isinstance(
+                active_error, (Exception, GeneratorExit)
+            ):
+                raise active_error
             raise close_error
 
 
